@@ -1,4 +1,6 @@
-﻿namespace EntityDi.Container;
+﻿using System;
+
+namespace EntityDi.Container;
 
 public static class DiContainerExtensions
 {

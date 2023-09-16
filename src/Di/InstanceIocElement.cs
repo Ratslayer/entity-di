@@ -1,4 +1,6 @@
-﻿namespace EntityDi.Container;
+﻿using System;
+
+namespace EntityDi.Container;
 
 internal sealed record InstanceIocElement(object Instance) : IIocElement
 {

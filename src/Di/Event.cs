@@ -1,4 +1,6 @@
-﻿namespace EntityDi.Container;
+﻿using System;
+
+namespace EntityDi.Container;
 public interface ISubscriber<T>
 {
 	void Subscribe(Action<T> action);

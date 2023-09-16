@@ -1,4 +1,6 @@
-﻿namespace EntityDi;
+﻿using System.Collections.Generic;
+
+namespace EntityDi;
 public static class ArrayManager<T>
 {
 	static readonly List<T[]> _argsArrays = new();

@@ -1,4 +1,7 @@
-﻿namespace EntityDi;
+﻿using System;
+using System.Collections.Generic;
+
+namespace EntityDi;
 public interface IResolver
 {
 	void Bind(Type contract, Type imp);

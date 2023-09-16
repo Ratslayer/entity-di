@@ -1,4 +1,7 @@
-﻿namespace EntityDi;
+﻿using System;
+using System.Linq;
+
+namespace EntityDi;
 
 public static class EntityExtensions
 {
@@ -29,7 +32,7 @@ public static class EntityExtensions
 	public static void BindLazy<T>(this IEntity entity)
 		=> entity.BindLazy<T, T>();
 	public static void Event<T>(this IEntity entity)
-		=> entity.Bind<Container.Event<T>>();
+		=> entity.BindLazy<Container.Event<T>>();
 	public static void BindInstance<T>(this IEntity entity, T instance)
 		=> entity.Resolver.BindInstance(typeof(T), instance);
 	public static void Append<T>(this IEntity entity, params (Type, object)[] args)

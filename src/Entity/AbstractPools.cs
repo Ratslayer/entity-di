@@ -1,4 +1,7 @@
-﻿namespace EntityDi;
+﻿using System;
+using System.Collections.Generic;
+
+namespace EntityDi;
 public interface IPool
 {
 	bool HasUnspawnedEntity(out IEntity entity);

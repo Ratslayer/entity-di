@@ -1,6 +1,8 @@
-﻿namespace EntityDi.Container;
+﻿using System;
+using System.Linq;
 
-internal sealed record LazyIocElement(Type InstanceType, bool ResolveOnInstall) : IIocElement, IInstallElement
+namespace EntityDi.Container;
+internal abstract record TypedIocElement(Type InstanceType, bool ResolveOnInstall) : IIocElement
 {
 	object _instance;
 	public void Assert(Type contract, DiContainer container)
@@ -15,3 +17,7 @@ internal sealed record LazyIocElement(Type InstanceType, bool ResolveOnInstall) 
 		return _instance;
 	}
 }
+internal sealed record LazyIocElement(Type InstanceType, bool ResolveOnInstall) 
+	: TypedIocElement(InstanceType,ResolveOnInstall);
+internal sealed record NonLazyIocElement(Type InstanceType, bool ResolveOnInstall)
+	: TypedIocElement(InstanceType, ResolveOnInstall), IInstallElement;

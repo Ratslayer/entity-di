@@ -1,4 +1,7 @@
-﻿namespace EntityDi.Container;
+﻿using System;
+using System.Collections.Generic;
+
+namespace EntityDi.Container;
 
 [AttributeUsage(AttributeTargets.Method | AttributeTargets.Property)]
 public sealed class InjectAttribute : Attribute { }
@@ -24,8 +27,9 @@ public sealed class DiContainer : IResolver
 			Throw($"Attempted dublicate binding for contact {contract.Name}");
 	}
 	public void BindLazy(Type contract, Type imp) => Bind(contract, new LazyIocElement(imp, false));
-	public void Bind(Type contract, Type imp) => Bind(contract, new LazyIocElement(imp, true));
-	public void BindInstance(Type contract, object instance) => Bind(contract, new InstanceIocElement(instance));
+	public void Bind(Type contract, Type imp) => Bind(contract, new NonLazyIocElement(imp, true));
+	public void BindInstance(Type contract, object instance) 
+		=> Bind(contract, new InstanceIocElement(instance));
 	public bool TryResolve(Type contract, out object result)
 	{
 		if (!Installed)

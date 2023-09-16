@@ -1,8 +1,12 @@
 ﻿using EntityDi.Container;
+using System;
+using System.Collections.Generic;
+
 namespace EntityDi;
 public readonly struct CreatedEvent { }
 public readonly struct SpawnedEvent { }
 public readonly struct DespawnedEvent { }
+public readonly record struct UpdatedEvent(float Delta);
 public interface IEntityFactory
 {
 	string Name { get; }
