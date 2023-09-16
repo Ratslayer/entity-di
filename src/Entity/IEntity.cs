@@ -3,21 +3,33 @@ namespace EntityDi;
 public readonly struct CreatedEvent { }
 public readonly struct SpawnedEvent { }
 public readonly struct DespawnedEvent { }
+public interface IEntityFactory
+{
+	string Name { get; }
+	IEntity Create(string name, IEntity parent);
+}
 public interface IEntity
 {
 	string Name { get; }
 	IResolver Resolver { get; }
 	void AddSubscription(ISubscription subscription);
+	void Append(Type type, params (Type, object)[] args);
 	void Spawn();
 	void Despawn();
+	bool IsSpawned { get; }
 }
 public sealed record Entity(string Name, IResolver Resolver) : IEntity
 {
+	sealed record AppendedSystem(Type Type, (Type, object)[] Args);
+	readonly List<AppendedSystem> _appends = new();
 	readonly List<ISubscription> _subscriptions = new();
 	Event<CreatedEvent> _created;
 	Event<SpawnedEvent> _spawned;
 	Event<DespawnedEvent> _despawned;
 	bool _initialized;
+
+	public bool IsSpawned { get; private set; }
+
 	[Inject]
 	void Init(
 		Event<CreatedEvent> created,
@@ -31,10 +43,16 @@ public sealed record Entity(string Name, IResolver Resolver) : IEntity
 	public void AddSubscription(ISubscription subscription)
 	{
 		_subscriptions.Add(subscription);
+		if (!_initialized)
+			return;
+		subscription.Init();
+		if (IsSpawned)
+			subscription.Subscribe();
 	}
 
 	public void Despawn()
 	{
+		IsSpawned = false;
 		_despawned.Publish();
 		foreach (var subscription in _subscriptions)
 			subscription.Unsubscribe();
@@ -46,12 +64,15 @@ public sealed record Entity(string Name, IResolver Resolver) : IEntity
 		if (!_initialized)
 		{
 			_initialized = true;
+			foreach (var append in _appends)
+				Append(append.Type, append.Args);
 			foreach (var subscription in _subscriptions)
 				subscription.Init();
 			Subscribe();
 			_created.Publish();
 		}
 		else Subscribe();
+		IsSpawned = true;
 		_spawned.Publish();
 		void Subscribe()
 		{
@@ -59,31 +80,14 @@ public sealed record Entity(string Name, IResolver Resolver) : IEntity
 				subscription.Subscribe();
 		}
 	}
-
-}
-public static class EntityCreationUtils
-{
-	public static IEntity _world;
-	public static IResolver CreateResolver(string name, IResolver parent)
+	public void Append(Type type, (Type, object)[] args)
 	{
-		return new DiContainer(name, (DiContainer)parent);
+		if (Resolver.Installed)
+			AppendInternal(type, args);
+		else _appends.Add(new(type, args));
 	}
-	public static IEntity CreateEntity(string name, IEntity parent, Action<IEntity> bind)
+	void AppendInternal(Type type, (Type, object)[] args)
 	{
-		parent = parent ?? _world;
-		var resolver = CreateResolver(name, parent?.Resolver);
-		var entity = new Entity(name, resolver);
-		BindEntity(entity);
-		bind(entity);
-		resolver.Install();
-		resolver.Inject(entity);
-		return entity;
-	}
-	static void BindEntity(IEntity entity)
-	{
-		entity.BindInstance(entity);
-		entity.Event<CreatedEvent>();
-		entity.Event<SpawnedEvent>();
-		entity.Event<DespawnedEvent>();
+		Resolver.Create(type, args);
 	}
 }

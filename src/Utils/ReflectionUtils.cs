@@ -1,20 +1,11 @@
 ﻿using System.Reflection;
 
 namespace EntityDi.Container;
-
 public static class ReflectionUtils
 {
-	static readonly List<object[]> _argsArrays = new();
+	
 	static readonly Dictionary<Type, AttributeData> _datas = new();
-	public static object[] GetArgArray(int numArgs)
-	{
-		if (numArgs >= _argsArrays.Count)
-		{
-			for (var i = _argsArrays.Count; i <= numArgs; i++)
-				_argsArrays.Add(new object[i]);
-		}
-		return _argsArrays[numArgs];
-	}
+	
 	public sealed class AttributeData
 	{
 		public readonly Dictionary<Type, List<MemberInfo>> _members = new();

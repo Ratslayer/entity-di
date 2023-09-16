@@ -1,5 +1,4 @@
-﻿using EntityDi.Container;
-namespace EntityDi;
+﻿namespace EntityDi;
 public interface IResolver
 {
 	void Bind(Type contract, Type imp);

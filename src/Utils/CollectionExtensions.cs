@@ -13,4 +13,11 @@ public static class CollectionExtensions
 		element = default;
 		return false;
 	}
+	public static bool Contains<T>(this IEnumerable<T> col, Predicate<T> predicate)
+	{
+		foreach (var item in col)
+			if (predicate(item))
+				return true;
+		return false;
+	}
 }
