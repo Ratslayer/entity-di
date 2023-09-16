@@ -10,7 +10,7 @@ public static class DiInjectionUtils
 		foreach (var info in ReflectionUtils.GetAllMethodsWithAttribute<InjectAttribute>(type))
 		{
 			var parameters = info.GetParameters();
-			var args = ReflectionUtils.GetArgArray(parameters.Length);
+			var args = ArrayManager<object>.GetArgArray(parameters.Length);
 			for (var i = 0; i < args.Length; i++)
 			{
 				args[i] = container.Resolve(parameters[i].ParameterType);

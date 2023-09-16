@@ -33,7 +33,7 @@ public abstract record EntitySystem
 			//create subscription
 			var subscriptionType = typeof(EventSubscription<>).MakeGenericType(type);
 			var constructor = subscriptionType.GetConstructors()[0];
-			var constructorArgs = ReflectionUtils.GetArgArray(2);
+			var constructorArgs = ArrayManager<object>.GetArgArray(2);
 			constructorArgs[0] = action;
 			constructorArgs[1] = Entity;
 			var subscription = constructor.Invoke(constructorArgs);
