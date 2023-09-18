@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace EntityDi.Container;
+namespace EntityDi;
 
 public sealed class DiException : Exception
 {

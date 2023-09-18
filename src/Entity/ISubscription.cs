@@ -11,16 +11,16 @@ public interface ISubscription
 }
 public sealed record EventSubscription<T>(Action<T> Action, IEntity Entity) : ISubscription
 {
-	Event<T> _subscriber;
-	public void Init() => _subscriber = Entity.Resolve<Event<T>>();
+	IPublisher<T> _subscriber;
+	public void Init() => _subscriber = Entity.Resolve<IPublisher<T>>();
 
 	public void Unsubscribe()
 	{
-		_subscriber.Unsubscribe(Action);
+		((ISubscriber<T>)_subscriber).Unsubscribe(Action);
 	}
 	public void Subscribe()
 	{
-		_subscriber.Subscribe(Action);
+		((ISubscriber<T>)_subscriber).Subscribe(Action);
 	}
 }
 [AttributeUsage(AttributeTargets.Method)]

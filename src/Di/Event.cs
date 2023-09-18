@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace EntityDi.Container;
+namespace EntityDi;
 public interface ISubscriber<T>
 {
 	void Subscribe(Action<T> action);
@@ -30,7 +30,7 @@ public sealed class Event<T> : ISubscriber<T>, IPublisher<T>
 }
 public static class EventExtensions
 {
-	public static void Publish<T>(this Event<T> e)
+	public static void Publish<T>(this IPublisher<T> e)
 		where T : new()
 	{
 		e.Publish(new());

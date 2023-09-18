@@ -15,7 +15,7 @@ public static class DiCreationUtils
 			var activator = instanceType.GetConstructors().FirstOrDefault();
 			if (activator is null)
 			{
-				container.Throw($"{instanceType.Name} does not have a constructor");
+				throw container.Exception($"{instanceType.Name} does not have a constructor");
 			}
 			var parameters = activator.GetParameters();
 			var args = new object[parameters.Length];

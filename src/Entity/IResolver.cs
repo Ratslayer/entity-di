@@ -14,5 +14,5 @@ public interface IResolver
 	//debug data
 	string Name { get; }
 	bool Installed { get; }
-	void Throw(string message);
+	DiException Exception(string message);
 }

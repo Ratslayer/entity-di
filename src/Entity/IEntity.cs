@@ -17,7 +17,7 @@ public interface IEntity
 	string Name { get; }
 	IResolver Resolver { get; }
 	void AddSubscription(ISubscription subscription);
-	void Append(Type type, params (Type, object)[] args);
+	void AppendExplicit(Type type, params (Type, object)[] args);
 	void Spawn();
 	void Despawn();
 	bool IsSpawned { get; }
@@ -27,18 +27,18 @@ public sealed record Entity(string Name, IResolver Resolver) : IEntity
 	sealed record AppendedSystem(Type Type, (Type, object)[] Args);
 	readonly List<AppendedSystem> _appends = new();
 	readonly List<ISubscription> _subscriptions = new();
-	Event<CreatedEvent> _created;
-	Event<SpawnedEvent> _spawned;
-	Event<DespawnedEvent> _despawned;
+	IPublisher<CreatedEvent> _created;
+	IPublisher<SpawnedEvent> _spawned;
+	IPublisher<DespawnedEvent> _despawned;
 	bool _initialized;
 
 	public bool IsSpawned { get; private set; }
 
 	[Inject]
 	void Init(
-		Event<CreatedEvent> created,
-		Event<SpawnedEvent> spawned,
-		Event<DespawnedEvent> despawned)
+		IPublisher<CreatedEvent> created,
+		IPublisher<SpawnedEvent> spawned,
+		IPublisher<DespawnedEvent> despawned)
 	{
 		_created = created;
 		_spawned = spawned;
@@ -69,7 +69,7 @@ public sealed record Entity(string Name, IResolver Resolver) : IEntity
 		{
 			_initialized = true;
 			foreach (var append in _appends)
-				Append(append.Type, append.Args);
+				AppendExplicit(append.Type, append.Args);
 			foreach (var subscription in _subscriptions)
 				subscription.Init();
 			Subscribe();
@@ -84,7 +84,7 @@ public sealed record Entity(string Name, IResolver Resolver) : IEntity
 				subscription.Subscribe();
 		}
 	}
-	public void Append(Type type, (Type, object)[] args)
+	public void AppendExplicit(Type type, (Type, object)[] args)
 	{
 		if (Resolver.Installed)
 			AppendInternal(type, args);

@@ -16,15 +16,15 @@ public sealed class DiContainer : IResolver
 		_parent = parent;
 		Name = name;
 	}
-	public void Throw(string msg)
-		=> throw new DiException($"[{Name}] {msg}");
+	public DiException Exception(string msg)
+		=> new DiException($"[{Name}] {msg}");
 	private void Bind(Type contract, IIocElement element)
 	{
 		if (Installed)
-			Throw($"Attempting to bind {contract.Name} after installing.");
+			throw Exception($"Attempting to bind {contract.Name} after installing.");
 		element.Assert(contract, this);
 		if (!_elements.TryAdd(contract, element))
-			Throw($"Attempted dublicate binding for contact {contract.Name}");
+			throw Exception($"Attempted dublicate binding for contact {contract.Name}");
 	}
 	public void BindLazy(Type contract, Type imp) => Bind(contract, new LazyIocElement(imp, false));
 	public void Bind(Type contract, Type imp) => Bind(contract, new NonLazyIocElement(imp, true));
@@ -33,7 +33,7 @@ public sealed class DiContainer : IResolver
 	public bool TryResolve(Type contract, out object result)
 	{
 		if (!Installed)
-			Throw($"Attempting to resolve {contract.Name} before installing");
+			throw Exception($"Attempting to resolve {contract.Name} before installing");
 		var container = this;
 		while (container is not null)
 		{
