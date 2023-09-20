@@ -17,6 +17,12 @@ public static class EntityExtensions
 	}
 	public static bool TryResolve(this IEntity entity, Type type, out object instance)
 		=> entity.Resolver.TryResolve(type, out instance);
+	public static void Resolve<T>(this IEntity entity, ref T value)
+		where T : class
+	{
+		if (value is null)
+			value = entity.Resolve<T>();
+	}
 	public static T Resolve<T>(this IEntity entity)
 	{
 		if (!entity.TryResolve<T>(out var result))

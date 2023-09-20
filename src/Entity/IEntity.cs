@@ -4,8 +4,10 @@ using System.Collections.Generic;
 
 namespace EntityDi;
 public readonly struct CreatedEvent { }
+public readonly struct PreSpawnedEvent { }
 public readonly struct SpawnedEvent { }
 public readonly struct DespawnedEvent { }
+public readonly struct PostDespawnedEvent { }
 public readonly record struct UpdatedEvent(float Delta);
 public interface IEntityFactory
 {
@@ -28,8 +30,10 @@ public sealed record Entity(string Name, IResolver Resolver) : IEntity
 	readonly List<AppendedSystem> _appends = new();
 	readonly List<ISubscription> _subscriptions = new();
 	IPublisher<CreatedEvent> _created;
+	IPublisher<PreSpawnedEvent> _preSpawned;
 	IPublisher<SpawnedEvent> _spawned;
 	IPublisher<DespawnedEvent> _despawned;
+	IPublisher<PostDespawnedEvent> _postDespawned;
 	bool _initialized;
 
 	public bool IsSpawned { get; private set; }
@@ -37,12 +41,16 @@ public sealed record Entity(string Name, IResolver Resolver) : IEntity
 	[Inject]
 	void Init(
 		IPublisher<CreatedEvent> created,
+		IPublisher<PreSpawnedEvent> preSpawned,
 		IPublisher<SpawnedEvent> spawned,
-		IPublisher<DespawnedEvent> despawned)
+		IPublisher<DespawnedEvent> despawned,
+		IPublisher<PostDespawnedEvent> postDespawned)
 	{
 		_created = created;
+		_preSpawned = preSpawned;
 		_spawned = spawned;
 		_despawned = despawned;
+		_postDespawned = postDespawned;
 	}
 	public void AddSubscription(ISubscription subscription)
 	{
@@ -58,6 +66,7 @@ public sealed record Entity(string Name, IResolver Resolver) : IEntity
 	{
 		IsSpawned = false;
 		_despawned.Publish();
+		_postDespawned.Publish();
 		foreach (var subscription in _subscriptions)
 			subscription.Unsubscribe();
 	}
@@ -77,6 +86,7 @@ public sealed record Entity(string Name, IResolver Resolver) : IEntity
 		}
 		else Subscribe();
 		IsSpawned = true;
+		_preSpawned.Publish();
 		_spawned.Publish();
 		void Subscribe()
 		{
