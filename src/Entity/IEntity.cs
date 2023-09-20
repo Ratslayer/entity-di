@@ -9,6 +9,7 @@ public readonly struct SpawnedEvent { }
 public readonly struct DespawnedEvent { }
 public readonly struct PostDespawnedEvent { }
 public readonly record struct UpdatedEvent(float Delta);
+public readonly record struct FixedUpdatedEvent(float Delta);
 public interface IEntityFactory
 {
 	string Name { get; }

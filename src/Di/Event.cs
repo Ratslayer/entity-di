@@ -35,4 +35,10 @@ public static class EventExtensions
 	{
 		e.Publish(new());
 	}
+	public static void Publish<T>(this IEntity entity, T msg)
+	{
+		if (entity.TryResolve(out IPublisher<T> e))
+			e.Publish(msg);
+
+	}
 }
