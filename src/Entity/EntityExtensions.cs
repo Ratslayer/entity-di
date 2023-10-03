@@ -54,7 +54,7 @@ public static class EntityExtensions
 		}
 		if (args.Contains(o => o is null))
 			throw entity.Exception($"Tried to append a type with some args being null.");
-		var convertedArgs = ArrayManager<(Type, object)>.GetArgArray(args.Length);
+		var convertedArgs = new (Type, object)[args.Length];//ArrayManager<(Type, object)>.GetArgArray(args.Length);
 		for (int i = 0; i < convertedArgs.Length; i++)
 			convertedArgs[i] = (args[i].GetType(), args[i]);
 		AppendExplicit<T>(entity, convertedArgs);

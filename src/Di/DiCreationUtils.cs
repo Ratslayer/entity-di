@@ -10,7 +10,7 @@ public static class DiCreationUtils
 	sealed record CreationInfo(ConstructorInfo Constructor, ParameterInfo[] ParamInfos, object[] Params);
 	public static object Create(DiContainer container, Type instanceType, IEnumerable<(Type, object)> instanceArgs)
 	{
-		if(!_infoCache.TryGetValue(instanceType, out var info))
+		if (!_infoCache.TryGetValue(instanceType, out var info))
 		{
 			var activator = instanceType.GetConstructors().FirstOrDefault();
 			if (activator is null)
@@ -22,14 +22,15 @@ public static class DiCreationUtils
 			info = new(activator, parameters, args);
 			_infoCache[instanceType] = info;
 		}
-		
+
 		for (var i = 0; i < info.Params.Length; i++)
 		{
 			var type = info.ParamInfos[i].ParameterType;
-			if (instanceArgs.TryGet(out var arg, a => a.Item1 == type))
+			if (instanceArgs.TryGet(out var arg, a => type.IsAssignableFrom(a.Item1)))
 				info.Params[i] = arg.Item2;
-			else
-				info.Params[i] = container.Resolve(type);
+			else if (container.TryResolve(type, out var resolvedArg))
+				info.Params[i] = resolvedArg;
+			else container.Exception($"Couldn't create {instanceType.FullName}. {type.FullName} is not bound, nor among args.");
 		}
 		var result = info.Constructor.Invoke(info.Params);
 		return result;
