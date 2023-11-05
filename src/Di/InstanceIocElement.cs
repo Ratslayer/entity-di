@@ -4,6 +4,7 @@ namespace EntityDi.Container;
 
 internal sealed record InstanceIocElement(object Instance) : IIocElement
 {
+	bool _injected;
 	public void Assert(Type contract, DiContainer container)
 	{
 		if (Instance is null)
@@ -15,6 +16,11 @@ internal sealed record InstanceIocElement(object Instance) : IIocElement
 
 	public object Resolve(DiContainer container)
 	{
+		if (!_injected)
+		{
+			_injected = true;
+			container.Inject(Instance);
+		}
 		return Instance;
 	}
 }

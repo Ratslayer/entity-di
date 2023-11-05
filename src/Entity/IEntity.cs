@@ -8,13 +8,14 @@ public readonly struct PreSpawnedEvent { }
 public readonly struct SpawnedEvent { }
 public readonly struct DespawnedEvent { }
 public readonly struct PostDespawnedEvent { }
-public readonly record struct UpdatedEvent(float Delta);
-public readonly record struct LateUpdatedEvent(float Delta);
-public readonly record struct FixedUpdatedEvent(float Delta);
 public interface IEntityFactory
 {
 	string Name { get; }
 	IEntity Create(string name, IEntity parent);
+}
+public interface IEntitySingleComponent
+{
+	void Despawn();
 }
 public interface IEntity
 {
@@ -25,19 +26,22 @@ public interface IEntity
 	void Spawn();
 	void Despawn();
 	bool IsSpawned { get; }
+	void AddComponent(IEntitySingleComponent component);
+	void RemoveComponent(IEntitySingleComponent component);
 }
 public sealed record Entity(string Name, IResolver Resolver) : IEntity
 {
 	sealed record AppendedSystem(Type Type, (Type, object)[] Args);
 	readonly List<AppendedSystem> _appends = new();
 	readonly List<ISubscription> _subscriptions = new();
+	readonly List<IEntitySingleComponent> _components = new();
 	IPublisher<CreatedEvent> _created;
 	IPublisher<PreSpawnedEvent> _preSpawned;
 	IPublisher<SpawnedEvent> _spawned;
 	IPublisher<DespawnedEvent> _despawned;
 	IPublisher<PostDespawnedEvent> _postDespawned;
 	bool _initialized;
-
+	public override string ToString() => Name;
 	public bool IsSpawned { get; private set; }
 
 	[Inject]
@@ -67,6 +71,9 @@ public sealed record Entity(string Name, IResolver Resolver) : IEntity
 	public void Despawn()
 	{
 		IsSpawned = false;
+		foreach (var comp in _components)
+			comp.Despawn();
+		_components.Clear();
 		_despawned.Publish();
 		_postDespawned.Publish();
 		foreach (var subscription in _subscriptions)
@@ -105,5 +112,13 @@ public sealed record Entity(string Name, IResolver Resolver) : IEntity
 	void AppendInternal(Type type, (Type, object)[] args)
 	{
 		Resolver.Create(type, args);
+	}
+	public void AddComponent(IEntitySingleComponent component)
+	{
+		_components.Add(component);
+	}
+	public void RemoveComponent(IEntitySingleComponent component)
+	{
+		_components.Remove(component);
 	}
 }

@@ -2,14 +2,6 @@
 using System;
 
 namespace EntityDi;
-public static class World
-{
-	public static IEntity Entity { get; set; }
-	public static void Init(IEntity entity) => Entity = entity;
-	public static void Resolve<T>(ref T instance)
-		where T : class
-		=> Entity.Resolve(ref instance);
-}
 public static class EntityCreationUtils
 {
 	public static IResolver CreateResolver(string name, IResolver parent)
@@ -18,7 +10,7 @@ public static class EntityCreationUtils
 	}
 	public static IEntity CreateEntity(string name, IEntity parent, Action<IEntity> bind)
 	{
-		parent = parent ?? World.Entity;
+		parent ??= World.Entity;
 		var resolver = CreateResolver(name, parent?.Resolver);
 		var entity = new Entity(name, resolver);
 		BindEntity(entity);
