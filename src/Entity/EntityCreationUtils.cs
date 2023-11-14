@@ -27,5 +27,6 @@ public static class EntityCreationUtils
 		entity.Event<SpawnedEvent>();
 		entity.Event<DespawnedEvent>();
 		entity.Event<PostDespawnedEvent>();
+		entity.Event<AttachedEvent>();
 	}
 }

@@ -8,6 +8,7 @@ public readonly struct PreSpawnedEvent { }
 public readonly struct SpawnedEvent { }
 public readonly struct DespawnedEvent { }
 public readonly struct PostDespawnedEvent { }
+public readonly record struct AttachedEvent(IEntity Entity);
 public interface IEntityFactory
 {
 	string Name { get; }
@@ -17,7 +18,7 @@ public interface IEntitySingleComponent
 {
 	void Despawn();
 }
-public interface IEntity
+public interface IEntity : IEntitySingleComponent
 {
 	string Name { get; }
 	IResolver Resolver { get; }
@@ -28,18 +29,22 @@ public interface IEntity
 	bool IsSpawned { get; }
 	void AddComponent(IEntitySingleComponent component);
 	void RemoveComponent(IEntitySingleComponent component);
+	void AttachTo(IEntity entity);
+	void AddAttachedSubscription(IAttachedSubscription subscription);
 }
 public sealed record Entity(string Name, IResolver Resolver) : IEntity
 {
 	sealed record AppendedSystem(Type Type, (Type, object)[] Args);
 	readonly List<AppendedSystem> _appends = new();
 	readonly List<ISubscription> _subscriptions = new();
+	readonly List<IAttachedSubscription> _attachedSubscriptions = new();
 	readonly List<IEntitySingleComponent> _components = new();
 	IPublisher<CreatedEvent> _created;
 	IPublisher<PreSpawnedEvent> _preSpawned;
 	IPublisher<SpawnedEvent> _spawned;
 	IPublisher<DespawnedEvent> _despawned;
 	IPublisher<PostDespawnedEvent> _postDespawned;
+	IPublisher<AttachedEvent> _attached;
 	bool _initialized;
 	public override string ToString() => Name;
 	public bool IsSpawned { get; private set; }
@@ -50,20 +55,22 @@ public sealed record Entity(string Name, IResolver Resolver) : IEntity
 		IPublisher<PreSpawnedEvent> preSpawned,
 		IPublisher<SpawnedEvent> spawned,
 		IPublisher<DespawnedEvent> despawned,
-		IPublisher<PostDespawnedEvent> postDespawned)
+		IPublisher<PostDespawnedEvent> postDespawned,
+		IPublisher<AttachedEvent> attached)
 	{
 		_created = created;
 		_preSpawned = preSpawned;
 		_spawned = spawned;
 		_despawned = despawned;
 		_postDespawned = postDespawned;
+		_attached = attached;
 	}
 	public void AddSubscription(ISubscription subscription)
 	{
 		_subscriptions.Add(subscription);
 		if (!_initialized)
 			return;
-		subscription.Init();
+		subscription.Init(this);
 		if (IsSpawned)
 			subscription.Subscribe();
 	}
@@ -89,7 +96,7 @@ public sealed record Entity(string Name, IResolver Resolver) : IEntity
 			foreach (var append in _appends)
 				AppendExplicit(append.Type, append.Args);
 			foreach (var subscription in _subscriptions)
-				subscription.Init();
+				subscription.Init(this);
 			Subscribe();
 			_created.Publish();
 		}
@@ -121,4 +128,15 @@ public sealed record Entity(string Name, IResolver Resolver) : IEntity
 	{
 		_components.Remove(component);
 	}
+
+	public void AttachTo(IEntity entity)
+	{
+		entity.AddComponent(this);
+		foreach (var sub in _attachedSubscriptions)
+			sub.Subscribe(entity);
+		_attached.Publish(new AttachedEvent(entity));
+	}
+
+	public void AddAttachedSubscription(IAttachedSubscription subscription)
+		=> _attachedSubscriptions.Add(subscription);
 }
