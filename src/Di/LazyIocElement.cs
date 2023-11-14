@@ -1,8 +1,10 @@
 ﻿using System;
-using System.Linq;
 
 namespace EntityDi.Container;
-internal abstract record TypedIocElement(Type InstanceType, bool ResolveOnInstall) : IIocElement
+internal abstract record TypedIocStrategy(
+	Type InstanceType,
+	bool ResolveOnInstall,
+	(Type, object)[] Args) : IIocStrategy
 {
 	object _instance;
 	public void Assert(Type contract, DiContainer container)
@@ -13,11 +15,11 @@ internal abstract record TypedIocElement(Type InstanceType, bool ResolveOnInstal
 
 	public object Resolve(DiContainer container)
 	{
-		_instance ??= container.Create(InstanceType, Enumerable.Empty<(Type, object)>());
+		_instance ??= container.Create(InstanceType, Args);
 		return _instance;
 	}
 }
-internal sealed record LazyIocElement(Type InstanceType, bool ResolveOnInstall) 
-	: TypedIocElement(InstanceType,ResolveOnInstall);
-internal sealed record NonLazyIocElement(Type InstanceType, bool ResolveOnInstall)
-	: TypedIocElement(InstanceType, ResolveOnInstall), IInstallElement;
+internal sealed record LazyIocElement(Type InstanceType, bool ResolveOnInstall, (Type, object)[] Args)
+	: TypedIocStrategy(InstanceType, ResolveOnInstall, Args);
+internal sealed record NonLazyIocElement(Type InstanceType, bool ResolveOnInstall, (Type, object)[] Args)
+	: TypedIocStrategy(InstanceType, ResolveOnInstall, Args), IInstallElement;

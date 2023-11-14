@@ -14,11 +14,11 @@ public interface IEntityFactory
 	string Name { get; }
 	IEntity Create(string name, IEntity parent);
 }
-public interface IEntitySingleComponent
+public interface IEntityChild
 {
 	void Despawn();
 }
-public interface IEntity : IEntitySingleComponent
+public interface IEntity : IEntityChild
 {
 	string Name { get; }
 	IResolver Resolver { get; }
@@ -27,8 +27,8 @@ public interface IEntity : IEntitySingleComponent
 	void Spawn();
 	void Despawn();
 	bool IsSpawned { get; }
-	void AddComponent(IEntitySingleComponent component);
-	void RemoveComponent(IEntitySingleComponent component);
+	void AddChild(IEntityChild child);
+	void RemoveChild(IEntityChild child);
 	void AttachTo(IEntity entity);
 	void AddAttachedSubscription(IAttachedSubscription subscription);
 }
@@ -38,7 +38,7 @@ public sealed record Entity(string Name, IResolver Resolver) : IEntity
 	readonly List<AppendedSystem> _appends = new();
 	readonly List<ISubscription> _subscriptions = new();
 	readonly List<IAttachedSubscription> _attachedSubscriptions = new();
-	readonly List<IEntitySingleComponent> _components = new();
+	readonly List<IEntityChild> _components = new();
 	IPublisher<CreatedEvent> _created;
 	IPublisher<PreSpawnedEvent> _preSpawned;
 	IPublisher<SpawnedEvent> _spawned;
@@ -120,18 +120,18 @@ public sealed record Entity(string Name, IResolver Resolver) : IEntity
 	{
 		Resolver.Create(type, args);
 	}
-	public void AddComponent(IEntitySingleComponent component)
+	public void AddChild(IEntityChild component)
 	{
 		_components.Add(component);
 	}
-	public void RemoveComponent(IEntitySingleComponent component)
+	public void RemoveChild(IEntityChild component)
 	{
 		_components.Remove(component);
 	}
 
 	public void AttachTo(IEntity entity)
 	{
-		entity.AddComponent(this);
+		entity.AddChild(this);
 		foreach (var sub in _attachedSubscriptions)
 			sub.Subscribe(entity);
 		_attached.Publish(new AttachedEvent(entity));

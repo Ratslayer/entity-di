@@ -7,7 +7,7 @@ namespace EntityDi.Container;
 public sealed class InjectAttribute : Attribute { }
 public sealed class DiContainer : IResolver
 {
-	readonly Dictionary<Type, IIocElement> _elements = new();
+	readonly Dictionary<Type, IIocStrategy> _elements = new();
 	readonly DiContainer _parent;
 	public string Name { get; init; }
 	public bool Installed { get; private set; }
@@ -18,7 +18,7 @@ public sealed class DiContainer : IResolver
 	}
 	public DiException Exception(string msg)
 		=> new DiException($"[{Name}] {msg}");
-	private void Bind(Type contract, IIocElement element)
+	private void Bind(Type contract, IIocStrategy element)
 	{
 		if (Installed)
 			throw Exception($"Attempting to bind {contract.Name} after installing.");
@@ -26,9 +26,11 @@ public sealed class DiContainer : IResolver
 		if (!_elements.TryAdd(contract, element))
 			throw Exception($"Attempted dublicate binding for contact {contract.Name}");
 	}
-	public void BindLazy(Type contract, Type imp) => Bind(contract, new LazyIocElement(imp, false));
-	public void Bind(Type contract, Type imp) => Bind(contract, new NonLazyIocElement(imp, true));
-	public void BindInstance(Type contract, object instance) 
+	public void BindLazy(Type contract, Type imp, (Type, object)[] args)
+		=> Bind(contract, new LazyIocElement(imp, false, args));
+	public void Bind(Type contract, Type imp, (Type, object)[] args)
+		=> Bind(contract, new NonLazyIocElement(imp, true, args));
+	public void BindInstance(Type contract, object instance)
 		=> Bind(contract, new InstanceIocElement(instance));
 	public bool TryResolve(Type contract, out object result)
 	{

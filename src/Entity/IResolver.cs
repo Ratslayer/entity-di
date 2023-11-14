@@ -4,8 +4,8 @@ using System.Collections.Generic;
 namespace EntityDi;
 public interface IResolver
 {
-	void Bind(Type contract, Type imp);
-	void BindLazy(Type contract, Type imp);
+	void Bind(Type contract, Type imp, (Type, object)[] args);
+	void BindLazy(Type contract, Type imp, (Type, object)[] args);
 	void BindInstance(Type contract, object instance);
 	bool TryResolve(Type contract, out object instance);
 	void Inject(object instance);

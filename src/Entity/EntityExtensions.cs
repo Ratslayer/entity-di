@@ -31,14 +31,14 @@ public static class EntityExtensions
 	}
 	public static DiException Exception(this IEntity entity, string msg)
 		=> entity.Resolver.Exception(msg);
-	public static void Bind<ContractType, ImpType>(this IEntity entity)
-		=> entity.Resolver.Bind(typeof(ContractType), typeof(ImpType));
-	public static void Bind<T>(this IEntity entity)
-		=> entity.Bind<T, T>();
-	public static void BindLazy<ContractType, ImpType>(this IEntity entity)
-		=> entity.Resolver.BindLazy(typeof(ContractType), typeof(ImpType));
-	public static void BindLazy<T>(this IEntity entity)
-		=> entity.BindLazy<T, T>();
+	public static void Bind<ContractType, ImpType>(this IEntity entity, params object[] args)
+		=> entity.Resolver.Bind(typeof(ContractType), typeof(ImpType), ConvertArgs<ImpType>(entity, args));
+	public static void Bind<T>(this IEntity entity, params object[] args)
+		=> entity.Bind<T, T>(args);
+	public static void BindLazy<ContractType, ImpType>(this IEntity entity, params object[] args)
+		=> entity.Resolver.BindLazy(typeof(ContractType), typeof(ImpType), ConvertArgs<ImpType>(entity, args));
+	public static void BindLazy<T>(this IEntity entity, params object[] args)
+		=> entity.BindLazy<T, T>(args);
 	public static void Event<T>(this IEntity entity)
 		=> entity.BindInstance<IPublisher<T>>(new Event<T>());
 	public static void BindInstance<T>(this IEntity entity, T instance)
@@ -47,16 +47,29 @@ public static class EntityExtensions
 		=> entity.AppendExplicit(typeof(T), args);
 	public static void Append<T>(this IEntity entity, params object[] args)
 	{
-		if(args is null)
-		{
-			entity.AppendExplicit<T>();
-			return;
-		}
+		var convertedArgs = ConvertArgs<T>(entity, args);
+		AppendExplicit<T>(entity, convertedArgs);
+		//if (args is null)
+		//{
+		//	entity.AppendExplicit<T>();
+		//	return;
+		//}
+		//if (args.Contains(o => o is null))
+		//	throw entity.Exception($"Tried to append {typeof(T).FullName} with some args being null.");
+		//var convertedArgs = new (Type, object)[args.Length];//ArrayManager<(Type, object)>.GetArgArray(args.Length);
+		//for (int i = 0; i < convertedArgs.Length; i++)
+		//	convertedArgs[i] = (args[i].GetType(), args[i]);
+		//AppendExplicit<T>(entity, convertedArgs);
+	}
+	static (Type, object)[] ConvertArgs<T>(IEntity entity, object[] args)
+	{
+		if (args is null || args.Length == 0)
+			return Array.Empty<(Type, object)>();
 		if (args.Contains(o => o is null))
-			throw entity.Exception($"Tried to append {typeof(T).FullName} with some args being null.");
+			throw entity.Exception($"Tried to create {typeof(T).FullName} with some args being null.");
 		var convertedArgs = new (Type, object)[args.Length];//ArrayManager<(Type, object)>.GetArgArray(args.Length);
 		for (int i = 0; i < convertedArgs.Length; i++)
 			convertedArgs[i] = (args[i].GetType(), args[i]);
-		AppendExplicit<T>(entity, convertedArgs);
+		return convertedArgs;
 	}
 }

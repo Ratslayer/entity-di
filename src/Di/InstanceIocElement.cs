@@ -2,7 +2,7 @@
 
 namespace EntityDi.Container;
 
-internal sealed record InstanceIocElement(object Instance) : IIocElement
+internal sealed record InstanceIocElement(object Instance) : IIocStrategy
 {
 	bool _injected;
 	public void Assert(Type contract, DiContainer container)
