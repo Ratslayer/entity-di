@@ -1,50 +1,65 @@
-﻿using EntityDi.Container;
-using System;
+﻿using System;
+using System.Collections.Generic;
 
 namespace EntityDi;
+public interface IAttachedEvent : IOnDespawn
+{
+	void AttachTo(IEntity entity);
+}
+public interface ISubscription : IOnSpawn, IOnDespawn
+{
+}
+public sealed record Subscription<EventType>(
+	ISubscriber<EventType> Subscriber,
+	Action<EventType> Action)
+	: ISubscription
+{
+	public void Spawn()
+	{
+		Subscriber.Subscribe(Action);
+	}
 
-public interface ISubscription
-{
-	void Init(IEntity entity);
-	void Subscribe();
-	void Unsubscribe();
+	public void Despawn()
+	{
+		Subscriber.Unsubscribe(Action);
+	}
 }
-public interface IAttachedSubscription
+public sealed record AttachedEventSubscription<T>(Action<T> Action) : IAttachedEvent
 {
-	void Subscribe(IEntity entity);
-	void Unsubscribe();
-}
-public sealed record AttachedEventSubscription<T>(Action<T> Action) : IAttachedSubscription
-{
-	ISubscriber<T> _subscriber;
-	public void Subscribe(IEntity entity)
+	readonly List<ISubscription> _subscriptions = new();
+
+	public void Despawn()
+	{
+		foreach (var subscription in _subscriptions)
+			subscription.Despawn();
+		_subscriptions.Clear();
+	}
+
+	public void AttachTo(IEntity entity)
 	{
 		if (entity.TryResolve(out IPublisher<T> publisher))
 		{
-			_subscriber = (ISubscriber<T>)publisher;
-			_subscriber.Subscribe(Action);
+			var sub = new Subscription<T>((ISubscriber<T>)publisher, Action);
+			_subscriptions.Add(sub);
+			entity.AddSubscription(sub, true);
+			sub.Spawn();
 		}
-		else _subscriber = null;
-	}
-
-	public void Unsubscribe()
-	{
-		_subscriber?.Unsubscribe(Action);
 	}
 }
-public sealed record EventSubscription<T>(Action<T> Action) : ISubscription
+public sealed record EventSubscription<T>(Action<T> Action) : IOnInit, IOnSpawn, IOnDespawn
 {
-	IPublisher<T> _subscriber;
-	public void Init(IEntity entity) => _subscriber = entity.Resolve<IPublisher<T>>();
+	ISubscriber<T> _subscriber;
+	public void Init(IEntity entity) => _subscriber = (ISubscriber<T>)entity.Resolve<IPublisher<T>>();
 
-	public void Unsubscribe()
+	public void Despawn()
 	{
-		((ISubscriber<T>)_subscriber).Unsubscribe(Action);
+		_subscriber.Unsubscribe(Action);
 	}
-	public void Subscribe()
+	public void Spawn()
 	{
-		((ISubscriber<T>)_subscriber).Subscribe(Action);
+		_subscriber.Subscribe(Action);
 	}
+	public override string ToString() => $"Subscription<{typeof(T).FullName}>";
 }
 [AttributeUsage(AttributeTargets.Method)]
 public sealed class SubscribeAttribute : Attribute { }

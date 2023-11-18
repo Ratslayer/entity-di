@@ -9,7 +9,7 @@ public interface IResolver
 	void BindInstance(Type contract, object instance);
 	bool TryResolve(Type contract, out object instance);
 	void Inject(object instance);
-	object Create(Type contract, IEnumerable<(Type, object)> args);
+	object Create(Type contract, IList<(Type, object)> args);
 	void Install();
 	//debug data
 	string Name { get; }

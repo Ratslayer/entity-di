@@ -49,7 +49,7 @@ public sealed class DiContainer : IResolver
 		result = default;
 		return false;
 	}
-	public object Create(Type instanceType, IEnumerable<(Type, object)> instanceArgs)
+	public object Create(Type instanceType, IList<(Type, object)> instanceArgs)
 	{
 		var result = DiCreationUtils.Create(this, instanceType, instanceArgs);
 		Inject(result);

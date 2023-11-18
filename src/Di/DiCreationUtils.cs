@@ -8,7 +8,8 @@ public static class DiCreationUtils
 {
 	static readonly Dictionary<Type, CreationInfo> _infoCache = new();
 	sealed record CreationInfo(ConstructorInfo Constructor, ParameterInfo[] ParamInfos, object[] Params);
-	public static object Create(DiContainer container, Type instanceType, IEnumerable<(Type, object)> instanceArgs)
+	static readonly List<bool> _usedParams = new();
+	public static object Create(DiContainer container, Type instanceType, IList<(Type, object)> instanceArgs)
 	{
 		if (!_infoCache.TryGetValue(instanceType, out var info))
 		{
@@ -22,15 +23,30 @@ public static class DiCreationUtils
 			info = new(activator, parameters, args);
 			_infoCache[instanceType] = info;
 		}
-
+		var name = instanceType.Name;
+		//init usage map
+		_usedParams.Clear();
+		for (var i = 0; i < instanceArgs.Count; i++)
+			_usedParams.Add(false);
 		for (var i = 0; i < info.Params.Length; i++)
 		{
 			var type = info.ParamInfos[i].ParameterType;
-			if (instanceArgs.TryGet(out var arg, a => type.IsAssignableFrom(a.Item1)))
-				info.Params[i] = arg.Item2;
+			var foundInArgs = false;
+			for (var j = 0; j < _usedParams.Count; j++)
+				if (!_usedParams[j] && type.IsAssignableFrom(instanceArgs[j].Item1))
+				{
+					info.Params[i] = instanceArgs[j].Item2;
+					_usedParams[j] = true;
+					foundInArgs = true;
+					break;
+				}
+			//if (instanceArgs.TryGet(out var arg, a => type.IsAssignableFrom(a.Item1)))
+			//	info.Params[i] = arg.Item2;
+			if (foundInArgs)
+				continue;
 			else if (container.TryResolve(type, out var resolvedArg))
 				info.Params[i] = resolvedArg;
-			else container.Exception($"Couldn't create {instanceType.FullName}. {type.FullName} is not bound, nor among args.");
+			else throw container.Exception($"Couldn't create {instanceType.FullName}. {type.FullName} is not bound, nor among args.");
 		}
 		var result = info.Constructor.Invoke(info.Params);
 		return result;
