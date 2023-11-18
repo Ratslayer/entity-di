@@ -28,18 +28,18 @@ public interface IEntityFactory
 	string Name { get; }
 	IEntity Create(string name, IEntity parent);
 }
-public interface IEntitySub
+public interface IEntityComponent
 {
 }
-public interface IOnInit : IEntitySub
+public interface IOnInit : IEntityComponent
 {
 	void Init(IEntity entity);
 }
-public interface IOnSpawn : IEntitySub
+public interface IOnSpawn : IEntityComponent
 {
 	void Spawn();
 }
-public interface IOnDespawn : IEntitySub
+public interface IOnDespawn : IEntityComponent
 {
 	void Despawn();
 }
@@ -47,10 +47,8 @@ public interface IEntity : IOnSpawn, IOnDespawn
 {
 	string Name { get; }
 	IResolver Resolver { get; }
-	void AddSubscription(IEntitySub subscription, bool removeOnDespawn = true);
-	void RemoveSubscription(IEntitySub subscription);
-	//void AddDespawnable(IOnDespawn disposable);
-	//void RemoveDespawnable(IOnDespawn disposable);
+	void AddComponent(IEntityComponent subscription, bool removeOnDespawn = true);
+	void RemoveComponent(IEntityComponent subscription);
 	void AddAttachment(IAttachedEvent attachment);
 	void AttachTo(IEntity entity);
 	void AppendExplicit(Type type, params (Type, object)[] args);
@@ -67,8 +65,8 @@ public sealed record Entity(string Name, IResolver Resolver) : IEntity
 		}
 	}
 	//readonly List<AppendedSystem> _appends = new();
-	readonly List<IEntitySub> _subscriptions = new();
-	readonly List<IEntitySub> _tempSubscriptions = new();
+	readonly List<IEntityComponent> _subscriptions = new();
+	readonly List<IEntityComponent> _tempSubscriptions = new();
 	readonly List<IAttachedEvent> _attachments = new();
 	//readonly List<IEntityChild> _components = new();
 	IPublisher<CreatedEvent> _created;
@@ -94,7 +92,7 @@ public sealed record Entity(string Name, IResolver Resolver) : IEntity
 		_despawned = despawned;
 		_postDespawned = postDespawned;
 	}
-	public void AddSubscription(IEntitySub subscription, bool removeOnDespawn)
+	public void AddComponent(IEntityComponent subscription, bool removeOnDespawn)
 	{
 		var subs = removeOnDespawn ? _tempSubscriptions : _subscriptions;
 		subs.Add(subscription);
@@ -168,7 +166,7 @@ public sealed record Entity(string Name, IResolver Resolver) : IEntity
 		Resolver.Create(type, args);
 	}
 
-	public void RemoveSubscription(IEntitySub subscription)
+	public void RemoveComponent(IEntityComponent subscription)
 	{
 		_subscriptions.Remove(subscription);
 	}
@@ -182,7 +180,7 @@ public sealed record Entity(string Name, IResolver Resolver) : IEntity
 	{
 		foreach (var attachment in _attachments)
 			attachment.AttachTo(entity);
-		entity.AddSubscription(entity);
+		entity.AddComponent(entity);
 	}
 
 	//public void AddDespawnable(IOnDespawn disposable)

@@ -41,8 +41,7 @@ public sealed record AttachedEventSubscription<T>(Action<T> Action) : IAttachedE
 		{
 			var sub = new Subscription<T>((ISubscriber<T>)publisher, Action);
 			_subscriptions.Add(sub);
-			entity.AddSubscription(sub, true);
-			sub.Spawn();
+			entity.AddComponent(sub, true);
 		}
 	}
 }
