@@ -18,6 +18,7 @@ public static class EntitySubscriptionExtensions
 	//}
 }
 public readonly struct CreatedEvent { }
+public readonly struct DestroyedEvent { }
 public readonly struct PreSpawnedEvent { }
 public readonly struct SpawnedEvent { }
 public readonly struct DespawnedEvent { }

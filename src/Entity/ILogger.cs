@@ -7,5 +7,9 @@ public enum LogType
 }
 public interface ILogger
 {
-	void Log(string message, LogType type);
+	void LogMessage(string message, LogType type);
+}
+public static class LoggerExtensions
+{
+	public static void Log(this ILogger logger, string msg) => logger.LogMessage(msg, LogType.Info);
 }

@@ -26,13 +26,15 @@ public static class EntityExtensions
 	public static T Resolve<T>(this IEntity entity)
 	{
 		if (!entity.TryResolve<T>(out var result))
-			throw entity.Exception($"{typeof(T).Name} contract not found.");
+			throw entity.Exception($"{typeof(T).FullName} contract not found.");
 		return result;
 	}
 	public static DiException Exception(this IEntity entity, string msg)
 		=> entity.Resolver.Exception(msg);
 	public static void Bind<ContractType, ImpType>(this IEntity entity, params object[] args)
 		=> entity.Resolver.Bind(typeof(ContractType), typeof(ImpType), ConvertArgs<ImpType>(entity, args));
+	public static void BindExplicit<ContractType, ImpType>(this IEntity entity, params (Type, object)[] args)
+		=> entity.Resolver.Bind(typeof(ContractType), typeof(ImpType), args);
 	public static void Bind<T>(this IEntity entity, params object[] args)
 		=> entity.Bind<T, T>(args);
 	public static void BindLazy<ContractType, ImpType>(this IEntity entity, params object[] args)
@@ -64,14 +66,14 @@ public static class EntityExtensions
 	public static bool Has<VarType>(this IEntity entity, out VarType var)
 		where VarType : IVariable
 	{
-		if(entity is null)
+		if (entity is null)
 		{
 			var = default;
 			return false;
 		}
 		return entity.TryResolve(out var);
 	}
-	public static bool Has<T1,T2>(this IEntity entity, out T1 var1, out T2 var2)
+	public static bool Has<T1, T2>(this IEntity entity, out T1 var1, out T2 var2)
 		where T1 : IVariable
 		where T2 : IVariable
 
@@ -83,10 +85,10 @@ public static class EntityExtensions
 			return false;
 		}
 		var result = entity.Has(out var1);
-		result&= entity.Has(out var2);
+		result &= entity.Has(out var2);
 		return result;
 	}
-	public static bool Has<T1, T2,T3>(this IEntity entity, out T1 var1, out T2 var2, out T3 var3)
+	public static bool Has<T1, T2, T3>(this IEntity entity, out T1 var1, out T2 var2, out T3 var3)
 		where T1 : IVariable
 		where T2 : IVariable
 		where T3 : IVariable
