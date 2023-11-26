@@ -7,7 +7,8 @@ public static class EntityExtensions
 {
 	public static bool TryResolve<T>(this IEntity entity, out T instance)
 	{
-		if (entity.Resolver.TryResolve(typeof(T), out var obj))
+		if (entity is not null
+			&& entity.Resolver.TryResolve(typeof(T), out var obj))
 		{
 			instance = (T)obj;
 			return true;
