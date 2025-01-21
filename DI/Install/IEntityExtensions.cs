@@ -11,10 +11,6 @@ namespace BB.Di
 				throw new DiException($"{entity.Name}: Could not resolve {typeof(T).Name}");
 			return instance;
 		}
-		public static IEntity GetEntityRef(this Component comp)
-			=> comp.gameObject.GetComponent<EntityGameObject>().Entity._ref;
-		public static IEntity GetEntityRef(this GameObject go)
-			=> go.GetComponent<EntityGameObject>().Entity._ref;
 		public static bool Has<T>(this IEntity entity, out T instance)
 		{
 			if (entity is not null

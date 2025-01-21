@@ -1,5 +1,4 @@
 ﻿using System;
-using UnityEngine;
 using BB.Di;
 namespace BB
 {
@@ -33,7 +32,5 @@ namespace BB
 		public override int GetHashCode() => base.GetHashCode();
 
 		public void Dispose() => this.Despawn();
-
-		public Transform Root => this.Has(out Root root) ? root.Transform : null;
 	}
 }

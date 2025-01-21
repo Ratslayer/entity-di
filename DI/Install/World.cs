@@ -4,13 +4,11 @@ using UnityEngine;
 using BB.Di;
 namespace BB
 {
-	public static class World
+	public static partial class World
 	{
 		static readonly List<EntityImpl> _entities = new();
 		static EntityImpl TopEntity => _entities.Count > 0 ? _entities[^1] : null;
-		public static Entity Entity => EntityRef.GetToken();
-		public static IEntity EntityRef
-			=> Application.isPlaying ? TopEntity : EditorWorld.Entity;
+		
 		public static void Init(Action<IDiContainer> install)
 		{
 			while (_entities.Count > 0)
@@ -42,8 +40,7 @@ namespace BB
 			if (_entities.Count > 0)
 				_entities.RemoveAt(_entities.Count - 1);
 		}
-		public static void RaiseEvent<T>(T msg = default) => Entity.RaiseEvent(msg);
-		public static bool Has<T>(out T system) => EntityRef.Has(out system);
+		
 		public static Entity Spawn(IEntityInstaller installer) => Entity.SpawnChild(installer);
 		public static T Require<T>()
 		{
@@ -64,5 +61,10 @@ namespace BB
 			foreach (var _ in _entities.Count)
 				PopWorld();
 		}
+		public static IEntity EntityRef
+			=> Application.isPlaying ? TopEntity : null;//EditorWorld.Entity;
+		public static Entity Entity => EntityRef.GetToken();
+		public static void RaiseEvent<T>(T msg = default) => Entity.RaiseEvent(msg);
+		public static bool Has<T>(out T system) => EntityRef.Has(out system);
 	}
 }

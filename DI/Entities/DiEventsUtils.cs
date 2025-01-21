@@ -245,20 +245,21 @@ namespace BB
 		{
 			Action<T> action;
 			var hasArgs = method.GetParameters().Length > 0;
-			if (method.ReturnType == typeof(IEnumerator))
-			{
-				if (hasArgs)
-				{
-					var coroutine = CreateDelegate<Func<T, IEnumerator>>();
-					action = arg => TimingUtils.StartCoroutine(coroutine(arg));
-				}
-				else
-				{
-					var coroutine = CreateDelegate<Func<IEnumerator>>();
-					action = _ => TimingUtils.StartCoroutine(coroutine());
-				}
-			}
-			else if (method.ReturnType == typeof(UniTaskVoid))
+			//if (method.ReturnType == typeof(IEnumerator))
+			//{
+			//	if (hasArgs)
+			//	{
+			//		var coroutine = CreateDelegate<Func<T, IEnumerator>>();
+			//		action = arg => TimingUtils.StartCoroutine(coroutine(arg));
+			//	}
+			//	else
+			//	{
+			//		var coroutine = CreateDelegate<Func<IEnumerator>>();
+			//		action = _ => TimingUtils.StartCoroutine(coroutine());
+			//	}
+			//}
+			//else 
+			if (method.ReturnType == typeof(UniTaskVoid))
 			{
 				if (hasArgs)
 				{
@@ -298,13 +299,14 @@ namespace BB
 				action = null;
 				return false;
 			}
-			if (method.ReturnType == typeof(IEnumerator))
-			{
-				var coroutine = (Func<UpdateTime, IEnumerator>)
-					Delegate.CreateDelegate(typeof(Func<IEnumerator>), target, method);
-				action = time => TimingUtils.StartCoroutine(coroutine(time));
-			}
-			else if (method.ReturnType == typeof(UniTaskVoid))
+			//if (method.ReturnType == typeof(IEnumerator))
+			//{
+			//	var coroutine = (Func<UpdateTime, IEnumerator>)
+			//		Delegate.CreateDelegate(typeof(Func<IEnumerator>), target, method);
+			//	action = time => TimingUtils.StartCoroutine(coroutine(time));
+			//}
+			//else
+			if (method.ReturnType == typeof(UniTaskVoid))
 			{
 				var asyncMethod = (Func<UpdateTime, UniTaskVoid>)
 					Delegate.CreateDelegate(typeof(Func<UniTaskVoid>), target, method);
@@ -324,13 +326,14 @@ namespace BB
 				action = null;
 				return false;
 			}
-			if (method.ReturnType == typeof(IEnumerator))
-			{
-				var coroutine = (Func<IEnumerator>)
-					Delegate.CreateDelegate(typeof(Func<IEnumerator>), target, method);
-				action = () => TimingUtils.StartCoroutine(coroutine());
-			}
-			else if (method.ReturnType == typeof(UniTaskVoid))
+			//if (method.ReturnType == typeof(IEnumerator))
+			//{
+			//	var coroutine = (Func<IEnumerator>)
+			//		Delegate.CreateDelegate(typeof(Func<IEnumerator>), target, method);
+			//	action = () => TimingUtils.StartCoroutine(coroutine());
+			//}
+			//else 
+			if (method.ReturnType == typeof(UniTaskVoid))
 			{
 				var asyncMethod = (Func<UniTaskVoid>)
 					Delegate.CreateDelegate(typeof(Func<UniTaskVoid>), target, method);
