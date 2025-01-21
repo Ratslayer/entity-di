@@ -1,0 +1,144 @@
+﻿using BB;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using UnityEngine;
+public static class ThrowHelper
+{
+	public static void IfNull(object obj)
+	{
+		if (obj is null)
+			throw new NullReferenceException();
+	}
+}
+public static class Log
+{
+	public static ILogger Logger { get; private set; }
+	public static void BindLogger(ILogger logger) => Logger = logger;
+}
+public static class ILoggerExtensions
+{
+	public static void Info(this ILogger logger, string msg) => logger.Log(msg, LogLevel.Info);
+	public static void Error(this ILogger logger, string msg) => logger.Log(msg, LogLevel.Error);
+	public static void Warning(this ILogger logger, string msg) => logger.Log(msg, LogLevel.Warning);
+	public static void LogException(this ILogger logger, Exception exception)
+		=> logger.LogException(exception);
+	public static bool Assert(this ILogger logger, bool condition, string msg)
+	{
+		if (!condition)
+			logger.Error(msg);
+		return condition;
+	}
+	public static LoggerUnityObjectContext UseUnityContext(this ILogger logger, UnityEngine.Object context)
+		=> new((UnityLogger)logger, context);
+	public static LoggerPrefix UseContext(this ILogger logger, object prefix)
+		=> new(logger, prefix);
+}
+public readonly struct LoggerPrefix : IDisposable
+{
+	readonly object _prefix;
+	readonly ILogger _logger;
+	public LoggerPrefix(ILogger logger, object prefix)
+	{
+		_prefix = prefix;
+		_logger = logger;
+		_logger.AddContext(_prefix);
+	}
+
+	public void Dispose()
+	{
+		_logger.RemovePrefix(_prefix);
+	}
+}
+public readonly struct LoggerUnityObjectContext : IDisposable
+{
+	readonly UnityEngine.Object _context;
+	readonly UnityLogger _logger;
+	public LoggerUnityObjectContext(UnityLogger logger, UnityEngine.Object context)
+	{
+		_context = context;
+		_logger = logger;
+		_logger._contexts.Add(_context);
+	}
+
+	public void Dispose()
+	{
+		_logger._contexts.Remove(_context);
+	}
+}
+public sealed class UnityLogger : ILogger
+{
+	public readonly List<UnityEngine.Object> _contexts = new();
+	readonly List<object>
+		_prefixes = new(),
+		_singleUsePrefixes = new();
+	public void Log(string msg, LogLevel level)
+	{
+		var fullMessage = GetCurrentMessage(msg, false, null);
+		var context = _contexts.LastOrDefault();
+		switch (level)
+		{
+			case LogLevel.Error:
+				Debug.LogError(fullMessage, context);
+				break;
+			case LogLevel.Warning:
+				Debug.LogWarning(fullMessage, context);
+				break;
+			default:
+				Debug.Log(fullMessage, context);
+				break;
+		}
+	}
+	public void LogException(Exception exception)
+	{
+		var tags = GetCurrentMessage(null, true, "#FF0000");
+		throw new Exception(tags, exception);
+	}
+	public void AddContext(object prefix) => _prefixes.Add(prefix);
+	public void RemovePrefix(object prefix)
+	{
+		_singleUsePrefixes.Add(prefix);
+		_prefixes.Remove(prefix);
+	}
+	string GetCurrentMessage(string msg, bool appendSingleUse, string color)
+	{
+		//build message
+		using var builder = PooledStringBuilder.GetPooled();
+		if (color is not null)
+			builder.Append($"<color={color}>");
+		AppendPrefixes(_prefixes);
+		if (appendSingleUse)
+			AppendPrefixes(_singleUsePrefixes);
+		_singleUsePrefixes.Clear();
+		if (msg is not null)
+			builder.Append($" {msg}");
+		if (color is not null)
+			builder.Append("</color>");
+		var fullMessage = builder.ToString();
+		return fullMessage;
+		void AppendPrefixes(List<object> prefixes)
+		{
+			foreach (var i in -prefixes.Count)
+			{
+				var prefix = prefixes[i];
+				var prefixName = prefix is null ? "N/A" : prefix.ToString();
+				builder.Append($"[{prefixName}]");
+			}
+		}
+	}
+
+
+}
+public enum LogLevel
+{
+	Info,
+	Warning,
+	Error
+}
+public interface ILogger
+{
+	void Log(string msg, LogLevel level);
+	void LogException(Exception exception);
+	void AddContext(object prefix);
+	void RemovePrefix(object prefix);
+}
