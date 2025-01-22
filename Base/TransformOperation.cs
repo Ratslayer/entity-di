@@ -147,6 +147,7 @@ public readonly struct TransformOperation
 	public static TransformOperation ParentReset(Transform parent)
 		=> new(parent.position, parent.rotation, parent);
 	public static implicit operator TransformOperation(Transform parent) => new(parent);
+	public static implicit operator TransformOperation(Vector3 position) => new(position);
 }
 public static class TransformArgsExtensions
 {
