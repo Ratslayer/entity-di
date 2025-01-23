@@ -290,6 +290,8 @@ namespace BB.Di
 			CurrentSpawnId = 0;
 			DetachFromCurrentEntity();
 			ClearExternalSubscriptions();
+			if (_effectiveState != EntityState.Disposed)
+				_pool.Return(this);
 		}
 		void FinalizeStateChange()
 		{
