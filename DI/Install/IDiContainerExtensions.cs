@@ -154,21 +154,5 @@ namespace BB.Di
 			strategy.Params |= IocParams.BindEvents;
 			return strategy;
 		}
-		//public static IDiStrategy WithArgs(
-		//	this IDiConstructorStrategy strategy,
-		//	params object[] args)
-		//	=> strategy.SetConstructorArgs(ConvertArgs(strategy, args));
-		//static (Type, object)[] ConvertArgs(IDiConstructorStrategy strategy, object[] args)
-		//{
-		//	using var _ = Log.Logger.UseContext(strategy);
-		//	if (args is null || args.Length == 0)
-		//		return Array.Empty<(Type, object)>();
-		//	if (args.Contains(o => o is null))
-		//		throw Log.Logger.Exception($"Some args passed implicitly are null.");
-		//	var convertedArgs = new (Type, object)[args.Length];
-		//	for (int i = 0; i < convertedArgs.Length; i++)
-		//		convertedArgs[i] = (args[i].GetType(), args[i]);
-		//	return convertedArgs;
-		//}
 	}
 }
