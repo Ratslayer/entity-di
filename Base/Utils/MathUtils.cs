@@ -21,7 +21,7 @@ public static class MathUtils
 		=> d >= min && d <= max;
 	public static bool IsZero(this float value) => value.Approximately(0);
 	public static bool IsZero(this double value) => value.Approximately(0);
-
+	public static bool NotZero(this double value) => !value.IsZero();
 	public static bool LessThanOrEquals(this float v1, float v2)
 		=> v1 <= v2 + _epsilon;
 	public static bool LessThanOrEquals(this double v1, double v2)
