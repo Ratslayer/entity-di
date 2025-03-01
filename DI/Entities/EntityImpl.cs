@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
-using System.Xml.Linq;
 namespace BB.Di
 {
-	public partial struct UpdateTime
+	public readonly partial struct UpdateTime
 	{
 		public readonly float _delta;
+
+		public static implicit operator float(UpdateTime time)
+			=> time._delta;
 	}
 	public sealed partial class EntityImpl :
 		IEntity,
@@ -58,7 +60,6 @@ namespace BB.Di
 			using var _ = Log.Logger.UseContext(this);
 			Log.Logger.Info($"Entity is being destroyed.");
 		}
-		public event Action ExternalDespawned;
 		public void FixedUpdate(UpdateTime time)
 		{
 			FixedUpdateEvent?.Invoke(time);
@@ -115,11 +116,11 @@ namespace BB.Di
 			LateUpdateEvent,
 			FixedUpdateEvent;
 		private readonly List<ISubscription> _subscriptions = new();
-		private readonly List<IExternalSubscription> _externalSubscriptions = new();
+		private readonly List<IAttachedSubscription> _externalSubscriptionsOld = new();
 		public void RegisterSubscription(ISubscription sub)
 			=> _subscriptions.Add(sub);
-		public void RegisterExternalSubscription(IExternalSubscription subscription)
-			=> _externalSubscriptions.Add(subscription);
+		public void RegisterExternalSubscription(IAttachedSubscription subscription)
+			=> _externalSubscriptionsOld.Add(subscription);
 		#endregion
 		#region Container
 		readonly Dictionary<Type, IDiStrategy> _elements = new();
@@ -256,10 +257,16 @@ namespace BB.Di
 		void RaiseDespawnedStateEvent()
 		{
 			DespawnEvent?.Invoke();
+			foreach (var sub in _externalSubscriptions)
+				if (sub is IOnDespawn d)
+					d.OnDespawn();
 		}
 		void RaiseSpawnedStateEvent()
 		{
 			SpawnEvent?.Invoke();
+			foreach (var sub in _externalSubscriptions)
+				if (sub is IOnSpawn s)
+					s.OnSpawn();
 			PostSpawnEvent?.Invoke();
 		}
 		void RaiseEnableStateEvent()
@@ -290,6 +297,7 @@ namespace BB.Di
 			CurrentSpawnId = 0;
 			DetachFromCurrentEntity();
 			ClearExternalSubscriptions();
+			_subscriptions.DisposeAndClear();
 			if (_effectiveState != EntityState.Disposed)
 				_pool.Return(this);
 		}
@@ -392,6 +400,13 @@ namespace BB.Di
 			else child = pool._entities.RemoveLast();
 			return child;
 		}
+		#endregion
+		#region Subscriptions
+		readonly List<IEntitySubscription> _externalSubscriptions = new();
+		public void AddSubscription(IEntitySubscription subscription)
+			=> _externalSubscriptions.Add(subscription);
+		public void RemoveSubscription(IEntitySubscription subscription)
+			=> _externalSubscriptions.Remove(subscription);
 		#endregion
 	}
 }

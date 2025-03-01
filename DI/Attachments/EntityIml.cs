@@ -17,39 +17,13 @@ namespace BB.Di
 			if (entity)
 				(entity._ref as EntityImpl).Detach();
 		}
-		public static void AddOnDespawn(this Entity entity, Action action)
-		{
-			if (entity)
-				(entity._ref as EntityImpl).ExternalDespawned += action;
-		}
-		public static void RemoveOnDespawn(this Entity entity, Action action)
-		{
-			if (entity)
-				(entity._ref as EntityImpl).ExternalDespawned -= action;
-		}
-	}
-	public readonly struct EntityExternalDespawnToken : IDisposable
-	{
-		readonly Entity _entity;
-		readonly Action _action;
-		public EntityExternalDespawnToken(Entity entity, Action action)
-		{
-			_entity = entity;
-			_action = action;
-		}
-
-		public void Dispose()
-		{
-			_entity.RemoveOnDespawn(_action);
-		}
 	}
 	public sealed partial class EntityImpl : IEntity
 	{
-		readonly List<IExternalSubscription> _attachedSubscriptions = new();
+		readonly List<IAttachedSubscription> _attachedSubscriptions = new();
 		public IEntity AttachedToEntity => _attachedTo;
 		EntityImpl _attachedTo;
-		IExternalSubscription _attachedSubscription;
-		event Action DespawnedExternal;
+		IAttachedSubscription _attachedSubscription;
 		bool IsAttachedInHierarchy(out IEntity attachedTo)
 		{
 			attachedTo = _attachedTo;
@@ -90,27 +64,26 @@ namespace BB.Di
 		{
 			if (_attachedTo is null)
 				return;
-			foreach (var subscription in _externalSubscriptions)
+			foreach (var subscription in _externalSubscriptionsOld)
 				_attachedTo.AddExternalSubscription(subscription);
 		}
 		partial void UnsubscribeExternals()
 		{
 			if (_attachedTo is null)
 				return;
-			foreach (var subscription in _externalSubscriptions)
+			foreach (var subscription in _externalSubscriptionsOld)
 				_attachedTo.RemoveExternalSubscription(subscription);
 		}
 		partial void ClearExternalSubscriptions()
 		{
-			DespawnedExternal = null;
-			_externalSubscriptions.Clear();
+			_externalSubscriptionsOld.Clear();
 		}
-		public void AddExternalSubscription(IExternalSubscription subscription)
+		public void AddExternalSubscription(IAttachedSubscription subscription)
 		{
 			_attachedSubscriptions.Add(subscription);
 			subscription.Subscribe(this);
 		}
-		public void RemoveExternalSubscription(IExternalSubscription subscription)
+		public void RemoveExternalSubscription(IAttachedSubscription subscription)
 		{
 			_attachedSubscriptions.Remove(subscription);
 			subscription.Unsubscribe(this);

@@ -40,7 +40,7 @@ namespace BB.Di
 			EnableEvent,
 			DisableEvent;
 		void RegisterSubscription(ISubscription subscription);
-		void RegisterExternalSubscription(IExternalSubscription subscription);
+		void RegisterExternalSubscription(IAttachedSubscription subscription);
 	}
 	public abstract class InternalSubscription : ISubscription
 	{

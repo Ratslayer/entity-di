@@ -1,13 +1,15 @@
-﻿using Cysharp.Threading.Tasks;
-
-namespace BB
+﻿namespace BB
 {
 	public interface IFlushable
 	{
-		void FlushChanges();
+		void ForceFlushChanges();
 	}
 	public interface IAutoFlushable : IFlushable
 	{
 		bool AutoFlushDisabled { get; set; }
+	}
+	public interface IDirtyFlushable : IFlushable
+	{
+		bool IsDirty { get; set; }
 	}
 }

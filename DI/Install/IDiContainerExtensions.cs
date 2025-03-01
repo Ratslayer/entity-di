@@ -63,7 +63,7 @@ namespace BB.Di
 			this IDiContainer container,
 			params object[] args)
 			=> container.System<T, T>(args);
-		public static IDiStrategy SystemWithArgs<TContract,TInstance>(
+		public static IDiStrategy SystemWithArgs<TContract, TInstance>(
 			this IDiContainer container, params (Type, object)[] args)
 		{
 			var result = container.Construct<TContract, TInstance>()
@@ -82,7 +82,17 @@ namespace BB.Di
 				.BindEvents()
 				.NonLazy() as IDiConstructorStrategy;
 			if (args is not null)
-				  result.WithArgs(args);
+				result.WithArgs(args);
+			return result;
+		}
+
+		public static IDiStrategy Service<TContract, TInstance>(
+			this IDiContainer container,
+			params object[] args)
+		{
+			var result = container.Construct<TContract, TInstance>();
+			if (args is not null)
+				result.WithArgs(args);
 			return result;
 		}
 		public static void Event<T>(this IDiContainer container)
@@ -100,11 +110,19 @@ namespace BB.Di
 				return strategy;
 			using var _ = Log.Logger.UseContext(strategy);
 			//convert args to explicit args
-			var explicitArgs = new (Type, object)[args.Length];
-			foreach (var i in args.Length)
-				if (args[i] is null)
-					throw new Exception("One of the args passed during binding is null");
-				else explicitArgs[i] = (args[i].GetType(), args[i]);
+			(Type, object)[] explicitArgs;
+
+			if (args.GetType() == typeof(object[]))
+			{
+				explicitArgs = new (Type, object)[args.Length];
+				foreach (var i in args.Length)
+					if (args[i] is null)
+						throw new Exception("One of the args passed during binding is null");
+					else explicitArgs[i] = (args[i].GetType(), args[i]);
+			}
+			//if args type is not object[], then it means that an array was passed as an argument
+			//in this case, treat it as a single param arg
+			else explicitArgs = new (Type, object)[1] { (args.GetType(), args) };
 
 			strategy.WithArgsExplicit(explicitArgs);
 			return strategy;
@@ -117,7 +135,7 @@ namespace BB.Di
 		}
 		public static void InjectedInstance(this IDiContainer container, Type contractType, object instance)
 			=> container
-			.Instance(instance)
+			.Instance(contractType, instance)
 			.Inject()
 			.BindEvents()
 			.NonLazy();

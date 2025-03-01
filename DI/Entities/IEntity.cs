@@ -8,11 +8,6 @@ namespace BB.Di
 		void AttachTo(IEntity entity);
 		void Detach();
 	}
-	public interface IEntityExternalSubscriptions
-	{
-		void AddExternalSubscription(IExternalSubscription subscription);
-		void RemoveExternalSubscription(IExternalSubscription subscription);
-	}
 	public enum EntityState
 	{
 		Enabled = 0,
@@ -28,6 +23,8 @@ namespace BB.Di
 		EntityState State { get; set; }
 		bool TryResolve(Type type, out object result);
 		IEntity CreateChild(IEntityInstaller installer);
+		void AddSubscription(IEntitySubscription subscription);
+		void RemoveSubscription(IEntitySubscription subscription);
 	}
 	public interface IEntityProvider
 	{

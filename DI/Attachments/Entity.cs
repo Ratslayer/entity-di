@@ -10,7 +10,7 @@ namespace BB
 			: default;
 	}
 	public sealed record OnDespawnExternalSubscription(Action action)
-		: IExternalSubscription
+		: IAttachedSubscription
 	{
 		public void Subscribe(IEntity entity)
 		{
@@ -24,17 +24,15 @@ namespace BB
 	}
 	public static class ExternalSubscriptionExtensions
 	{
-		public static void AddToEntity(this IExternalSubscription subscription, Entity entity)
+		public static void SubscribeExternal(this Entity entity, IEntitySubscription subscription)
 		{
 			if (entity)
-				(entity._ref as EntityImpl).AddExternalSubscription(subscription);
+				entity._ref.AddSubscription(subscription);
 		}
-		public static void SubscribeExternal<TEvent>(this Entity entity, Action<TEvent> action)
+		public static void UnsubscribeExternal(this Entity entity, IEntitySubscription subscription)
 		{
-			if (!entity)
-				return;
-			var subscription = new OnEventExternalSubscription<TEvent>(action);
-			subscription.AddToEntity(entity);
+			if (entity)
+				entity._ref.RemoveSubscription(subscription);
 		}
 	}
 }

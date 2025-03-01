@@ -1,6 +1,6 @@
 ﻿namespace BB.Di
 {
-	public interface IExternalSubscription
+	public interface IAttachedSubscription
 	{
 		void Subscribe(IEntity entity);
 		void Unsubscribe(IEntity entity);

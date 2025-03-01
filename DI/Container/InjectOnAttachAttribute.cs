@@ -4,7 +4,7 @@ namespace BB.Di
 {
 	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
 	public sealed class InjectOnAttachAttribute : Attribute { }
-	public abstract class AbstractEntityValueAttachment : IExternalSubscription
+	public abstract class AbstractEntityValueAttachment : IAttachedSubscription
 	{
 		protected abstract Type Type { get; }
 		protected abstract void Set(object target, object value);

@@ -1,32 +1,44 @@
-﻿using System;
+﻿using NUnit.Framework;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 namespace BB
 {
 	public interface IListVariable { }
 	public abstract record ListVariable<SelfType, ElementType>
-		: IList<ElementType>, IAutoFlushable, IListVariable
+		: IList<ElementType>,
+		IReadOnlyList<ElementType>,
+		IAutoFlushable,
+		IListVariable,
+		IDirtyFlushable
 		where SelfType : ListVariable<SelfType, ElementType>
 	{
 		[Inject]
 		readonly IEvent<SelfType> _changePublisher;
 		readonly List<ElementType> _elements = new();
 		public bool AutoFlushDisabled { get; set; }
+		public bool IsDirty { get; set; }
 		public IEnumerator<ElementType> GetEnumerator() => _elements.GetEnumerator();
 		public void Add(ElementType e)
 		{
 			_elements.Add(e);
-			AutoFlush();
+			OnAdd(e);
+			this.SetDirtyAndFlushChanges();
 		}
-		public void AddRange(IEnumerable<ElementType> e)
+
+		public void AddRange(IEnumerable<ElementType> range)
 		{
-			_elements.AddRange(e);
-			AutoFlush();
+			_elements.AddRange(range);
+			foreach (var e in range)
+				OnAdd(e);
+			this.SetDirtyAndFlushChanges();
 		}
-		public void RemoveRange(IEnumerable<ElementType> e)
+		public void RemoveRange(IEnumerable<ElementType> range)
 		{
-			_elements.RemoveRange(e);
-			AutoFlush();
+			foreach (var e in range)
+				if (_elements.Remove(e))
+					OnRemove(e);
+			this.SetDirtyAndFlushChanges();
 		}
 		public void RemoveDisposeAndFlush(Func<ElementType, bool> predicate)
 		{
@@ -45,26 +57,33 @@ namespace BB
 		{
 			var result = _elements.Remove(e);
 			if (result)
-				AutoFlush();
+			{
+				OnRemove(e);
+				this.SetDirtyAndFlushChanges();
+			}
 			return result;
 		}
 		public ElementType this[int index] => _elements[index];
 		public int Count => _elements.Count;
 		[OnDespawn]
-		void OnDespawn() => _elements.Clear();
+		void OnDespawn() => Clear();
 		public void Clear()
 		{
+			foreach(var e in _elements)
+				OnRemove(e);
 			_elements.Clear();
-			AutoFlush();
+			this.SetDirtyAndFlushChanges();
 		}
 		public void SetRange(IEnumerable<ElementType> elements)
 		{
-			_elements.SetRange(elements);
-			AutoFlush();
+			using var _ = this.FlushOnDispose();
+			Clear();
+			if (elements is not null)
+				AddRange(elements);
 		}
 		public IEnumerable<ElementType> Elements => _elements;
 
-		public bool IsReadOnly => throw new NotImplementedException();
+		public bool IsReadOnly => false;
 
 		ElementType IList<ElementType>.this[int index]
 		{
@@ -76,7 +95,11 @@ namespace BB
 		{
 			_changePublisher.Raise(this as SelfType);
 		}
-		public virtual void FlushChanges() => OnListUpdate();
+		public virtual void ForceFlushChanges()
+		{
+			using var _ = this.DisableAutoFlush();
+			OnListUpdate();
+		}
 		public bool Contains(out ElementType e, Predicate<ElementType> predicate)
 			=> _elements.TryGetValue(predicate, out e);
 
@@ -85,20 +108,17 @@ namespace BB
 		public void Insert(int index, ElementType item)
 		{
 			_elements.Insert(index, item);
-			AutoFlush();
+			this.SetDirtyAndFlushChanges();
 		}
 
 		public void RemoveAt(int index)
 		{
 			_elements.RemoveAt(index);
-			AutoFlush();
-		}
-		void AutoFlush()
-		{
-			if (!AutoFlushDisabled)
-				FlushChanges();
+			this.SetDirtyAndFlushChanges();
 		}
 
+		protected virtual void OnRemove(ElementType e) { }
+		protected virtual void OnAdd(ElementType e) { }
 		public bool Contains(ElementType item)
 			=> _elements.Contains(item);
 

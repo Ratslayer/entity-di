@@ -1,10 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace BB
 {
 	public sealed class DisposableBag : PooledObject<DisposableBag>
@@ -25,9 +21,14 @@ namespace BB
 	}
 	public static class DisposableExtensions
 	{
+		public static void TryDispose(this object obj)
+		{
+			if (obj is IDisposable disposable)
+				disposable.Dispose();
+		}
 		public static IDisposable Link(this IDisposable disposable, IDisposable other)
 		{
-			if(disposable is not DisposableBag bag)
+			if (disposable is not DisposableBag bag)
 			{
 				bag = DisposableBag.GetPooled();
 				bag.AddDisposable(disposable);
@@ -39,10 +40,17 @@ namespace BB
 
 		public static void DisposeAndClear(this IList collection)
 		{
-			foreach(var element in collection)
-				if(element is IDisposable disposable)
+			foreach (var element in collection)
+				if (element is IDisposable disposable)
 					disposable.Dispose();
 			collection.Clear();
+		}
+		public static void DisposeAndClear(this IDictionary dictionary)
+		{
+			foreach (var element in dictionary.Values)
+				if (element is IDisposable disposable)
+					disposable.Dispose();
+			dictionary.Clear();
 		}
 	}
 }
