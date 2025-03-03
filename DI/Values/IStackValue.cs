@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace BB.Di
 {
@@ -8,6 +9,7 @@ namespace BB.Di
 		void SetDefaultValue(TValue value);
 		StackValuePushDisposable<TValue> Push(IReadOnlyValue<TValue> value);
 		void Pop(IReadOnlyValue<TValue> value);
+		IEnumerable<IReadOnlyValue<TValue>> Values { get; }
 	}
 	public readonly struct StackValuePushDisposable<TValue> : IDisposable
 	{

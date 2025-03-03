@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using static UnityEngine.Rendering.DebugUI;
 namespace BB.Di
 {
 	public abstract record StackValue<TSelf, TValue> : IStackValue<TValue>
@@ -21,6 +23,9 @@ namespace BB.Di
 		}
 		public TValue Value { get; private set; }
 		public TValue PreviousValue { get; private set; }
+
+		public IEnumerable<IReadOnlyValue<TValue>> Values => _stack;
+
 		readonly List<IReadOnlyValue<TValue>> _stack = new();
 		public bool HasValue(out TValue value)
 		{
@@ -74,10 +79,24 @@ namespace BB.Di
 	}
 	public static class StackValueExtensions
 	{
-		public static StackValuePushDisposable<T> Push<T>(this IStackValue<T> stackValue, T value)
+		public static StackValuePushDisposable<T> Push<T>(this IStackValue<T> stack, T value)
 		{
 			var val = new Val<T>(value);
-			return stackValue.Push(val);
+			return stack.Push(val);
+		}
+		public static void Pop<T>(this IStackValue<T> stack, Predicate<T> predicate)
+		{
+			if (stack.Values.TryGetValue(
+				x => predicate(x.Value),
+				out var v))
+				stack.Pop(v);
+		}
+		public static void Pop<T>(this IStackValue<T> stack, T value)
+		{
+			if (stack.Values.TryGetValue(
+				x => EqualityComparer<T>.Default.Equals(x.Value, value),
+				out var v))
+				stack.Pop(v);
 		}
 	}
 }
