@@ -93,7 +93,7 @@ namespace BB
 
 		protected virtual void OnListUpdate()
 		{
-			_changePublisher.Raise(this as SelfType);
+			_changePublisher.Publish(this as SelfType);
 		}
 		public virtual void ForceFlushChanges()
 		{

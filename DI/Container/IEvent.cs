@@ -4,7 +4,7 @@ using System.Threading;
 public interface IEvent<T>
 {
 	CancellationTokenSource CancellationTokenSource { get; }
-	void Raise(T message);
+	void Publish(T message);
 	void Subscribe(Action<T> action);
 	void Unsubscribe(Action<T> action);
 }
@@ -28,7 +28,7 @@ public sealed class DefaultEventImpl<T> : IEvent<T>, IDisposable
 		_tokenSource.Dispose();
 		_tokenSource = null;
 	}
-	public void Raise(T message)
+	public void Publish(T message)
 	{
 		try
 		{
@@ -59,5 +59,5 @@ public static class EventUtils
 {
 	public static void Raise<T>(this IEvent<T> e)
 		where T : new()
-		=> e.Raise(new());
+		=> e.Publish(new());
 }

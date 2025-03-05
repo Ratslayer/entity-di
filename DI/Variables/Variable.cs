@@ -31,7 +31,7 @@ namespace BB
 		{
 			PreviousValue = _value;
 			_value = value;
-			_event.Raise((TSelf)this);
+			_event.Publish((TSelf)this);
 		}
 		public override string ToString()
 			=> StringExtensions.SafeToString(_value);

@@ -10,7 +10,7 @@
 		public static implicit operator bool(EntityVariable<TSelf> b)
 			=> b.Value;
 		public void RaiseEvent<T>(T msg = default)
-			=> Value.RaiseEvent(msg);
+			=> Value.Publish(msg);
 		public void Get<T>(ref T cacheRef)
 			where T : class
 			=> Value.Get(ref cacheRef);

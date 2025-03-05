@@ -22,15 +22,15 @@ namespace BB
 				entity._ref.State = EntityState.Despawned;
 		}
 
-		public static void RaiseEvent<T>(this Entity entity, T msg = default)
+		public static void Publish<T>(this Entity entity, T msg = default)
 		{
 			if (entity.Has(out IEvent<T> publisher))
-				publisher.Raise(msg);
+				publisher.Publish(msg);
 		}
-		public static void RaiseEvent<T>(this IEntity entity, T msg = default)
+		public static void Publish<T>(this IEntity entity, T msg = default)
 		{
 			if (entity.Has(out IEvent<T> publisher))
-				publisher.Raise(msg);
+				publisher.Publish(msg);
 		}
 		
 
@@ -113,9 +113,5 @@ namespace BB
 			result &= entity.Has(out var5);
 			return result;
 		}
-	}
-	public static class EntityUsageExtensions
-	{
-		
 	}
 }

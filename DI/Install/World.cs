@@ -64,7 +64,7 @@ namespace BB
 		public static IEntity EntityRef
 			=> Application.isPlaying ? TopEntity : null;//EditorWorld.Entity;
 		public static Entity Entity => EntityRef.GetToken();
-		public static void RaiseEvent<T>(T msg = default) => Entity.RaiseEvent(msg);
+		public static void Publish<T>(T msg = default) => Entity.Publish(msg);
 		public static bool Has<T>(out T system) => EntityRef.Has(out system);
 	}
 }

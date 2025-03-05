@@ -37,7 +37,7 @@ namespace BB.Di
 			var value = _stack.Count > 0 ? _stack[^1] : default;
 			PreviousValue = Value;
 			Value = value is null ? _defaultValue : value.Value;
-			Publisher.Raise((TSelf)this);
+			Publisher.Publish((TSelf)this);
 		}
 		public StackValuePushDisposable<TValue> Push(IReadOnlyValue<TValue> value)
 		{
