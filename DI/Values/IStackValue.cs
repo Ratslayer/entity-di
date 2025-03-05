@@ -9,6 +9,7 @@ namespace BB.Di
 		void SetDefaultValue(TValue value);
 		StackValuePushDisposable<TValue> Push(IReadOnlyValue<TValue> value);
 		void Pop(IReadOnlyValue<TValue> value);
+		TValue Pop();
 		IEnumerable<IReadOnlyValue<TValue>> Values { get; }
 	}
 	public readonly struct StackValuePushDisposable<TValue> : IDisposable

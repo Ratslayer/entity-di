@@ -46,6 +46,16 @@ namespace BB.Di
 			Update();
 			return new((TSelf)this, value);
 		}
+		public TValue Pop()
+		{
+			if (_stack.Count <= 0)
+				return default;
+
+			var result = _stack.RemoveLast();
+			Update();
+
+			return result.Value;
+		}
 		public void Pop(IReadOnlyValue<TValue> value)
 		{
 			if (!_stack.Remove(value))
