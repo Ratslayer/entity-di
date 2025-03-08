@@ -3,7 +3,9 @@ namespace BB.Di
 {
 	public static class SpawnUtils
 	{
-		public static Entity SpawnChild(this Entity parent, IEntityInstaller installer)
+		public static Entity Spawn(
+			this IEntityInstaller installer,
+			Entity parent = default)
 		{
 			if (!parent)
 				parent = World.Entity;
