@@ -53,7 +53,10 @@ namespace BB.Di
 			void Attach(EntityImpl e)
 			{
 				e._attachedTo = entity as EntityImpl;
-				e._attachedSubscription = new OnDespawnExternalSubscription(DetachFromCurrentEntity);
+				e._attachedSubscription 
+					= DespawnExternalSubscription
+					.GetPooled()
+					.WithEntity(this.GetToken());
 				e._attachedTo.AddExternalSubscription(e._attachedSubscription);
 				SubscribeExternals();
 				e.AttachEvent?.Invoke();
@@ -64,10 +67,14 @@ namespace BB.Di
 		{
 			if (_attachedTo is null)
 				return;
+
 			_attachedTo.RemoveExternalSubscription(_attachedSubscription);
+			_attachedSubscription.TryDispose();
+			_attachedSubscription = null;
+
 			UnsubscribeExternals();
 			_attachedTo = null;
-			_attachedSubscription = null;
+			
 		}
 
 		partial void SubscribeExternals()

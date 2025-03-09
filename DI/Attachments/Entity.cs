@@ -1,5 +1,4 @@
-﻿using System;
-using BB.Di;
+﻿using BB.Di;
 namespace BB
 {
 	public readonly partial struct Entity
@@ -8,19 +7,6 @@ namespace BB
 			=> this && _ref is not null
 			? (_ref as EntityImpl).AttachedToEntity.GetToken()
 			: default;
-	}
-	public sealed record OnDespawnExternalSubscription(Action action)
-		: IAttachedSubscription
-	{
-		public void Subscribe(IEntity entity)
-		{
-			(entity as EntityImpl).DespawnEvent += action;
-		}
-
-		public void Unsubscribe(IEntity entity)
-		{
-			(entity as EntityImpl).DespawnEvent -= action;
-		}
 	}
 	public static class ExternalSubscriptionExtensions
 	{
