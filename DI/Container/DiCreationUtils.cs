@@ -8,7 +8,10 @@ namespace BB.Di
 	{
 		static readonly Dictionary<Type, CreationInfo> _infoCache = new();
 		sealed record CreationInfo(ConstructorInfo Constructor, ParameterInfo[] ParamInfos, object[] Params);
-		public static object Create(this IEntity container, Type instanceType, (Type, object)[] instanceArgs)
+		public static object Create(
+			this IEntity container,
+			Type instanceType,
+			(Type, object)[] instanceArgs)
 		{
 			if (!_infoCache.TryGetValue(instanceType, out var info))
 			{

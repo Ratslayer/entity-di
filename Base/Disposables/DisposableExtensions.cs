@@ -1,24 +1,7 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Generic;
 namespace BB
 {
-	public sealed class DisposableBag : PooledObject<DisposableBag>
-	{
-		readonly List<IDisposable> _disposables = new();
-		public void AddDisposable(IDisposable disposable)
-		{
-			if (disposable is not null)
-				_disposables.Add(disposable);
-		}
-		public override void Dispose()
-		{
-			base.Dispose();
-			foreach (var disposable in _disposables)
-				disposable.Dispose();
-			_disposables.Clear();
-		}
-	}
 	public static class DisposableExtensions
 	{
 		public static void TryDispose(this object obj)
@@ -26,15 +9,30 @@ namespace BB
 			if (obj is IDisposable disposable)
 				disposable.Dispose();
 		}
-		public static IDisposable Link(this IDisposable disposable, IDisposable other)
+		public static IDisposable LinkDisposable(
+			this IDisposable d1, 
+			IDisposable d2)
 		{
-			if (disposable is not DisposableBag bag)
+			if (d1 is null)
+				return d2;
+			if (d2 is null)
+				return d1;
+
+			if(d1 is DisposableBag b1)
 			{
-				bag = DisposableBag.GetPooled();
-				bag.AddDisposable(disposable);
+				b1.AddDisposable(d2);
+				return b1;
 			}
 
-			bag.AddDisposable(other);
+			if(d2 is DisposableBag b2)
+			{
+				b2.AddDisposable(d1);
+				return b2;
+			}
+
+			var bag = DisposableBag.GetPooled();
+			bag.AddDisposable(d1);
+			bag.AddDisposable(d2);
 			return bag;
 		}
 

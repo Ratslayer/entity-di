@@ -5,10 +5,10 @@ using System.Linq;
 using UnityEngine;
 public static class ThrowHelper
 {
-	public static void IfNull(object obj)
+	public static void IfNull(object obj, string message = "")
 	{
 		if (obj is null)
-			throw new NullReferenceException();
+			throw new NullReferenceException(message);
 	}
 }
 public static class Log

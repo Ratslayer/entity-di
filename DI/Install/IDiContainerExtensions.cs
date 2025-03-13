@@ -63,6 +63,10 @@ namespace BB.Di
 			this IDiContainer container,
 			params object[] args)
 			=> container.System<T, T>(args);
+		public static IDiStrategy SystemWithArgs<TContract>(
+			this IDiContainer container,
+			params (Type, object)[] args)
+			=> container.SystemWithArgs<TContract, TContract>(args);
 		public static IDiStrategy SystemWithArgs<TContract, TInstance>(
 			this IDiContainer container, params (Type, object)[] args)
 		{
