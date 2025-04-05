@@ -297,7 +297,6 @@ namespace BB.Di
 			CurrentSpawnId = 0;
 			DetachFromCurrentEntity();
 			ClearExternalSubscriptions();
-			_subscriptions.DisposeAndClear();
 			if (_effectiveState != EntityState.Disposed)
 				_pool.Return(this);
 		}
@@ -306,6 +305,8 @@ namespace BB.Di
 			_previousEffectiveState = _effectiveState;
 			if (_effectiveState != EntityState.Disposed)
 				return;
+			//clear subscriptions
+			_subscriptions.DisposeAndClear();
 			//dispose components
 			foreach ((var _, var strategy) in _elements)
 				if (strategy is IDisposable disposable)
@@ -372,6 +373,7 @@ namespace BB.Di
 		sealed class Pool : IEntityPool
 		{
 			public readonly List<EntityImpl> _entities = new();
+			public int SpawnCount = 0;
 			public void Return(IEntity entity) => _entities.Add(entity as EntityImpl);
 			public void Remove(IEntity entity) => _entities.Remove(entity as EntityImpl);
 		}
@@ -391,7 +393,7 @@ namespace BB.Di
 			{
 				_children ??= new();
 				child = CreateEntity(
-					installer.Name,
+					$"{installer.Name} {++pool.SpawnCount}",
 					this,
 					installer.Install,
 					pool);

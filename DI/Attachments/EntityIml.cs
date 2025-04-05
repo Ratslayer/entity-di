@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 namespace BB.Di
 {
 	public sealed partial class EntityImpl : IEntity

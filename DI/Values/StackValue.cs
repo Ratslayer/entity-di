@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using static UnityEngine.Rendering.DebugUI;
 namespace BB.Di
 {
 	public abstract record StackValue<TSelf, TValue> : IStackValue<TValue>
@@ -54,6 +53,7 @@ namespace BB.Di
 			var result = _stack.RemoveLast();
 			Update();
 
+			result.TryDispose();
 			return result.Value;
 		}
 		public void Pop(IReadOnlyValue<TValue> value)

@@ -1,6 +1,4 @@
-﻿using Unity.VisualScripting;
-
-namespace BB
+﻿namespace BB
 {
 	public static class IFlushableExtensions
 	{
@@ -33,10 +31,5 @@ namespace BB
 				d.IsDirty = true;
 			flushable.FlushChangesIfDirty();
 		}
-		//public static void AutoFlushChanges(this IAutoFlushable flushable)
-		//{
-		//	if (!flushable.AutoFlushDisabled)
-		//		flushable.FlushChangesIfDirty();
-		//}
 	}
 }
