@@ -1,12 +1,10 @@
-﻿namespace BB.Di
+﻿using System;
+
+namespace BB.Di
 {
-	public interface IEntitySubscription { }
-	public interface IOnSpawn : IEntitySubscription
+	public interface IEntitySubscription
 	{
-		void OnSpawn();
-	}
-	public interface IOnDespawn : IEntitySubscription
-	{
-		void OnDespawn();
+		void Subscribe(IEntity entity);
+		void Unsubscribe(IEntity entity);
 	}
 }

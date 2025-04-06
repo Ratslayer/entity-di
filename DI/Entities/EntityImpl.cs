@@ -116,11 +116,11 @@ namespace BB.Di
 			LateUpdateEvent,
 			FixedUpdateEvent;
 		private readonly List<ISubscription> _subscriptions = new();
-		private readonly List<IAttachedSubscription> _externalSubscriptionsOld = new();
+		private readonly List<IEntitySubscription> _subscriptionsOnAttach = new();
 		public void RegisterSubscription(ISubscription sub)
 			=> _subscriptions.Add(sub);
-		public void RegisterExternalSubscription(IAttachedSubscription subscription)
-			=> _externalSubscriptionsOld.Add(subscription);
+		public void RegisterAttachedSubscription(IEntitySubscription subscription)
+			=> _subscriptionsOnAttach.Add(subscription);
 		#endregion
 		#region Container
 		readonly Dictionary<Type, IDiStrategy> _elements = new();
@@ -279,11 +279,13 @@ namespace BB.Di
 		{
 			foreach (var sub in _subscriptions)
 				sub.Subscribe();
-			SubscribeExternals();
+			foreach(var sub in _tempSubscriptions)
+				sub.Subscribe(this);
 		}
 		void DisableState()
 		{
-			UnsubscribeExternals();
+			foreach (var sub in _tempSubscriptions)
+				sub.Unsubscribe(this);
 			foreach (var sub in _subscriptions)
 				sub.Unsubscribe();
 		}
@@ -296,7 +298,7 @@ namespace BB.Di
 		{
 			CurrentSpawnId = 0;
 			DetachFromCurrentEntity();
-			ClearExternalSubscriptions();
+			_tempSubscriptions.Clear();
 			if (_effectiveState != EntityState.Disposed)
 				_pool.Return(this);
 		}
@@ -339,11 +341,23 @@ namespace BB.Di
 		}
 		partial void DetachFromCurrentEntity();
 		partial void SyncParentAttachments();
-		partial void SubscribeExternals();
-		partial void UnsubscribeExternals();
-		partial void ClearExternalSubscriptions();
 		partial void DisposeUnity();
 
+		#endregion
+		#region Temporary Subscriptions
+		private readonly List<IEntitySubscription> _tempSubscriptions = new();
+		public void AddTemporarySubscription(IEntitySubscription subscription)
+		{
+			if (_tempSubscriptions.AddUnique(subscription)
+				&& State == EntityState.Enabled)
+				subscription.Subscribe(this);
+		}
+		public void RemoveTemporarySubscription(IEntitySubscription subscription)
+		{
+			if (_tempSubscriptions.Remove(subscription)
+				&& State == EntityState.Enabled)
+				subscription.Unsubscribe(this);
+		}
 		#endregion
 		#region Install
 		readonly Action<IDiContainer> _install;
@@ -404,10 +418,10 @@ namespace BB.Di
 		}
 		#endregion
 		#region Subscriptions
-		readonly List<IEntitySubscription> _externalSubscriptions = new();
-		public void AddSubscription(IEntitySubscription subscription)
+		readonly List<IEntityEventMethod> _externalSubscriptions = new();
+		public void AddSubscription(IEntityEventMethod subscription)
 			=> _externalSubscriptions.Add(subscription);
-		public void RemoveSubscription(IEntitySubscription subscription)
+		public void RemoveSubscription(IEntityEventMethod subscription)
 			=> _externalSubscriptions.Remove(subscription);
 		#endregion
 	}

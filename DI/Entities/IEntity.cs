@@ -23,8 +23,10 @@ namespace BB.Di
 		EntityState State { get; set; }
 		bool TryResolve(Type type, out object result);
 		IEntity CreateChild(IEntityInstaller installer);
-		void AddSubscription(IEntitySubscription subscription);
-		void RemoveSubscription(IEntitySubscription subscription);
+		void AddSubscription(IEntityEventMethod subscription);
+		void RemoveSubscription(IEntityEventMethod subscription);
+		void AddTemporarySubscription(IEntitySubscription subscription);
+		void RemoveTemporarySubscription(IEntitySubscription subscription);
 	}
 	public interface IEntityProvider
 	{

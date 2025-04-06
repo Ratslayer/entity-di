@@ -1,15 +1,16 @@
 ﻿using BB.Di;
 namespace BB
 {
-	public sealed class DespawnExternalSubscription 
-		: PooledObject<DespawnExternalSubscription>
-		, IAttachedSubscription
+	public sealed class DespawnExternalSubscription
+		: ProtectedPooledObject<DespawnExternalSubscription>
+		, IEntitySubscription
 	{
 		Entity _entity;
-		public DespawnExternalSubscription WithEntity(Entity entity)
+		public static DespawnExternalSubscription GetPooled(Entity entity)
 		{
-			_entity = entity;
-			return this;
+			var result = GetPooledInternal();
+			result._entity = entity;
+			return result;
 		}
 		void Despawn() => _entity.Despawn();
 		public override void Dispose()

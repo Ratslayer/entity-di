@@ -15,14 +15,14 @@ namespace BB
 				switch (info)
 				{
 					case PropertyInfo prop:
-						binder.RegisterExternalSubscription(new EntityPropertyAttachment
+						binder.RegisterAttachedSubscription(new EntityPropertyAttachment
 						{
 							_info = prop,
 							_target = obj
 						});
 						break;
 					case FieldInfo field:
-						binder.RegisterExternalSubscription(new EntityFieldAttachment
+						binder.RegisterAttachedSubscription(new EntityFieldAttachment
 						{
 							_info = field,
 							_target = obj
@@ -116,8 +116,7 @@ namespace BB
 			MethodInfo method,
 			Type wrappedType)
 		{
-			if (!AssertEventMethodSignature<OnEventAttachedAttribute>(
-				target, method, wrappedType))
+			if (!AssertEventMethodSignature<OnEventAttribute>(method, wrappedType))
 				return;
 			if (binder is not IEntity entity)
 				return;
@@ -138,8 +137,7 @@ namespace BB
 			MethodInfo method,
 			Type wrappedEvent)
 		{
-			if (!AssertEventMethodSignature<OnEventAttachedAttribute>(
-				target, method, wrappedEvent))
+			if (!AssertEventMethodSignature<OnEventAttachedAttribute>(method, wrappedEvent))
 				return;
 			var subscription = (DiExternalSubscription)CreateEventSubscription(
 				target,
@@ -149,19 +147,16 @@ namespace BB
 			subscription._method = method;
 			subscription._target = target;
 			subscription.Init();
-			binder.RegisterExternalSubscription(subscription);
+			binder.RegisterAttachedSubscription(subscription);
 		}
 		static bool AssertEventMethodSignature<AttributeType>(
-			object target,
 			MethodInfo method,
 			Type wrappedType)
 		{
 			var numArgs = wrappedType is null ? 1 : 0;
-			return AssertAttributeMethodSignature<OnEventAttachedAttribute>(
-				target, method, numArgs);
+			return AssertAttributeMethodSignature<AttributeType>(method, numArgs);
 		}
-		static bool AssertAttributeMethodSignature<AttributeType>(
-			object target, MethodInfo method, int numArgs)
+		static bool AssertAttributeMethodSignature<AttributeType>(MethodInfo method, int numArgs)
 		{
 			if (method.GetParameters().Length != numArgs)
 			{
@@ -171,8 +166,7 @@ namespace BB
 			}
 			return AssertReturnType<AttributeType>(method);
 		}
-		static bool AssertUpdateMethodSignature<AttributeType>(
-			object target, MethodInfo method)
+		static bool AssertUpdateMethodSignature<AttributeType>(MethodInfo method)
 		{
 			var args = method.GetParameters();
 			if (args.Length != 1
@@ -292,9 +286,7 @@ namespace BB
 			object target,
 			out Action<UpdateTime> action)
 		{
-			if (!AssertUpdateMethodSignature<AttributeType>(
-				target,
-				method))
+			if (!AssertUpdateMethodSignature<AttributeType>(method))
 			{
 				action = null;
 				return false;
@@ -320,8 +312,7 @@ namespace BB
 		static bool BindAction<AttributeType>(
 			MethodInfo method, object target, out Action action)
 		{
-			if (!AssertAttributeMethodSignature<AttributeType>(
-				target, method, 0))
+			if (!AssertAttributeMethodSignature<AttributeType>(method, 0))
 			{
 				action = null;
 				return false;

@@ -10,12 +10,12 @@ namespace BB
 	}
 	public static class ExternalSubscriptionExtensions
 	{
-		public static void SubscribeExternal(this Entity entity, IEntitySubscription subscription)
+		public static void SubscribeExternal(this Entity entity, IEntityEventMethod subscription)
 		{
 			if (entity)
 				entity._ref.AddSubscription(subscription);
 		}
-		public static void UnsubscribeExternal(this Entity entity, IEntitySubscription subscription)
+		public static void UnsubscribeExternal(this Entity entity, IEntityEventMethod subscription)
 		{
 			if (entity)
 				entity._ref.RemoveSubscription(subscription);

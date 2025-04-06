@@ -2,7 +2,7 @@
 using System.Reflection;
 namespace BB.Di
 {
-	public abstract class DiExternalSubscription : IAttachedSubscription
+	public abstract class DiExternalSubscription : IEntitySubscription
 	{
 		public MethodInfo _method;
 		public object _target;
@@ -11,7 +11,7 @@ namespace BB.Di
 		public abstract void Unsubscribe(IEntity entity);
 	}
 	public sealed record OnEventExternalSubscription<TEvent>(Action<TEvent> Action)
-		: IAttachedSubscription
+		: IEntitySubscription
 	{
 		public void Subscribe(IEntity entity)
 		{
