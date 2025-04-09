@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 namespace BB.Di
 {
 	public interface IEntityAttachments
@@ -27,6 +28,8 @@ namespace BB.Di
 		void RemoveSubscription(IEntityEventMethod subscription);
 		void AddTemporarySubscription(IEntitySubscription subscription);
 		void RemoveTemporarySubscription(IEntitySubscription subscription);
+
+		CancellationToken DespawnCancellationToken { get; }
 	}
 	public interface IEntityProvider
 	{

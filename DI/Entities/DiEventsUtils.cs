@@ -1,13 +1,13 @@
 ﻿using BB.Di;
 using Cysharp.Threading.Tasks;
 using System;
-using System.Collections;
 using System.Reflection;
+using System.Threading;
 namespace BB
 {
 	public static class DiEventsUtils
 	{
-		public static void BindMembersWithAttributes(IEntityEventsBinder binder, object obj)
+		public static void BindMembersWithAttributes(IEntityEventsBinder binder, IEntity entity, object obj)
 		{
 			var type = obj.GetType();
 			ReflectionUtils.ProcessAllMethods(type, Process);
@@ -39,67 +39,67 @@ namespace BB
 						{
 							case OnPostSpawnAttribute:
 								if (BindAction<OnPostSpawnAttribute>(
-									method, obj, out action))
+									method, obj,entity, out action))
 									binder.PostSpawnEvent += action;
 								break;
 							case OnUpdateAttribute:
 								if (BindUpdateAction<OnUpdateAttribute>(
-									method, obj, out var updateAction))
+									method, obj, entity, out var updateAction))
 									binder.UpdateEvent += updateAction;
 								break;
 							case OnFixedUpdateAttribute:
 								if (BindUpdateAction<OnFixedUpdateAttribute>(
-									method, obj, out updateAction))
+									method, obj, entity, out updateAction))
 									binder.FixedUpdateEvent
 										+= updateAction;
 								break;
 							case OnLateUpdateAttribute:
 								if (BindUpdateAction<OnLateUpdateAttribute>(
-									method, obj, out updateAction))
+									method, obj, entity, out updateAction))
 									binder.LateUpdateEvent
 										+= updateAction;
 								break;
 							case OnCreateAttribute:
 								if (BindAction<OnCreateAttribute>(
-									method, obj, out action))
+									method, obj, entity, out action))
 									binder.CreateEvent += action;
 								break;
 							case OnSpawnAttribute:
 								if (BindAction<OnSpawnAttribute>(
-									method, obj, out action))
+									method, obj, entity, out action))
 									binder.SpawnEvent += action;
 								break;
 							case OnDespawnAttribute:
 								if (BindAction<OnDespawnAttribute>(
-									method, obj, out action))
+									method, obj, entity, out action))
 									binder.DespawnEvent += action;
 								break;
 							case OnAttachAttribute:
 								if (BindAction<OnAttachAttribute>(
-									method, obj, out action))
+									method, obj, entity, out action))
 									binder.AttachEvent += action;
 								break;
 							case OnEnableAttribute:
 								if (BindAction<OnEnableAttribute>(
-									method, obj, out action))
+									method, obj, entity, out action))
 									binder.EnableEvent += action;
 								break;
 							case OnDisableAttribute:
 								if (BindAction<OnDisableAttribute>(
-									method, obj, out action))
+									method, obj, entity, out action))
 									binder.DisableEvent += action;
 								break;
 							case OnEventAttribute ea:
 								if (ea._eventTypes is null || ea._eventTypes.Length == 0)
-									BindEvent(binder, obj, method, null);
+									BindEvent(binder, obj, method, entity, null);
 								else foreach (var e in ea._eventTypes)
-										BindEvent(binder, obj, method, e);
+										BindEvent(binder, obj, method, entity, e);
 								break;
 							case OnEventAttachedAttribute eaa:
 								if (eaa._eventTypes is null || eaa._eventTypes.Length == 0)
-									BindEventAttached(binder, obj, method, null);
+									BindEventAttached(binder, obj, method, entity, null);
 								else foreach (var e in eaa._eventTypes)
-										BindEventAttached(binder, obj, method, e);
+										BindEventAttached(binder, obj, method, entity, e);
 								break;
 						}
 				}
@@ -114,12 +114,16 @@ namespace BB
 			IEntityEventsBinder binder,
 			object target,
 			MethodInfo method,
+			IEntity entity,
 			Type wrappedType)
 		{
-			if (!AssertEventMethodSignature<OnEventAttribute>(method, wrappedType))
+			if (!AssertIsValidMethod<OnEventAttribute>(
+				method,
+				target,
+				MethodData.Optional,
+				true))
 				return;
-			if (binder is not IEntity entity)
-				return;
+		
 			var subscription = (InternalSubscription)CreateEventSubscription(
 				target,
 				method,
@@ -135,10 +139,17 @@ namespace BB
 			IEntityEventsBinder binder,
 			object target,
 			MethodInfo method,
+			IEntity entity,
 			Type wrappedEvent)
 		{
-			if (!AssertEventMethodSignature<OnEventAttachedAttribute>(method, wrappedEvent))
+			var dataType = wrappedEvent is null ? MethodData.Required : MethodData.None;
+			if (!AssertIsValidMethod<OnEventAttachedAttribute>(
+				method,
+				target,
+				dataType,
+				true))
 				return;
+
 			var subscription = (DiExternalSubscription)CreateEventSubscription(
 				target,
 				method,
@@ -149,56 +160,51 @@ namespace BB
 			subscription.Init();
 			binder.RegisterAttachedSubscription(subscription);
 		}
-		static bool AssertEventMethodSignature<AttributeType>(
+		enum MethodData
+		{
+			None,
+			Required,
+			Optional
+		}
+		static bool AssertIsValidMethod<AttributeType>(
 			MethodInfo method,
-			Type wrappedType)
+			object target,
+			MethodData data,
+			bool allowAsync)
 		{
-			var numArgs = wrappedType is null ? 1 : 0;
-			return AssertAttributeMethodSignature<AttributeType>(method, numArgs);
-		}
-		static bool AssertAttributeMethodSignature<AttributeType>(MethodInfo method, int numArgs)
-		{
-			if (method.GetParameters().Length != numArgs)
+			var p = method.GetParameters();
+			if (method.ReturnType == typeof(void))
 			{
-				Log.Logger.Error(
-					$"{typeof(AttributeType).Name} only works on methods with {numArgs} args.");
-				return false;
+				return Assert(data switch
+				{
+					MethodData.Required => p.Length == 1,
+					MethodData.Optional => p.Length < 2,
+					_ => p.Length == 0
+				}, "Invalid number of method parameters");
 			}
-			return AssertReturnType<AttributeType>(method);
-		}
-		static bool AssertUpdateMethodSignature<AttributeType>(MethodInfo method)
-		{
-			var args = method.GetParameters();
-			if (args.Length != 1
-				|| args[0].ParameterType != typeof(UpdateTime))
+			else if (allowAsync && method.ReturnType == typeof(UniTaskVoid))
 			{
-				Log.Logger.Error(
-					$"{typeof(AttributeType).Name} only works on methods " +
-					$"with 1 {nameof(UpdateTime)} arg.");
-				return false;
+				return p.Length switch
+				{
+					2 => Assert(data != MethodData.None, "Invalid number of arguments")
+						&& Assert(p[1].ParameterType == typeof(CancellationToken),
+							"Second arg can only be of type 'CancellationToken'"),
+					1 => Assert(data != MethodData.None
+							|| p[0].ParameterType == typeof(CancellationToken),
+							"Invalid argument type."),
+					0 => Assert(data != MethodData.Required, "Invalid number of arguments"),
+					_ => Assert(false, "Invalid number of arguments"),
+				};
 			}
-			if (method.ReturnType != typeof(void))
+			else return Assert(false, "Only void and UniTaskVoid return types are allowed.");
+
+			bool Assert(bool value, string errorMessage)
 			{
-				Log.Logger.Error(
-					$"{typeof(AttributeType).Name} only works on methods " +
-					$"with void return type.");
-				return false;
+				if (!value)
+					LogError(target, method, $"<{typeof(AttributeType).Name}> {errorMessage}");
+				return value;
 			}
-			return true;
-		}
-		static bool AssertReturnType<AttributeType>(
-			MethodInfo method)
-		{
-			if (method.ReturnType != typeof(void)
-				&& method.ReturnType != typeof(IEnumerator)
-				&& method.ReturnType != typeof(UniTaskVoid))
-			{
-				Log.Logger.Error(
-					$"{typeof(AttributeType).Name} only works on methods with return types " +
-					$"void, IEnumerator or async UniTaskVoid");
-				return false;
-			}
-			return true;
+
 		}
 		static object CreateEventSubscription(
 			object target,
@@ -233,105 +239,162 @@ namespace BB
 			return Activator.CreateInstance(subscriptionType);
 		}
 
-		public static Action<T> CreateEventAction<T>(
+		//public static Action<T> CreateEventAction<T>(
+		//	MethodInfo method,
+		//	object target,
+		//	IEntity entity)
+		//{
+		//	Action<T> action;
+		//	var @params = method.GetParameters();
+		//	var numArgs = @params.Length;
+		//	if (method.ReturnType == typeof(UniTaskVoid))
+		//	{
+		//		if (numArgs == 1)
+		//		{
+		//			if (@params[0].ParameterType == typeof(CancellationToken))
+		//			{
+		//				var asyncMethod = CreateDelegate<Func<CancellationToken, UniTaskVoid>>();
+		//				action = _ => asyncMethod(entity.DespawnCancellationToken).Forget();
+		//			}
+		//			else
+		//			{
+		//				var asyncMethod = CreateDelegate<Func<T, UniTaskVoid>>();
+		//				action = arg => asyncMethod(arg).Forget();
+		//			}
+		//		}
+		//		else if (numArgs == 2)
+		//		{
+		//			var asyncMethod = CreateDelegate<Func<T, CancellationToken, UniTaskVoid>>();
+		//			action = arg => asyncMethod(arg, entity.DespawnCancellationToken).Forget();
+		//		}
+		//		else
+		//		{
+		//			var asyncMethod = CreateDelegate<Func<UniTaskVoid>>();
+		//			action = _ => asyncMethod().Forget();
+		//		}
+		//	}
+		//	else
+		//	{
+		//		if (numArgs > 0)
+		//			action = CreateDelegate<Action<T>>();
+		//		else
+		//		{
+		//			var a = CreateDelegate<Action>();
+		//			action = _ => a();
+		//		}
+		//	}
+		//	return action;
+		//	TAction CreateDelegate<TAction>()
+		//		where TAction : Delegate
+		//		=> (TAction)Delegate.CreateDelegate(typeof(TAction), target, method);
+		//}
+		static bool BindUpdateAction<AttributeType>(
 			MethodInfo method,
-			object target)
+			object target,
+			IEntity entity,
+			out Action<UpdateTime> action)
 		{
-			Action<T> action;
-			var hasArgs = method.GetParameters().Length > 0;
-			//if (method.ReturnType == typeof(IEnumerator))
-			//{
-			//	if (hasArgs)
-			//	{
-			//		var coroutine = CreateDelegate<Func<T, IEnumerator>>();
-			//		action = arg => TimingUtils.StartCoroutine(coroutine(arg));
-			//	}
-			//	else
-			//	{
-			//		var coroutine = CreateDelegate<Func<IEnumerator>>();
-			//		action = _ => TimingUtils.StartCoroutine(coroutine());
-			//	}
-			//}
-			//else 
-			if (method.ReturnType == typeof(UniTaskVoid))
+			if (!AssertIsValidMethod<AttributeType>(
+				method,
+				target,
+				MethodData.Optional,
+				false))
 			{
-				if (hasArgs)
+				action = null;
+				return false;
+			}
+			action = CreateAction<UpdateTime>(method, target, entity);
+			return true;
+		}
+		static bool BindAction<AttributeType>(
+			MethodInfo method, object target, IEntity entity, out Action action)
+		{
+			if (!AssertIsValidMethod<OnEventAttachedAttribute>(
+				method,
+				target,
+				MethodData.None,
+				true))
+			{
+				action = null;
+				return false;
+			}
+			action = CreateAction(method, target, entity);
+			return action is not null;
+		}
+		public static Action<T> CreateAction<T>(MethodInfo method, object target, IEntity entity)
+		{
+			var args = method.GetParameters();
+			if (method.ReturnType == typeof(void))
+			{
+				switch (args.Length)
 				{
-					var asyncMethod = CreateDelegate<Func<T, UniTaskVoid>>();
-					action = arg => asyncMethod(arg).Forget();
-				}
-				else
+					case 1:
+						return (Action<T>)Delegate.CreateDelegate(typeof(Action<T>), target, method);
+					default:
+						var action = (Action)Delegate.CreateDelegate(typeof(Action), target, method);
+						return _ => action();
+				};
+			}
+			else if (method.ReturnType == typeof(UniTaskVoid))
+			{
+				switch (args.Length)
 				{
-					var asyncMethod = CreateDelegate<Func<UniTaskVoid>>();
-					action = _ => asyncMethod().Forget();
+					case 2:
+						var a2 = (Func<T, CancellationToken, UniTaskVoid>)Delegate
+							.CreateDelegate(typeof(Func<T, CancellationToken, UniTaskVoid>), target, method);
+						return t => a2(t, entity.DespawnCancellationToken).Forget();
+					case 1:
+						if (args[0].ParameterType == typeof(CancellationToken))
+						{
+							var a1 = (Func<CancellationToken, UniTaskVoid>)Delegate
+								.CreateDelegate(typeof(Func<CancellationToken, UniTaskVoid>), target, method);
+							return _ => a1(entity.DespawnCancellationToken).Forget();
+						}
+						else
+						{
+							var a1 = (Func<T, UniTaskVoid>)Delegate
+								.CreateDelegate(typeof(Func<T, UniTaskVoid>), target, method);
+							return t => a1(t).Forget();
+						}
+					default:
+						var a0 = (Func<UniTaskVoid>)Delegate.CreateDelegate(typeof(Func<UniTaskVoid>), target, method);
+						return _ => a0().Forget();
 				}
 			}
 			else
 			{
-				if (hasArgs)
-					action = CreateDelegate<Action<T>>();
+				LogError(target, method, "Action methods can only have return type of void or UniTaskVoid");
+				return null;
+			}
+		}
+		public static Action CreateAction(MethodInfo method, object target, IEntity entity)
+		{
+			if (method.ReturnType == typeof(void))
+			{
+				return (Action)Delegate.CreateDelegate(typeof(Action), target, method);
+			}
+			else if (method.ReturnType == typeof(UniTaskVoid))
+			{
+				if (method.GetParameters().Length == 0)
+				{
+					var asyncMethod
+						= (Func<UniTaskVoid>)Delegate
+						.CreateDelegate(typeof(Func<UniTaskVoid>), target, method);
+					return () => asyncMethod().Forget();
+				}
 				else
 				{
-					var a = CreateDelegate<Action>();
-					action = _ => a();
+					var asyncMethod
+						= (Func<CancellationToken, UniTaskVoid>)Delegate
+						.CreateDelegate(typeof(Func<CancellationToken, UniTaskVoid>), target, method);
+					return () => asyncMethod(entity.DespawnCancellationToken).Forget();
 				}
 			}
-			return action;
-			TAction CreateDelegate<TAction>()
-				where TAction : Delegate
-				=> (TAction)Delegate.CreateDelegate(typeof(TAction), target, method);
-		}
-		static bool BindUpdateAction<AttributeType>(
-			MethodInfo method,
-			object target,
-			out Action<UpdateTime> action)
-		{
-			if (!AssertUpdateMethodSignature<AttributeType>(method))
+			else
 			{
-				action = null;
-				return false;
+				LogError(target, method, "Action methods can only have return type of void or UniTaskVoid");
+				return null;
 			}
-			//if (method.ReturnType == typeof(IEnumerator))
-			//{
-			//	var coroutine = (Func<UpdateTime, IEnumerator>)
-			//		Delegate.CreateDelegate(typeof(Func<IEnumerator>), target, method);
-			//	action = time => TimingUtils.StartCoroutine(coroutine(time));
-			//}
-			//else
-			if (method.ReturnType == typeof(UniTaskVoid))
-			{
-				var asyncMethod = (Func<UpdateTime, UniTaskVoid>)
-					Delegate.CreateDelegate(typeof(Func<UniTaskVoid>), target, method);
-				action = time => asyncMethod(time).Forget();
-			}
-			else action = (Action<UpdateTime>)
-					Delegate.CreateDelegate(
-						typeof(Action<UpdateTime>), target, method);
-			return true;
-		}
-		static bool BindAction<AttributeType>(
-			MethodInfo method, object target, out Action action)
-		{
-			if (!AssertAttributeMethodSignature<AttributeType>(method, 0))
-			{
-				action = null;
-				return false;
-			}
-			//if (method.ReturnType == typeof(IEnumerator))
-			//{
-			//	var coroutine = (Func<IEnumerator>)
-			//		Delegate.CreateDelegate(typeof(Func<IEnumerator>), target, method);
-			//	action = () => TimingUtils.StartCoroutine(coroutine());
-			//}
-			//else 
-			if (method.ReturnType == typeof(UniTaskVoid))
-			{
-				var asyncMethod = (Func<UniTaskVoid>)
-					Delegate.CreateDelegate(typeof(Func<UniTaskVoid>), target, method);
-				action = () => asyncMethod().Forget();
-			}
-			else action = (Action)Delegate.CreateDelegate(typeof(Action), target, method);
-			return true;
 		}
 	}
 }

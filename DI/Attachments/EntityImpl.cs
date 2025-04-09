@@ -24,9 +24,11 @@
 			void Attach(EntityImpl e)
 			{
 				e._attachedTo = entity as EntityImpl;
+
 				e._detachOnDespawnSubscription
 					= DespawnExternalSubscription.GetPooled(this.GetToken());
 				e._attachedTo.AddTemporarySubscription(e._detachOnDespawnSubscription);
+				
 				foreach(var sub in _subscriptionsOnAttach)
 					entity.AddTemporarySubscription(sub);
 				e.AttachEvent?.Invoke();

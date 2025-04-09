@@ -79,7 +79,7 @@ namespace BB.Di
 		IEvent<T> _lastPublisher;
 		public override void Init()
 		{
-			_action = DiEventsUtils.CreateEventAction<T>(_method, _target);
+			_action = DiEventsUtils.CreateAction<T>(_method, _target, _entity);
 		}
 
 		public override void Subscribe()

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Threading;
 namespace BB.Di
 {
 	public readonly partial struct UpdateTime
@@ -22,7 +23,10 @@ namespace BB.Di
 		public IEntity Parent => _parent;
 		readonly EntityImpl _parent;
 		readonly IEntityPool _pool;
+		readonly OptimizedCancellationTokenSource _despawnCtSource;
 		public ulong CurrentSpawnId { get; private set; }
+		public CancellationToken DespawnCancellationToken
+			=> _despawnCtSource.Token;
 		public string Name { get; init; }
 		EntityImpl(
 			string name,
@@ -260,6 +264,7 @@ namespace BB.Di
 			foreach (var sub in _externalSubscriptions)
 				if (sub is IOnDespawn d)
 					d.OnDespawn();
+			_despawnCtSource.Cancel();
 		}
 		void RaiseSpawnedStateEvent()
 		{

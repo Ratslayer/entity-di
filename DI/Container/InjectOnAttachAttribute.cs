@@ -13,7 +13,10 @@ namespace BB.Di
 		public void Subscribe(IEntity entity)
 		{
 			if (!entity.TryResolve(Type, out var value))
+			{
+				Log.Logger.Error($"[InjectOnAttach] {entity} could not resolve {Type.Name}");
 				value = null;
+			}
 			Set(_target, value);
 		}
 

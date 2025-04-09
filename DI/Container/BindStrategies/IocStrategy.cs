@@ -33,7 +33,7 @@ namespace BB.Di
 			if (Params.HasFlag(IocParams.Inject))
 				DiInjectionUtils.Inject(_entity, _instance);
 			if (Params.HasFlag(IocParams.BindEvents))
-				DiEventsUtils.BindMembersWithAttributes((IEntityEventsBinder)_entity, _instance);
+				DiEventsUtils.BindMembersWithAttributes((IEntityEventsBinder)_entity, _entity, _instance);
 			return _instance;
 		}
 	}
