@@ -1,5 +1,6 @@
 ﻿using System;
 using BB.Di;
+using static UnityEngine.Rendering.DebugUI;
 namespace BB
 {
 	public readonly partial struct Entity : IDisposable
@@ -12,6 +13,11 @@ namespace BB
 			_id = id;
 		}
 		public bool Enabled => this && _ref.State == EntityState.Enabled;
+		public void SetEnabled(bool enabled)
+		{
+			if (this)
+				_ref.State = enabled ? EntityState.Enabled : EntityState.Disabled;
+		}
 		public bool IsAlive()
 			=> _ref is not null
 			&& _ref.State is EntityState.Enabled or EntityState.Disabled

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 namespace BB.Di
 {
 	public abstract record StackValue<TSelf, TValue> : IStackValue<TValue>
@@ -23,9 +24,10 @@ namespace BB.Di
 		public TValue Value { get; private set; }
 		public TValue PreviousValue { get; private set; }
 
-		public IEnumerable<IReadOnlyValue<TValue>> Values => _stack;
+		public IEnumerable<TValue> Values
+			=> _stack.Select(v => v._value);
 
-		readonly List<IReadOnlyValue<TValue>> _stack = new();
+		readonly List<ValueWrapper> _stack = new();
 		public bool HasValue(out TValue value)
 		{
 			value = Value;
@@ -33,17 +35,16 @@ namespace BB.Di
 		}
 		public void Update()
 		{
-			var value = _stack.Count > 0 ? _stack[^1] : default;
 			PreviousValue = Value;
-			Value = value is null ? _defaultValue : value.Value;
+			Value = _stack.Count > 0 ? _stack[^1]._value : _defaultValue;
 			Publisher.Publish((TSelf)this);
 		}
-		public StackValuePushDisposable<TValue> Push(IReadOnlyValue<TValue> value)
+		public StackValuePushDisposable<TValue> Push(TValue value, int priority = default)
 		{
-			_stack.Add(value);
+			_stack.Add(new(value, priority));
 			_stack.SortByPriority();
 			Update();
-			return new((TSelf)this, value);
+			return new((TSelf)this, value, priority);
 		}
 		public TValue Pop()
 		{
@@ -53,60 +54,45 @@ namespace BB.Di
 			var result = _stack.RemoveLast();
 			Update();
 
-			result.TryDispose();
-			return result.Value;
+			return result._value;
 		}
-		public void Pop(IReadOnlyValue<TValue> value)
+		public bool Remove(TValue value, int priority = default)
 		{
-			if (!_stack.Remove(value))
-				return;
-			Update();
-		}
-		public void PushUniqueOrUpdate(IReadOnlyValue<TValue> value)
-		{
-			if (!_stack.Contains(value))
-				Push(value);
-			else Update();
-		}
-		public void SetUniqueOrUpdate(IReadOnlyValue<TValue> value, bool push)
-		{
-			if (push)
-				PushUniqueOrUpdate(value);
-			else Pop(value);
-		}
-		public bool TryPop(IReadOnlyValue<TValue> value)
-		{
-			if (!_stack.Contains(value))
+			if (!_stack.Remove(new(value, priority)))
 				return false;
-			Pop(value);
+
+			Update();
 			return true;
 		}
+		public bool TryPop(out TValue value)
+		{
+			if (_stack.Count == 0)
+			{
+				value = default;
+				return false;
+			}
+
+			value = Pop();
+			return true;
+		}
+		public bool Contains(TValue value, int priority)
+			=> _stack.Contains(new(value, priority));
 		public override string ToString()
 			=> $"[{typeof(TSelf).Name}] {StringExtensions.SafeToString(Value)}";
 		public static implicit operator
 			TValue(StackValue<TSelf, TValue> state)
 			=> state.Value;
-	}
-	public static class StackValueExtensions
-	{
-		public static StackValuePushDisposable<T> Push<T>(this IStackValue<T> stack, T value)
+
+		readonly struct ValueWrapper : IPriority
 		{
-			var val = new Val<T>(value);
-			return stack.Push(val);
-		}
-		public static void Pop<T>(this IStackValue<T> stack, Predicate<T> predicate)
-		{
-			if (stack.Values.TryGetValue(
-				x => predicate(x.Value),
-				out var v))
-				stack.Pop(v);
-		}
-		public static void Pop<T>(this IStackValue<T> stack, T value)
-		{
-			if (stack.Values.TryGetValue(
-				x => EqualityComparer<T>.Default.Equals(x.Value, value),
-				out var v))
-				stack.Pop(v);
+			public readonly TValue _value;
+			public readonly int _priority;
+			public int Priority => _priority;
+			public ValueWrapper(TValue value, int priority)
+			{
+				_value = value;
+				_priority = priority;
+			}
 		}
 	}
 }

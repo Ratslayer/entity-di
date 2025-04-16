@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Unity.IO.LowLevel.Unsafe;
 
 namespace BB.Di
 {
@@ -7,21 +8,23 @@ namespace BB.Di
 	public interface IStackValue<TValue> : IStackValue
 	{
 		void SetDefaultValue(TValue value);
-		StackValuePushDisposable<TValue> Push(IReadOnlyValue<TValue> value);
-		void Pop(IReadOnlyValue<TValue> value);
+		StackValuePushDisposable<TValue> Push(TValue value, int priority = 0);
+		bool Remove(TValue value, int priority = 0);
 		TValue Pop();
-		IEnumerable<IReadOnlyValue<TValue>> Values { get; }
+		IEnumerable<TValue> Values { get; }
 	}
 	public readonly struct StackValuePushDisposable<TValue> : IDisposable
 	{
 		readonly IStackValue<TValue> _stack;
-		readonly IReadOnlyValue<TValue> _value;
-		public StackValuePushDisposable(IStackValue<TValue> stack, IReadOnlyValue<TValue> value)
+		readonly TValue _value;
+		readonly int _priority;
+		public StackValuePushDisposable(IStackValue<TValue> stack, TValue value, int priority)
 		{
 			_stack = stack;
 			_value = value;
+			_priority = priority;
 		}
 
-		public void Dispose() => _stack?.Pop(_value);
+		public void Dispose() => _stack?.Remove(_value, _priority);
 	}
 }

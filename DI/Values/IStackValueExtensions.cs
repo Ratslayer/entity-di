@@ -10,8 +10,7 @@
 			if (!entity.Has(out TStack stack))
 				return default;
 
-			var pooledWrapper = PooledValue<TValue>.GetPooled(value);
-			return stack.Push(pooledWrapper);
+			return stack.Push(value);
 		}
 	}
 }

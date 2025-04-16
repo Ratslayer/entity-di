@@ -129,6 +129,13 @@ public static class ListUtils
 			return l.CompareTo(r);
 		}
 	}
+	public static void SortByPriorityTyped<T>(this List<T> list)
+		where T : IPriority
+	{
+		list.Sort(Compare);
+		static int Compare(T left, T right)
+			=> left.Priority.CompareTo(right.Priority);
+	}
 	public static T GetLast<T>(this List<T> list, T defaultValue)
 		=> list.Count > 0 ? list[^1] : defaultValue;
 	public static void RemoveRange<T>(this List<T> list, IEnumerable<T> other)
