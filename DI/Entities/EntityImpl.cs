@@ -21,6 +21,7 @@ namespace BB.Di
 	{
 		static ulong _lastId = 0;
 		public IEntity Parent => _parent;
+		readonly bool _isRoot;
 		readonly EntityImpl _parent;
 		readonly IEntityPool _pool;
 		readonly OptimizedCancellationTokenSource _despawnCtSource;
@@ -32,7 +33,8 @@ namespace BB.Di
 			string name,
 			EntityImpl parent,
 			Action<IDiContainer> install,
-			IEntityPool pool)
+			IEntityPool pool,
+			bool isRoot)
 		{
 			Name = name;
 			_pool = pool;
@@ -44,14 +46,16 @@ namespace BB.Di
 			}
 			_assignedState = _effectiveState = EntityState.Despawned;
 			_install = install;
+			_isRoot = isRoot;
 		}
 		public static EntityImpl CreateEntity(
 			string name,
 			EntityImpl parent,
 			Action<IDiContainer> install,
-			IEntityPool pool)
+			IEntityPool pool,
+			bool isRoot)
 		{
-			var entity = new EntityImpl(name, parent, install, pool);
+			var entity = new EntityImpl(name, parent, install, pool, isRoot);
 			using var _ = Log.Logger.UseContext(entity);
 			entity.Install();
 			return entity;
@@ -191,10 +195,10 @@ namespace BB.Di
 				? _assignedState
 				: (EntityState)Math.Max((int)_parent._effectiveState, (int)_assignedState);
 			//if the effective state is despawned/disposed, there is no turning back
-			if ((int)_effectiveState >= (int)EntityState.Despawned)
+			if (_isRoot && (int)_effectiveState >= (int)EntityState.Despawned)
 				_assignedState = _effectiveState;
-			//if there is no pool, despawned = disposed
-			if (_pool is null && _effectiveState == EntityState.Despawned)
+			//if there is no pool and the object is root, despawned = disposed
+			if (_pool is null && _isRoot && _effectiveState == EntityState.Despawned)
 				_effectiveState = EntityState.Disposed;
 			//update children
 			if (StateChanged && _children is not null)
@@ -284,7 +288,7 @@ namespace BB.Di
 		{
 			foreach (var sub in _subscriptions)
 				sub.Subscribe();
-			foreach(var sub in _tempSubscriptions)
+			foreach (var sub in _tempSubscriptions)
 				sub.Subscribe(this);
 		}
 		void DisableState()
@@ -305,7 +309,7 @@ namespace BB.Di
 			DetachFromCurrentEntity();
 			_tempSubscriptions.Clear();
 			if (_effectiveState != EntityState.Disposed)
-				_pool.Return(this);
+				_pool?.Return(this);
 		}
 		void FinalizeStateChange()
 		{
@@ -415,7 +419,8 @@ namespace BB.Di
 					$"{installer.Name} {++pool.SpawnCount}",
 					this,
 					installer.Install,
-					pool);
+					pool,
+					true);
 				_children.Add(child);
 			}
 			else child = pool._entities.RemoveLast();

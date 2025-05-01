@@ -239,55 +239,6 @@ namespace BB
 			return Activator.CreateInstance(subscriptionType);
 		}
 
-		//public static Action<T> CreateEventAction<T>(
-		//	MethodInfo method,
-		//	object target,
-		//	IEntity entity)
-		//{
-		//	Action<T> action;
-		//	var @params = method.GetParameters();
-		//	var numArgs = @params.Length;
-		//	if (method.ReturnType == typeof(UniTaskVoid))
-		//	{
-		//		if (numArgs == 1)
-		//		{
-		//			if (@params[0].ParameterType == typeof(CancellationToken))
-		//			{
-		//				var asyncMethod = CreateDelegate<Func<CancellationToken, UniTaskVoid>>();
-		//				action = _ => asyncMethod(entity.DespawnCancellationToken).Forget();
-		//			}
-		//			else
-		//			{
-		//				var asyncMethod = CreateDelegate<Func<T, UniTaskVoid>>();
-		//				action = arg => asyncMethod(arg).Forget();
-		//			}
-		//		}
-		//		else if (numArgs == 2)
-		//		{
-		//			var asyncMethod = CreateDelegate<Func<T, CancellationToken, UniTaskVoid>>();
-		//			action = arg => asyncMethod(arg, entity.DespawnCancellationToken).Forget();
-		//		}
-		//		else
-		//		{
-		//			var asyncMethod = CreateDelegate<Func<UniTaskVoid>>();
-		//			action = _ => asyncMethod().Forget();
-		//		}
-		//	}
-		//	else
-		//	{
-		//		if (numArgs > 0)
-		//			action = CreateDelegate<Action<T>>();
-		//		else
-		//		{
-		//			var a = CreateDelegate<Action>();
-		//			action = _ => a();
-		//		}
-		//	}
-		//	return action;
-		//	TAction CreateDelegate<TAction>()
-		//		where TAction : Delegate
-		//		=> (TAction)Delegate.CreateDelegate(typeof(TAction), target, method);
-		//}
 		static bool BindUpdateAction<AttributeType>(
 			MethodInfo method,
 			object target,

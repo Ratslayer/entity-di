@@ -21,7 +21,8 @@ namespace BB
 				name,
 				TopEntity,
 				install,
-				null);
+				null,
+				true);
 			_entities.Add(entity);
 			entity.State = EntityState.Enabled;
 		}

@@ -12,14 +12,14 @@ public static class StringExtensions
 			return "NULL";
 		return value.ToString();
 	}
-	public static bool Invalid(this string str) => string.IsNullOrWhiteSpace(str);
+	public static bool IsInvalid(this string str) => string.IsNullOrWhiteSpace(str);
 	public static string DefaultTo(this string str, string defaultString)
 	{
 		if(string.IsNullOrWhiteSpace(str))
 			return defaultString;
 		return str;
 	}
-	public static bool Valid(this string str) => !Invalid(str);
+	public static bool IsValid(this string str) => !IsInvalid(str);
 	public static string Join<T>(string separator, IEnumerable<T> collection, Func<T, string> strGetter)
 	{
 		_builder.Clear();
