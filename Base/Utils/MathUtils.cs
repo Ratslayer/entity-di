@@ -1,5 +1,4 @@
-﻿using Sirenix.OdinInspector.Editor;
-using System;
+﻿using System;
 public static class MathUtils
 {
 	const float _epsilon = 0.00001f;
