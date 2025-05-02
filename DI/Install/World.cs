@@ -8,7 +8,7 @@ namespace BB
 	{
 		static readonly List<EntityImpl> _entities = new();
 		static EntityImpl TopEntity => _entities.Count > 0 ? _entities[^1] : null;
-		
+
 		public static void Init(Action<IDiContainer> install)
 		{
 			while (_entities.Count > 0)
@@ -41,7 +41,7 @@ namespace BB
 			if (_entities.Count > 0)
 				_entities.RemoveAt(_entities.Count - 1);
 		}
-		
+
 		public static Entity Spawn(IEntityInstaller installer)
 			=> installer.Spawn(Entity);
 		public static T Require<T>()
@@ -68,5 +68,8 @@ namespace BB
 		public static Entity Entity => EntityRef.GetToken();
 		public static void Publish<T>(T msg = default) => Entity.Publish(msg);
 		public static bool Has<T>(out T system) => EntityRef.Has(out system);
+		public static bool Has<T1, T2>(out T1 t1, out T2 t2) => Entity.Has(out t1, out t2);
+		public static bool Has<T1, T2, T3>(out T1 t1, out T2 t2, out T3 t3)
+			=> Entity.Has(out t1, out t2, out t3);
 	}
 }
