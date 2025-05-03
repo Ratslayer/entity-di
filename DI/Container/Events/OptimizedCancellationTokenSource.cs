@@ -2,7 +2,7 @@
 using System.Threading;
 namespace BB
 {
-	public struct OptimizedCancellationTokenSource : IDisposable
+	public class OptimizedCancellationTokenSource : IDisposable
 	{
 		CancellationTokenSource _source;
 		public CancellationToken Token

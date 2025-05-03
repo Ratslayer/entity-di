@@ -24,7 +24,7 @@ namespace BB.Di
 		readonly bool _isRoot;
 		readonly EntityImpl _parent;
 		readonly IEntityPool _pool;
-		readonly OptimizedCancellationTokenSource _despawnCtSource;
+		readonly OptimizedCancellationTokenSource _despawnCtSource = new();
 		public ulong CurrentSpawnId { get; private set; }
 		public CancellationToken DespawnCancellationToken
 			=> _despawnCtSource.Token;

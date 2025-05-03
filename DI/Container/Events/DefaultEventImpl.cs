@@ -5,7 +5,7 @@ namespace BB
 	public sealed class DefaultEventImpl<T> : IEvent<T>, IDisposable
 	{
 		event Action<T> Events;
-		readonly OptimizedCancellationTokenSource _tokenSource;
+		readonly OptimizedCancellationTokenSource _tokenSource = new();
 		public CancellationToken NextEventCancellationToken
 			=> _tokenSource.Token;
 		public void Dispose()
