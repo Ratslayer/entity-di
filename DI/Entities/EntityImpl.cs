@@ -413,16 +413,12 @@ namespace BB.Di
 			}
 			EntityImpl child;
 			if (pool._entities.Count == 0)
-			{
-				_children ??= new();
 				child = CreateEntity(
 					$"{installer.Name} {++pool.SpawnCount}",
 					this,
 					installer.Install,
 					pool,
 					true);
-				_children.Add(child);
-			}
 			else child = pool._entities.RemoveLast();
 			return child;
 		}
