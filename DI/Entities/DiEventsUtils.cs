@@ -217,12 +217,20 @@ namespace BB
 			var args = method.GetParameters();
 			if (wrappedType is null)
 			{
-				if (args.Length != 1)
+				switch (args.Length)
 				{
-					LogError(target, method, "Event binding attribute only works on methods with 1 arg.");
-					return null;
+					case 1:
+						eventType = args[0].ParameterType;
+						break;
+					case 2:
+						eventType = args[1].ParameterType == typeof(CancellationToken)
+							? args[0].ParameterType : args[1].ParameterType;
+						break;
+					default:
+						LogError(target, method, 
+							"Event binding attribute works only on methods with 1 arg + CancellationToken.");
+						return null;
 				}
-				eventType = args[0].ParameterType;
 			}
 			else
 			{

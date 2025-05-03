@@ -1,4 +1,7 @@
-﻿namespace BB.Di
+﻿using Cysharp.Threading.Tasks;
+using System.Threading;
+
+namespace BB.Di
 {
 	public abstract record EntityVariable<TSelf> : Variable<TSelf, Entity>
 		where TSelf : Variable<TSelf, Entity>
@@ -14,5 +17,10 @@
 		public void Get<T>(ref T cacheRef)
 			where T : class
 			=> Value.Get(ref cacheRef);
+		public async UniTask WaitForEvent<T>(CancellationToken ct)
+		{
+			if (Has(out IEvent<T> e))
+				await e.WaitForEvent(ct);
+		}
 	}
 }

@@ -1,5 +1,7 @@
 ﻿using UnityEngine;
 using BB.Di;
+using Cysharp.Threading.Tasks;
+using System.Threading;
 namespace BB
 {
 	public static class EntityExtensions
@@ -15,7 +17,12 @@ namespace BB
 			entity.Has(out T instance);
 			return instance;
 		}
-
+		public static async UniTask WaitForEvent<T>(this Entity entity, CancellationToken ct)
+		{
+			if (!entity.Has(out IEvent<T> e))
+				return;
+			await e.WaitForEvent(ct);
+		}
 		public static void Despawn(this Entity entity)
 		{
 			if (entity)
