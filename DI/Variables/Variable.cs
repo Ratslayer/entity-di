@@ -6,13 +6,14 @@ namespace BB
 	public interface IVariable<T> : IVariable
 	{
 		T Value { get; }
+		T PreviousValue { get; }
 		void SetValueNoUpdate(T value);
 	}
 	public abstract record Variable<TSelf, TValue> : IVariable<TValue>
 		where TSelf : Variable<TSelf, TValue>
 	{
 		[Inject]
-		readonly IEvent<TSelf> _event;
+		public readonly IEvent<TSelf> _event;
 		[OnDespawn]
 		void Reset() => _value = PreviousValue = default;
 		TValue _value;
