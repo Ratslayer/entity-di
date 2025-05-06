@@ -10,15 +10,13 @@
 				(entity._ref as EntityImpl).AttachTo(target._ref);
 			else (entity._ref as EntityImpl).Detach();
 		}
-		public static void SpawnAndAttachTo(
-			this IEntityInstaller installer,
-			Entity target,
-			Entity parent = default)
+		public static Entity SpawnAndAttachTo(this IEntityInstaller installer, Entity target)
 		{
 			if (installer is null || !target)
-				return;
-			var entity = installer.Spawn(parent);
+				return default;
+			var entity = installer.Spawn();
 			entity.AttachTo(target);
+			return entity;
 		}
 		public static void Detach(this Entity entity)
 		{
