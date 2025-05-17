@@ -14,7 +14,7 @@ namespace BB.Di
 		Enabled = 0,
 		Disabled = 1,
 		Despawned = 2,
-		Disposed = 3
+		Destroyed = 3
 	}
 	public interface IEntity
 	{

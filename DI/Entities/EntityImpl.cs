@@ -178,7 +178,7 @@ namespace BB.Di
 		private void AssignState(EntityState state)
 		{
 			//what is dead may never die
-			if (_effectiveState == EntityState.Disposed)
+			if (_effectiveState == EntityState.Destroyed)
 				return;
 			_assignedState = state;
 			BeginStateChange();
@@ -199,7 +199,7 @@ namespace BB.Di
 				_assignedState = _effectiveState;
 			//if there is no pool and the object is root, despawned = disposed
 			if (_pool is null && _isRoot && _effectiveState == EntityState.Despawned)
-				_effectiveState = EntityState.Disposed;
+				_effectiveState = EntityState.Destroyed;
 			//update children
 			if (StateChanged && _children is not null)
 				foreach (var child in _children)
@@ -215,7 +215,7 @@ namespace BB.Di
 			{
 				case EntityState.Enabled:
 					disable();
-					if (_effectiveState is EntityState.Despawned or EntityState.Disposed)
+					if (_effectiveState is EntityState.Despawned or EntityState.Destroyed)
 						despawn();
 					break;
 				case EntityState.Disabled:
@@ -308,13 +308,13 @@ namespace BB.Di
 			CurrentSpawnId = 0;
 			DetachFromCurrentEntity();
 			_tempSubscriptions.Clear();
-			if (_effectiveState != EntityState.Disposed)
+			if (_effectiveState != EntityState.Destroyed)
 				_pool?.Return(this);
 		}
 		void FinalizeStateChange()
 		{
 			_previousEffectiveState = _effectiveState;
-			if (_effectiveState != EntityState.Disposed)
+			if (_effectiveState != EntityState.Destroyed)
 				return;
 			//clear subscriptions
 			_subscriptions.DisposeAndClear();
@@ -324,7 +324,7 @@ namespace BB.Di
 					disposable.Dispose();
 			//remove yourself from parent and pool if it's not disposed
 			//otherwise it will remove you itself later
-			if (_parent is not null && _parent._effectiveState != EntityState.Disposed)
+			if (_parent is not null && _parent._effectiveState != EntityState.Destroyed)
 			{
 				_pool?.Remove(this);
 				_parent._children.Remove(this);
@@ -346,7 +346,7 @@ namespace BB.Di
 		}
 		public void Dispose()
 		{
-			State = EntityState.Disposed;
+			State = EntityState.Destroyed;
 		}
 		partial void DetachFromCurrentEntity();
 		partial void SyncParentAttachments();

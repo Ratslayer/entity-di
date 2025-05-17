@@ -11,7 +11,7 @@ namespace BB
 		{
 			var type = obj.GetType();
 			ReflectionUtils.ProcessAllMethods(type, Process);
-			foreach (var info in ReflectionUtils.GetAllMembersWithAttribute<InjectOnAttachAttribute>(type))
+			foreach (var info in ReflectionUtils.GetAllMembersWithAttribute<InjectFromAttachAttribute>(type))
 				switch (info)
 				{
 					case PropertyInfo prop:

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 namespace BB
 {
-	public sealed class PooledList<T> : List<T>, IDisposable
+	public sealed class PooledList<T> : List<T>, IDisposableList<T>
 	{
 		static readonly List<PooledList<T>> _pool = new();
 		private PooledList() { }
@@ -14,4 +14,5 @@ namespace BB
 			_pool.Add(this);
 		}
 	}
+	public interface IDisposableList<T> : IList<T>, IDisposable { }
 }

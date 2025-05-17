@@ -3,7 +3,7 @@ using System.Reflection;
 namespace BB.Di
 {
 	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
-	public sealed class InjectOnAttachAttribute : Attribute { }
+	public sealed class InjectFromAttachAttribute : Attribute { }
 	public abstract class AbstractEntityValueAttachment : IEntitySubscription
 	{
 		protected abstract Type Type { get; }
