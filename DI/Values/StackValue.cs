@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using Cysharp.Threading.Tasks;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 namespace BB.Di
@@ -101,5 +102,17 @@ namespace BB.Di
 				_priority = priority;
 			}
 		}
+
+		public async UniTask WaitForValue(TValue value)
+		{
+			while (true)
+			{
+				if (IsCurrentValue(value))
+					return;
+				await UniTask.NextFrame();
+			}
+		}
+		public virtual bool IsCurrentValue(TValue value)
+			=> EqualityComparer<TValue>.Default.Equals(Value, value);
 	}
 }
