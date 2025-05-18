@@ -1,17 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
-using Unity.IO.LowLevel.Unsafe;
 
 namespace BB.Di
 {
 	public interface IStackValue { }
-	public interface IStackValue<TValue> : IStackValue
+	public interface IStackValue<TValue> : IStackValue, IReadOnlyList<TValue>
 	{
 		void SetDefaultValue(TValue value);
 		StackValuePushDisposable<TValue> Push(TValue value, int priority = 0);
 		bool Remove(TValue value, int priority = 0);
 		TValue Pop();
-		IEnumerable<TValue> Values { get; }
 	}
 	public readonly struct StackValuePushDisposable<TValue> : IDisposable
 	{

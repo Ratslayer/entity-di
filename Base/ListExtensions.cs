@@ -28,4 +28,16 @@ public static class ListExtensions
 		next = default;
 		return false;
 	}
+	public static bool TryRemoveLast<T>(this IList<T> list, out T element)
+	{
+		if (list.Count == 0)
+		{
+			element = default;
+			return false;
+		}
+
+		element = list[^1];
+		list.RemoveAt(list.Count - 1);
+		return true;
+	}
 }

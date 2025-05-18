@@ -17,7 +17,7 @@ namespace BB.Di
 		{
 			using var _ = Log.Logger.UseContext(entity);
 			if (!entity.TryResolve(type, out var result))
-				throw new DiException($"{type.FullName} contract not found.");
+				throw new DiException($"{type.FullName} contract not found in entity {entity.Name}.");
 			return result;
 		}
 		public static void Var<TVar, TValue>(this IDiContainer container, TValue value)

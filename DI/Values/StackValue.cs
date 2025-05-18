@@ -1,4 +1,4 @@
-﻿using System;
+﻿using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 namespace BB.Di
@@ -24,8 +24,9 @@ namespace BB.Di
 		public TValue Value { get; private set; }
 		public TValue PreviousValue { get; private set; }
 
-		public IEnumerable<TValue> Values
-			=> _stack.Select(v => v._value);
+		public int Count => _stack.Count;
+
+		public TValue this[int index] => _stack[index]._value;
 
 		readonly List<ValueWrapper> _stack = new();
 		public bool HasValue(out TValue value)
@@ -79,6 +80,12 @@ namespace BB.Di
 			=> _stack.Contains(new(value, priority));
 		public override string ToString()
 			=> $"[{typeof(TSelf).Name}] {StringExtensions.SafeToString(Value)}";
+
+		public IEnumerator<TValue> GetEnumerator()
+			=> _stack.Select(x => x._value).GetEnumerator();
+
+		IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
 		public static implicit operator
 			TValue(StackValue<TSelf, TValue> state)
 			=> state.Value;
