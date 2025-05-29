@@ -37,7 +37,7 @@ namespace BB
 		public override string ToString()
 			=> StringExtensions.SafeToString(_value);
 		public static implicit operator TValue(Variable<TSelf, TValue> s)
-			=> s.Value;
+			=> s is not null ? s.Value : default;
 	}
 	public static class VariableUtils
 	{

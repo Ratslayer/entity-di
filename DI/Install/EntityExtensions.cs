@@ -2,6 +2,7 @@
 using BB.Di;
 using Cysharp.Threading.Tasks;
 using System.Threading;
+using System.Collections.Generic;
 namespace BB
 {
 	public static class EntityExtensions
@@ -119,6 +120,13 @@ namespace BB
 			result &= entity.Has(out var4);
 			result &= entity.Has(out var5);
 			return result;
+		}
+
+		public static void DespawnAndClear(this IList<Entity> entities)
+		{
+			foreach (var entity in entities)
+				entity.Despawn();
+			entities.Clear();
 		}
 	}
 }
