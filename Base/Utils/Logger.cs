@@ -16,6 +16,7 @@ public static class Log
 	public static ILogger Logger { get; private set; }
 	public static void BindLogger(ILogger logger) => Logger = logger;
 	public static void Error(string message) => Logger.Error(message);
+	public static void Info(string message) => Logger.Info(message);
 }
 public static class ILoggerExtensions
 {
