@@ -143,6 +143,12 @@ namespace BB.Di
 			.Inject()
 			.BindEvents()
 			.NonLazy();
+		public static void InjectedInstance<T>(this IDiContainer container, object instance)
+			=> container
+			.Instance(typeof(T), instance)
+			.Inject()
+			.BindEvents()
+			.NonLazy();
 		public static IDiConstructorStrategy Construct(this IDiContainer container, Type contractType, Type instanceType)
 		{
 			var strategy = new ConstructedIocStrategy((IEntity)container, instanceType);

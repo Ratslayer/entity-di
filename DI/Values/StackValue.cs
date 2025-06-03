@@ -39,7 +39,8 @@ namespace BB.Di
 		{
 			PreviousValue = Value;
 			Value = _stack.Count > 0 ? _stack[^1]._value : _defaultValue;
-			Publisher.Publish((TSelf)this);
+			if (!EqualityComparer<TValue>.Default.Equals(_defaultValue, Value))
+				Publisher.Publish((TSelf)this);
 		}
 		public StackValuePushDisposable<TValue> Push(TValue value, int priority = default)
 		{
