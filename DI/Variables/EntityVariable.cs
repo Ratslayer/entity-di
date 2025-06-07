@@ -14,7 +14,8 @@ namespace BB.Di
 			=> b.Value;
 		public void RaiseEvent<T>(T msg = default)
 			=> Value.Publish(msg);
-		public void Get<T>(ref T cacheRef)
+		public T Get<T>() => Value.Get<T>();
+		public void GetValue<T>(ref T cacheRef)
 			where T : class
 			=> Value.Get(ref cacheRef);
 		public async UniTask WaitForEvent<T>(CancellationToken ct)

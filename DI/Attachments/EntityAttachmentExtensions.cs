@@ -6,6 +6,8 @@
 		{
 			if (!entity)
 				return;
+			if (target == entity)
+				return;
 			if (target)
 				(entity._ref as EntityImpl).AttachTo(target._ref);
 			else (entity._ref as EntityImpl).Detach();
