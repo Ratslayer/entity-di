@@ -12,6 +12,6 @@
 		where TSelf : BoolStackValue<TSelf>
 	{
 		public static implicit operator bool(BoolStackValue<TSelf> e)
-			=> e.Value;
+			=> e?.Value is true;
 	}
 }

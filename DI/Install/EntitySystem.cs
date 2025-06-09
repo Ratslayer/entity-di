@@ -6,7 +6,7 @@ namespace BB
 		[Inject]
 		readonly IEntity _entityRef;
 		public Entity Entity => _entityRef.GetToken();
-
+		public Entity AttachedToEntity => Entity.AttachedToEntity;
 		public override string ToString()
 			=> $"{GetType().Name} {Entity}";
 
