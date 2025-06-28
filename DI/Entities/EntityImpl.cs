@@ -335,7 +335,7 @@ namespace BB.Di
 					child.FinalizeStateChange();
 				_children.Clear();
 			}
-			DisposeUnity();
+			UnityDestroy();
 			//clear collections
 			if (_childPools is not null)
 			{
@@ -350,7 +350,8 @@ namespace BB.Di
 		}
 		partial void DetachFromCurrentEntity();
 		partial void SyncParentAttachments();
-		partial void DisposeUnity();
+		partial void UnityDestroy();
+		partial void UnityDespawn();
 
 		#endregion
 		#region Temporary Subscriptions
