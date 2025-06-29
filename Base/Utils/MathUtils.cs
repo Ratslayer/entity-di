@@ -47,4 +47,7 @@ public static class MathUtils
 	public static float Min0(this float value) => Math.Max(value, 0);
 	public static bool IsPositive(this double value)
 		=> value.IsValid() && value >= _epsilon;
+
+	public static bool IsOdd(this int n) => n % 2 == 1;
+	public static bool IsEven(this int n) => n % 2 == 0;
 }
