@@ -369,6 +369,18 @@ namespace BB.Di
 				subscription.Unsubscribe(this);
 		}
 		#endregion
+		#region Despawn Disposables
+		List<DisposableToken> _despawnDisposables;
+		public void AddDespawnDisposable(IDisposable disposable)
+		{
+			_despawnDisposables ??= new();
+			_despawnDisposables.Add(new(disposable));
+		}
+		public void RemoveDespawnDisposable(IDisposable disposable)
+		{
+			_despawnDisposables?.Remove(new(disposable));
+		}
+		#endregion
 		#region Install
 		readonly Action<IDiContainer> _install;
 		void Install()

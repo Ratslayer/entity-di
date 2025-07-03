@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 namespace BB
 {
 	public static class DisposableExtensions
@@ -10,7 +11,7 @@ namespace BB
 				disposable.Dispose();
 		}
 		public static IDisposable LinkDisposable(
-			this IDisposable d1, 
+			this IDisposable d1,
 			IDisposable d2)
 		{
 			if (d1 is null)
@@ -18,13 +19,13 @@ namespace BB
 			if (d2 is null)
 				return d1;
 
-			if(d1 is DisposableBag b1)
+			if (d1 is DisposableBag b1)
 			{
 				b1.AddDisposable(d2);
 				return b1;
 			}
 
-			if(d2 is DisposableBag b2)
+			if (d2 is DisposableBag b2)
 			{
 				b2.AddDisposable(d1);
 				return b2;
@@ -41,6 +42,12 @@ namespace BB
 			foreach (var element in collection)
 				if (element is IDisposable disposable)
 					disposable.Dispose();
+			collection.Clear();
+		}
+		public static void DisposeAndClear(this List<DisposableToken> collection)
+		{
+			foreach (var element in collection)
+				element.Dispose();
 			collection.Clear();
 		}
 		public static void DisposeAndClear(this IDictionary dictionary)

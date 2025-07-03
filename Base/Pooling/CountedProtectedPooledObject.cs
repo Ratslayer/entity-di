@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace BB
 {
 	public abstract class CountedProtectedPooledObject<TSelf>
-		: ProtectedPooledObject<TSelf>, ICountedPooledDisposable
+		: ProtectedPooledObject<TSelf>, IPooledDisposable
 		where TSelf : CountedProtectedPooledObject<TSelf>, new()
 	{
 		static ulong _lastCounter = 0;
@@ -20,34 +20,41 @@ namespace BB
 			base.Dispose();
 			Counter = 0;
 		}
-		public CountedPooledDisposable GetToken() => new(this, Counter);
+		public DisposableToken GetToken() => new(this);
 		public CountedPooledDisposable<TSelf> GetTypedToken() => new((TSelf)this, Counter);
 	}
-	public interface ICountedPooledDisposable : IDisposable
+	public interface IPooledDisposable : IDisposable
 	{
 		ulong Counter { get; }
 	}
-	public readonly struct CountedPooledDisposable : IDisposable
+	public readonly struct DisposableToken : IDisposable
 	{
-		readonly ICountedPooledDisposable _disposable;
+		readonly IDisposable _disposable;
 		readonly ulong _counter;
-		public CountedPooledDisposable(ICountedPooledDisposable disposable, ulong counter)
+		public DisposableToken(IDisposable disposable)
+		{
+			_disposable = disposable;
+			_counter = disposable is IPooledDisposable pd
+				? pd.Counter : 0;
+		}
+		public DisposableToken(IDisposable disposable, ulong counter)
 		{
 			_disposable = disposable;
 			_counter = counter;
 		}
 		public void Dispose()
 		{
-			if (_disposable is null
-				|| _counter == 0
-				|| _disposable.Counter != _counter)
+			if (_disposable is null)
+				return;
+			if (_disposable is IPooledDisposable pd
+				&& (_counter == 0 || pd.Counter != _counter))
 				return;
 
 			_disposable.Dispose();
 		}
 	}
 	public readonly struct CountedPooledDisposable<T> : IDisposable
-		where T : ICountedPooledDisposable
+		where T : IPooledDisposable
 	{
 		readonly T _disposable;
 		readonly ulong _counter;
@@ -79,13 +86,13 @@ namespace BB
 			=> d._disposable is not null
 			&& d._counter > 0
 			&& d._counter == d._disposable.Counter;
-		public static implicit operator CountedPooledDisposable(CountedPooledDisposable<T> d)
+		public static implicit operator DisposableToken(CountedPooledDisposable<T> d)
 			=> new(d._disposable, d._counter);
 	}
 	public static class CounterPooledDisposableExtensions
 	{
 		public static void RemoveDeadElements<T>(this List<CountedPooledDisposable<T>> list)
-			where T : ICountedPooledDisposable
+			where T : IPooledDisposable
 		{
 			foreach (var i in -list.Count)
 				if (!list[i].HasValue(out _))

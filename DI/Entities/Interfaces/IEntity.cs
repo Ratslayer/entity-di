@@ -28,7 +28,8 @@ namespace BB.Di
 		void RemoveSubscription(IEntityEventMethod subscription);
 		void AddTemporarySubscription(IEntitySubscription subscription);
 		void RemoveTemporarySubscription(IEntitySubscription subscription);
-
+		void AddDespawnDisposable(IDisposable disposable);
+		void RemoveDespawnDisposable(IDisposable disposable);
 		CancellationToken DespawnCancellationToken { get; }
 	}
 	public interface IEntityProvider

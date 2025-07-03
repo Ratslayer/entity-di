@@ -1,27 +1,22 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 namespace BB
 {
-	public abstract class ProtectedPooledObject<TSelf> : IDisposable
+	public abstract class ProtectedPooledObject<TSelf> : IPooledDisposable
 		where TSelf : ProtectedPooledObject<TSelf>, new()
 	{
 		static readonly List<TSelf> _pool = new();
-		private bool _isPooled;
+		public ulong Counter { get; private set; }
 		protected ProtectedPooledObject() { }
 		protected static TSelf GetPooledInternal()
 		{
-			if (_pool.Count > 1)
-				return _pool.RemoveLast();
-
-			return new TSelf
-			{
-				_isPooled = true
-			};
+			var result = _pool.Count == 0 ? new TSelf() : _pool.RemoveLast();
+			result.Counter = PooledDisposableUtils.GetNextCounter();
+			return result;
 		}
 		public virtual void Dispose()
 		{
-			if (_isPooled)
-				_pool.Add((TSelf)this);
+			_pool.Add((TSelf)this);
+			Counter = 0;
 		}
 	}
 }
