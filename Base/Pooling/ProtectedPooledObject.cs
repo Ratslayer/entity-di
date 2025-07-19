@@ -18,5 +18,7 @@ namespace BB
 			_pool.Add((TSelf)this);
 			Counter = 0;
 		}
+		public DisposableToken GetToken() => new(this);
+		public DisposableToken<TSelf> GetTypedToken() => new((TSelf)this, Counter);
 	}
 }
