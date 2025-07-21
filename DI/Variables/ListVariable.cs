@@ -23,7 +23,7 @@ namespace BB
 		{
 			_elements.Add(e);
 			OnAdd(e);
-			this.SetDirtyAndFlushChanges();
+			this.SetDirtyAndAutoFlushChanges();
 		}
 
 		public void AddRange(IEnumerable<ElementType> range)
@@ -31,14 +31,14 @@ namespace BB
 			_elements.AddRange(range);
 			foreach (var e in range)
 				OnAdd(e);
-			this.SetDirtyAndFlushChanges();
+			this.SetDirtyAndAutoFlushChanges();
 		}
 		public void RemoveRange(IEnumerable<ElementType> range)
 		{
 			foreach (var e in range)
 				if (_elements.Remove(e))
 					OnRemove(e);
-			this.SetDirtyAndFlushChanges();
+			this.SetDirtyAndAutoFlushChanges();
 		}
 		public void RemoveDisposeAndFlush(Func<ElementType, bool> predicate)
 		{
@@ -59,7 +59,7 @@ namespace BB
 			if (result)
 			{
 				OnRemove(e);
-				this.SetDirtyAndFlushChanges();
+				this.SetDirtyAndAutoFlushChanges();
 			}
 			return result;
 		}
@@ -72,7 +72,7 @@ namespace BB
 			foreach(var e in _elements)
 				OnRemove(e);
 			_elements.Clear();
-			this.SetDirtyAndFlushChanges();
+			this.SetDirtyAndAutoFlushChanges();
 		}
 		public void SetRange(IEnumerable<ElementType> elements)
 		{
@@ -108,13 +108,13 @@ namespace BB
 		public void Insert(int index, ElementType item)
 		{
 			_elements.Insert(index, item);
-			this.SetDirtyAndFlushChanges();
+			this.SetDirtyAndAutoFlushChanges();
 		}
 
 		public void RemoveAt(int index)
 		{
 			_elements.RemoveAt(index);
-			this.SetDirtyAndFlushChanges();
+			this.SetDirtyAndAutoFlushChanges();
 		}
 
 		protected virtual void OnRemove(ElementType e) { }

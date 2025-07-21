@@ -24,7 +24,7 @@ namespace BB
 				auto.AutoFlushDisabled = _autoFlush;
 
 			if (_flushOnDispose)
-				_flushable.FlushChangesIfDirty();
+				_flushable.AutoFlushChangesIfDirty();
 		}
 	}
 }

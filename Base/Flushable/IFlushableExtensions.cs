@@ -8,7 +8,7 @@
 		public static FlushableDisposable DisableAutoFlush(this IAutoFlushable flushable)
 			=> new(flushable, false);
 
-		public static void FlushChangesIfDirty(this IFlushable flushable)
+		public static void AutoFlushChangesIfDirty(this IFlushable flushable)
 		{
 			if (flushable is IAutoFlushable auto && auto.AutoFlushDisabled)
 				return;
@@ -25,11 +25,11 @@
 			d.IsDirty = false;
 			d.ForceFlushChanges();
 		}
-		public static void SetDirtyAndFlushChanges(this IFlushable flushable, bool setDirty = true)
+		public static void SetDirtyAndAutoFlushChanges(this IFlushable flushable, bool setDirty = true)
 		{
 			if (setDirty && flushable is IDirtyFlushable d)
 				d.IsDirty = true;
-			flushable.FlushChangesIfDirty();
+			flushable.AutoFlushChangesIfDirty();
 		}
 	}
 }
