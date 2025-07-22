@@ -170,7 +170,8 @@ public static class ListUtils
 	}
 	public static bool IsNullOrEmpty<T>(this IEnumerable<T> list)
 		=> list is null || list.Count() == 0;
-	public static bool ContainsAll<T>(this IEnumerable<T> outer, IEnumerable<T> inner)
+	public static bool ContainsAll<T1, T2>(this IEnumerable<T1> outer, IEnumerable<T2> inner)
+		where T2 : T1
 	{
 		if (inner.IsNullOrEmpty())
 			return true;
