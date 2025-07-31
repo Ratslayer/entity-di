@@ -9,7 +9,5 @@ namespace BB
 		public Entity AttachedToEntity => Entity.AttachedToEntity;
 		public override string ToString()
 			=> $"{GetType().Name} {Entity}";
-
-		protected void Despawn() => Entity.Despawn();
 	}
 }

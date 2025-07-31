@@ -26,7 +26,8 @@ namespace BB.Di
 		public TValue PreviousValue { get; private set; }
 
 		public int Count => _stack.Count;
-
+		public bool IsDirty { get; set; }
+		public bool AutoFlushDisabled { get; set; }
 		public TValue this[int index] => _stack[index]._value;
 
 		readonly List<ValueWrapper> _stack = new();
@@ -35,18 +36,18 @@ namespace BB.Di
 			value = Value;
 			return _stack.Count > 0;
 		}
-		public void Update()
+		void FlushIfChanged()
 		{
 			PreviousValue = Value;
 			Value = _stack.Count > 0 ? _stack[^1]._value : _defaultValue;
 			if (!EqualityComparer<TValue>.Default.Equals(PreviousValue, Value))
-				Publisher.Publish((TSelf)this);
+				this.SetDirtyAndAutoFlushChanges();
 		}
 		public StackValuePushDisposable<TValue> Push(TValue value, int priority = default)
 		{
 			_stack.Add(new(value, priority));
 			_stack.SortByPriority();
-			Update();
+			FlushIfChanged();
 			return new((TSelf)this, value, priority);
 		}
 		public TValue Pop()
@@ -55,7 +56,7 @@ namespace BB.Di
 				return default;
 
 			var result = _stack.RemoveLast();
-			Update();
+			FlushIfChanged();
 
 			return result._value;
 		}
@@ -64,7 +65,7 @@ namespace BB.Di
 			if (!_stack.Remove(new(value, priority)))
 				return false;
 
-			Update();
+			FlushIfChanged();
 			return true;
 		}
 		public bool TryPop(out TValue value)
@@ -115,5 +116,10 @@ namespace BB.Di
 		}
 		public virtual bool IsCurrentValue(TValue value)
 			=> EqualityComparer<TValue>.Default.Equals(Value, value);
+
+		public void ForceFlushChanges()
+		{
+			Publisher.Publish((TSelf)this);
+		}
 	}
 }

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace BB.Di
 {
 	public interface IStackValue { }
-	public interface IStackValue<TValue> : IStackValue, IReadOnlyList<TValue>
+	public interface IStackValue<TValue> : IStackValue, IReadOnlyList<TValue>, IAutoFlushable, IDirtyFlushable
 	{
 		void SetDefaultValue(TValue value);
 		StackValuePushDisposable<TValue> Push(TValue value, int priority = 0);
