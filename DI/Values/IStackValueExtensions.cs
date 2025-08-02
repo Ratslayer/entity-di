@@ -20,6 +20,16 @@
 			stack.AutoFlushDisabled = false;
 			stack.AutoFlushChangesIfDirty();
 		}
+		public static TValue RemoveAndPush<TValue>(
+			this IStackValue<TValue> stack, TValue oldValue, TValue newValue)
+		{
+			stack.AutoFlushDisabled = true;
+			stack.Remove(oldValue);
+			stack.Push(newValue);
+			stack.AutoFlushDisabled = false;
+			stack.AutoFlushChangesIfDirty();
+			return newValue;
+		}
 		public static void PushOrRemove<TValue>(this IStackValue<TValue> stack, TValue value, bool push)
 		{
 			if(push)

@@ -386,12 +386,12 @@ namespace BB.Di
 		void Install()
 		{
 			InstallInternal();
-			RaiseCreateEvent();
+			PublishCreateEvent();
 			if (_children is not null)
 				foreach (var child in _children)
-					child.RaiseCreateEvent();
+					child.PublishCreateEvent();
 		}
-		void RaiseCreateEvent() => CreateEvent?.Invoke();
+		void PublishCreateEvent() => CreateEvent?.Invoke();
 		void InstallInternal()
 		{
 			this.Instance<IEntity>(this);
