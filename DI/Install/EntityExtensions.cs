@@ -1,8 +1,9 @@
-﻿using UnityEngine;
-using BB.Di;
+﻿using BB.Di;
 using Cysharp.Threading.Tasks;
 using System.Threading;
 using System.Collections.Generic;
+using System.Collections;
+using UnityEngine;
 namespace BB
 {
 	public static class EntityExtensions
@@ -28,6 +29,13 @@ namespace BB
 		{
 			if (entity)
 				entity._ref.State = EntityState.Despawned;
+		}
+		public static void DespawnAndClear<T>(this ICollection<T> collection)
+			where T:Component
+		{
+			foreach (var element in collection)
+				element.Despawn();
+			collection.Clear();
 		}
 
 		public static void Publish<T>(this Entity entity, T msg = default)
