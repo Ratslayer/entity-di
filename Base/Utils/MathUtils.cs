@@ -38,7 +38,8 @@ public static class MathUtils
 		=> v1 <= v2 + _epsilon;
 	public static bool LessThanOrEquals(this double v1, double v2)
 		=> v1 <= v2 + _epsilon;
-
+	public static bool GreaterThanOrEquals(this float v1, float v2)
+		=> v1 >= v2 - _epsilon;
 	public static bool GreaterThanOrEquals(this double v1, double v2)
 		=> v1 >= v2 - _epsilon;
 
