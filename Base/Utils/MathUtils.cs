@@ -42,6 +42,10 @@ public static class MathUtils
 		=> v1 >= v2 - _epsilon;
 	public static bool GreaterThanOrEquals(this double v1, double v2)
 		=> v1 >= v2 - _epsilon;
+	public static bool GreaterThan(this float v1, float v2)
+		=> v1 >= v2 + _epsilon;
+	public static bool GreaterThan(this double v1, double v2)
+		=> v1 >= v2 + _epsilon;
 
 	public static float SignOrZero(float value, float threshold)
 		=> Math.Abs(value) < threshold ? 0f : Math.Sign(value);
