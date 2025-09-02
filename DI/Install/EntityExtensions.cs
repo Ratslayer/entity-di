@@ -130,6 +130,29 @@ namespace BB
 			return result;
 		}
 
+		public static bool Has<T1, T2, T3, T4, T5,T6>(
+			this Entity entity,
+			out T1 var1, out T2 var2, out T3 var3, out T4 var4, out T5 var5, out T6 var6)
+		{
+			if (!entity)
+			{
+				var1 = default;
+				var2 = default;
+				var3 = default;
+				var4 = default;
+				var5 = default;
+				var6 = default;
+				return false;
+			}
+			var result = entity.Has(out var1);
+			result &= entity.Has(out var2);
+			result &= entity.Has(out var3);
+			result &= entity.Has(out var4);
+			result &= entity.Has(out var5);
+			result &= entity.Has(out var6);
+			return result;
+		}
+
 		public static void DespawnAndClear(this IList<Entity> entities)
 		{
 			foreach (var entity in entities)
