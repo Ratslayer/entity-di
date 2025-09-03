@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 public static class ListExtensions
 {
 	public static bool TryRemoveFirst<T>(this IList<T> list, out T element)
@@ -12,6 +13,18 @@ public static class ListExtensions
 		element = list[0];
 		list.RemoveAt(0);
 		return true;
+	}
+	public static T RemoveFirstOrDefault<T>(this IList<T> list, Func<T, bool> predicate)
+	{
+		foreach(var i in list.Count)
+		{
+			var element = list[i];
+			if (!predicate(element))
+				continue;
+			list.RemoveAt(i);
+			return element;
+		}
+		return default;
 	}
 	public static bool TryGetNext<T>(this IList<T> list, T element, out T next)
 	{
