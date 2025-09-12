@@ -7,6 +7,7 @@ namespace BB
 		public void Append(string str) => _sb.Append(str);
 		public void AppendLine(string str) => _sb.AppendLine(str);
 		public void AppendLine() => _sb.AppendLine();
+		public bool Empty => _sb.Length == 0;
 
 		public override void Dispose()
 		{
