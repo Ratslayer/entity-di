@@ -359,13 +359,13 @@ namespace BB.Di
 		public void AddTemporarySubscription(IEntitySubscription subscription)
 		{
 			if (_tempSubscriptions.AddUnique(subscription)
-				&& State == EntityState.Enabled)
+				&& State is EntityState.Enabled)
 				subscription.Subscribe(this);
 		}
 		public void RemoveTemporarySubscription(IEntitySubscription subscription)
 		{
-			if (_tempSubscriptions.Remove(subscription)
-				&& State == EntityState.Enabled)
+			if (State is EntityState.Enabled
+				&& _tempSubscriptions.Remove(subscription))
 				subscription.Unsubscribe(this);
 		}
 		#endregion
