@@ -39,7 +39,7 @@ namespace BB.Di
 				.BindEvents();
 			container.Event<T>();
 		}
-		public static void Stack<TStack, TValue>(this IDiContainer container, TValue defaultValue)
+        public static void Stack<TStack, TValue>(this IDiContainer container, TValue defaultValue)
 			where TStack : IStackValue<TValue>, new()
 		{
 			var stateValue = new TStack();
