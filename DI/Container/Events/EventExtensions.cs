@@ -8,26 +8,25 @@ namespace BB
 		public static void Publish<T>(this IEvent<T> e)
 			where T : new()
 			=> e.Publish(new());
-		public static IEntitySubscription TempSubscribe<T>(this Entity entity, Action<T> action)
-		{
-			if (!entity.Has(out IEvent<T> e))
-				return null;
-			var subscription = PooledActionSubscription<T>.GetPooled(e, action);
-			entity._ref.AddTemporarySubscription(subscription);
-			return subscription;
-		}
-	}
+		public static IDisposable TempSubscribe<T>(this Entity entity, Action<T> action)
+			=> PooledActionSubscription<T>.GetPooled(entity, action);
+    }
 	public sealed class PooledActionSubscription<T> 
 		: ProtectedPooledObject<PooledActionSubscription<T>>, IEntitySubscription
 	{
 		IEvent<T> _event;
 		Action<T> _action;
-		public static PooledActionSubscription<T> GetPooled(IEvent<T> e, Action<T> action)
+		IEntity _entity;
+		public static PooledActionSubscription<T> GetPooled(Entity entity, Action<T> action)
 		{
+			if (!entity.Has(out IEvent<T> e))
+				return null;
 			var result = GetPooledInternal();
+			result._entity = entity._ref;
 			result._event = e;
 			result._action = action;
-			return result;
+            entity._ref.AddTemporarySubscription(result);
+            return result;
 		}
 
 		public void Subscribe(IEntity _)
@@ -38,6 +37,14 @@ namespace BB
 		public void Unsubscribe(IEntity _)
 		{
 			_event.Unsubscribe(_action);
+		}
+		public override void Dispose()
+		{
+			_entity?.RemoveTemporarySubscription(this);
+			_entity = null;
+			_action = null;
+			_event = null;
+			base.Dispose();
 		}
 	}
 }
