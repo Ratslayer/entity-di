@@ -60,7 +60,7 @@ namespace BB.Di
 
 			return result._value;
 		}
-		public bool Remove(TValue value, int priority = default)
+		public bool Pop(TValue value, int priority = default)
 		{
 			if (!_stack.Remove(new(value, priority)))
 				return false;

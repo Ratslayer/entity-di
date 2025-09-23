@@ -15,7 +15,7 @@
 		public static void Repush<TValue>(this IStackValue<TValue> stack, TValue value)
 		{
 			stack.AutoFlushDisabled = true;
-			stack.Remove(value);
+			stack.Pop(value);
 			stack.Push(value);
 			stack.AutoFlushDisabled = false;
 			stack.AutoFlushChangesIfDirty();
@@ -24,7 +24,7 @@
 			this IStackValue<TValue> stack, TValue oldValue, TValue newValue)
 		{
 			stack.AutoFlushDisabled = true;
-			stack.Remove(oldValue);
+			stack.Pop(oldValue);
 			stack.Push(newValue);
 			stack.AutoFlushDisabled = false;
 			stack.AutoFlushChangesIfDirty();
@@ -34,7 +34,7 @@
 		{
 			if(push)
 				stack.Push(value);
-			else stack.Remove(value);
+			else stack.Pop(value);
 		}
 	}
 }

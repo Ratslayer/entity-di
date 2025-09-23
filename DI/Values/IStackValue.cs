@@ -8,7 +8,7 @@ namespace BB.Di
 	{
 		void SetDefaultValue(TValue value);
 		StackValuePushDisposable<TValue> Push(TValue value, int priority = 0);
-		bool Remove(TValue value, int priority = 0);
+		bool Pop(TValue value, int priority = 0);
 		TValue Pop();
 	}
 	public readonly struct StackValuePushDisposable<TValue> : IDisposable
@@ -23,6 +23,6 @@ namespace BB.Di
 			_priority = priority;
 		}
 
-		public void Dispose() => _stack?.Remove(_value, _priority);
+		public void Dispose() => _stack?.Pop(_value, _priority);
 	}
 }

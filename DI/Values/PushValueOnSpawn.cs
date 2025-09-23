@@ -10,6 +10,6 @@ namespace BB
 		[OnSpawn]
 		void OnSpawn() => Stack.Push(Value);
 		[OnDespawn]
-		void OnDespawn() => Stack.Remove(Value);
+		void OnDespawn() => Stack.Pop(Value);
 	}
 }
