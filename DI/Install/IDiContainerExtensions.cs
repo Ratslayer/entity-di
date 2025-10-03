@@ -39,26 +39,26 @@ namespace BB.Di
                 .BindEvents();
             container.Event<T>();
         }
-        public static void Stack<TStack, TValue>(this IDiContainer container, TValue defaultValue)
-            where TStack : IStackValue<TValue>, new()
-        {
-            var stateValue = new TStack();
-            stateValue.SetDefaultValue(defaultValue);
-            container
-                .Instance(stateValue)
-                .Inject()
-                .BindEvents();
-            container.Event<TStack>();
-        }
-        public static void Stack<TStack>(this IDiContainer container)
-            where TStack : IStackValue
-        {
-            container.Construct<TStack>()
-                .Inject()
-                .BindEvents()
-                .Lazy();
-            container.Event<TStack>();
-        }
+        //public static void Stack<TStack, TValue>(this IDiContainer container, TValue defaultValue)
+        //    where TStack : IStackValue<TValue>, new()
+        //{
+        //    var stateValue = new TStack();
+        //    stateValue.SetDefaultValue(defaultValue);
+        //    container
+        //        .Instance(stateValue)
+        //        .Inject()
+        //        .BindEvents();
+        //    container.Event<TStack>();
+        //}
+        //public static void Stack<TStack>(this IDiContainer container)
+        //    where TStack : IStackValue
+        //{
+        //    container.Construct<TStack>()
+        //        .Inject()
+        //        .BindEvents()
+        //        .Lazy();
+        //    container.Event<TStack>();
+        //}
         public static IDiStrategy System<T>(
             this IDiContainer container,
             params object[] args)
