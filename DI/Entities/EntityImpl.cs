@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Threading;
 namespace BB.Di
@@ -138,6 +139,7 @@ namespace BB.Di
 			foreach (var kvp in _elements)
 				yield return (kvp.Key, kvp.Value.Resolve());
 		}
+		public IEnumerable<IEntity> GetChildren() => _children.EmptyIfNull();
 		public bool Installed { get; private set; }
 		public void BindStrategy(Type contract, IDiStrategy element)
 		{

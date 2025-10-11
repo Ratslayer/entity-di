@@ -11,7 +11,7 @@ namespace BB.Di
         [Inject]
         IEvent<TSelf> Publisher { get; set; }
         TValue _defaultValue;
-        readonly List<ValueWrapper<TValue>> _stack = new();
+        readonly List<SourcedValue<TValue>> _stack = new();
         public void SetValueNoUpdate(TValue value)
         {
             _defaultValue = value;
@@ -44,7 +44,7 @@ namespace BB.Di
             if (!EqualityComparer<TValue>.Default.Equals(PreviousValue, Value))
                 this.SetDirtyAndAutoFlushChanges();
         }
-        public StackValuePushDisposable<TValue> Push(in ValueWrapper<TValue> value)
+        public StackValuePushDisposable<TValue> Push(in SourcedValue<TValue> value)
         {
             _stack.Add(value);
             _stack.SortByPriority();
@@ -61,7 +61,7 @@ namespace BB.Di
 
             return result.Value;
         }
-        public bool Pop(in ValueWrapper<TValue> value)
+        public bool Pop(in SourcedValue<TValue> value)
         {
             if (!_stack.Remove(value))
                 return false;
@@ -80,9 +80,9 @@ namespace BB.Di
             value = Pop();
             return true;
         }
-        public bool Contains(in ValueWrapper<TValue> value)
+        public bool Contains(in SourcedValue<TValue> value)
             => _stack.Contains(value);
-        public override string ToString()
+        public string CustomToString()
             => $"[{typeof(TSelf).Name}] {StringExtensions.SafeToString(Value)}";
 
         public IEnumerator<TValue> GetEnumerator()
@@ -112,13 +112,33 @@ namespace BB.Di
         {
             Publisher.Publish((TSelf)this);
         }
+
+        public IEnumerable<SourcedValue> GetTypelessSourceValues()
+        {
+            foreach (var value in _stack.Inverse())
+                yield return new()
+                {
+                    Value = value.Value,
+                    Priority = value.Priority,
+                    Source = value.Source
+                };
+        }
     }
-    public readonly struct ValueWrapper<TValue> : IPriority
+
+    public readonly struct SourcedValue : IPriority
+    {
+        public object Value { get; init; }
+        public int Priority { get; init; }
+        public DataSourceDesc Source { get; init; }
+        public override string ToString()
+            => $"{Value} ({Source})";
+    }
+    public readonly struct SourcedValue<TValue> : IPriority
     {
         public TValue Value { get; init; }
         public int Priority { get; init; }
         public DataSourceDesc Source { get; init; }
-		
+
     }
     public readonly struct DataSourceDesc
     {

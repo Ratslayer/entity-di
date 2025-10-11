@@ -8,6 +8,7 @@ namespace BB
     {
         static readonly List<EntityImpl> _entities = new();
         static EntityImpl TopEntity => _entities.Count > 0 ? _entities[^1] : null;
+        public static EntityImpl RootEntity => _entities[0];
 
         public static void Init(Action<IDiContainer> install)
         {

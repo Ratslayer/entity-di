@@ -4,7 +4,7 @@
 	{
 		public static StackValuePushDisposable<TValue> PushStackValue<TStack, TValue>(
 			this Entity entity,
-            in ValueWrapper<TValue> value)
+            in SourcedValue<TValue> value)
 			where TStack : IStackValue<TValue>
 		{
 			if (!entity.Has(out TStack stack))
@@ -12,7 +12,7 @@
 
 			return stack.Push(value);
 		}
-		public static void Repush<TValue>(this IStackValue<TValue> stack, in ValueWrapper<TValue> value)
+		public static void Repush<TValue>(this IStackValue<TValue> stack, in SourcedValue<TValue> value)
 		{
 			stack.AutoFlushDisabled = true;
 			stack.Pop(value);
@@ -21,7 +21,7 @@
 			stack.AutoFlushChangesIfDirty();
 		}
 		public static TValue RemoveAndPush<TValue>(
-			this IStackValue<TValue> stack, in ValueWrapper<TValue> oldValue, in ValueWrapper<TValue> newValue)
+			this IStackValue<TValue> stack, in SourcedValue<TValue> oldValue, in SourcedValue<TValue> newValue)
 		{
 			stack.AutoFlushDisabled = true;
 			stack.Pop(oldValue);
@@ -30,7 +30,7 @@
 			stack.AutoFlushChangesIfDirty();
 			return newValue.Value;
 		}
-		public static void PushOrRemove<TValue>(this IStackValue<TValue> stack, in ValueWrapper<TValue> value, bool push)
+		public static void PushOrRemove<TValue>(this IStackValue<TValue> stack, in SourcedValue<TValue> value, bool push)
 		{
 			if(push)
 				stack.Push(value);

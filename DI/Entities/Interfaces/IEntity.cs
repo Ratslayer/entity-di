@@ -39,6 +39,7 @@ namespace BB.Di
 	public interface IEntityDetails : IEntity
 	{
 		IEnumerable<(Type, object)> GetElements();
+		IEnumerable<IEntity> GetChildren();
 		bool Installed { get; }
 	}
 }
