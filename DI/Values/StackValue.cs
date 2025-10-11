@@ -1,4 +1,5 @@
 ﻿using Cysharp.Threading.Tasks;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,6 +11,7 @@ namespace BB.Di
         [Inject]
         IEvent<TSelf> Publisher { get; set; }
         TValue _defaultValue;
+        readonly List<ValueWrapper<TValue>> _stack = new();
         public void SetValueNoUpdate(TValue value)
         {
             _defaultValue = value;
@@ -28,9 +30,8 @@ namespace BB.Di
         public int Count => _stack.Count;
         public bool IsDirty { get; set; }
         public bool AutoFlushDisabled { get; set; }
-        public TValue this[int index] => _stack[index]._value;
+        public TValue this[int index] => _stack[index].Value;
 
-        readonly List<ValueWrapper> _stack = new();
         public bool HasValue(out TValue value)
         {
             value = Value;
@@ -39,16 +40,16 @@ namespace BB.Di
         void FlushIfChanged()
         {
             PreviousValue = Value;
-            Value = _stack.Count > 0 ? _stack[^1]._value : _defaultValue;
+            Value = _stack.Count > 0 ? _stack[^1].Value : _defaultValue;
             if (!EqualityComparer<TValue>.Default.Equals(PreviousValue, Value))
                 this.SetDirtyAndAutoFlushChanges();
         }
-        public StackValuePushDisposable<TValue> Push(TValue value, int priority = default)
+        public StackValuePushDisposable<TValue> Push(in ValueWrapper<TValue> value)
         {
-            _stack.Add(new(value, priority));
+            _stack.Add(value);
             _stack.SortByPriority();
             FlushIfChanged();
-            return new((TSelf)this, value, priority);
+            return new((TSelf)this, value);
         }
         public TValue Pop()
         {
@@ -58,11 +59,11 @@ namespace BB.Di
             var result = _stack.RemoveLast();
             FlushIfChanged();
 
-            return result._value;
+            return result.Value;
         }
-        public bool Pop(TValue value, int priority = default)
+        public bool Pop(in ValueWrapper<TValue> value)
         {
-            if (!_stack.Remove(new(value, priority)))
+            if (!_stack.Remove(value))
                 return false;
 
             FlushIfChanged();
@@ -79,13 +80,13 @@ namespace BB.Di
             value = Pop();
             return true;
         }
-        public bool Contains(TValue value, int priority)
-            => _stack.Contains(new(value, priority));
+        public bool Contains(in ValueWrapper<TValue> value)
+            => _stack.Contains(value);
         public override string ToString()
             => $"[{typeof(TSelf).Name}] {StringExtensions.SafeToString(Value)}";
 
         public IEnumerator<TValue> GetEnumerator()
-            => _stack.Select(x => x._value).GetEnumerator();
+            => _stack.Select(x => x.Value).GetEnumerator();
 
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
@@ -93,17 +94,7 @@ namespace BB.Di
             TValue(StackValue<TSelf, TValue> state)
             => state.Value;
 
-        readonly struct ValueWrapper : IPriority
-        {
-            public readonly TValue _value;
-            public readonly int _priority;
-            public int Priority => _priority;
-            public ValueWrapper(TValue value, int priority)
-            {
-                _value = value;
-                _priority = priority;
-            }
-        }
+
 
         public async UniTask WaitForValue(TValue value)
         {
@@ -121,5 +112,31 @@ namespace BB.Di
         {
             Publisher.Publish((TSelf)this);
         }
+    }
+    public readonly struct ValueWrapper<TValue> : IPriority
+    {
+        public TValue Value { get; init; }
+        public int Priority { get; init; }
+        public DataSourceDesc Source { get; init; }
+		
+    }
+    public readonly struct DataSourceDesc
+    {
+        public Entity Entity { get; init; }
+        public Type Type { get; init; }
+        public override string ToString()
+            => $"{Entity}:{Type.Name}";
+        public static implicit operator DataSourceDesc(EntitySystem system)
+            => new()
+            {
+                Entity = system.Entity,
+                Type = system.GetType()
+            };
+        public static implicit operator DataSourceDesc((Entity, object) e)
+            => new()
+            {
+                Entity = e.Item1,
+                Type = e.Item2.GetType()
+            };
     }
 }

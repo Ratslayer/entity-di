@@ -6,22 +6,20 @@ namespace BB.Di
     public interface IStackValue { }
     public interface IStackValue<TValue> : IVariable<TValue>, IStackValue, IReadOnlyList<TValue>, IAutoFlushable, IDirtyFlushable
     {
-        StackValuePushDisposable<TValue> Push(TValue value, int priority = 0);
-        bool Pop(TValue value, int priority = 0);
+        StackValuePushDisposable<TValue> Push(in ValueWrapper<TValue> value);
+        bool Pop(in ValueWrapper<TValue> value);
         TValue Pop();
     }
     public readonly struct StackValuePushDisposable<TValue> : IDisposable
     {
         readonly IStackValue<TValue> _stack;
-        readonly TValue _value;
-        readonly int _priority;
-        public StackValuePushDisposable(IStackValue<TValue> stack, TValue value, int priority)
+        readonly ValueWrapper<TValue> _value;
+        public StackValuePushDisposable(IStackValue<TValue> stack, ValueWrapper<TValue> value)
         {
             _stack = stack;
             _value = value;
-            _priority = priority;
         }
 
-        public void Dispose() => _stack?.Pop(_value, _priority);
+        public void Dispose() => _stack?.Pop(_value);
     }
 }
