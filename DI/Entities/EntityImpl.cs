@@ -311,7 +311,10 @@ namespace BB.Di
 			DetachFromCurrentEntity();
 			_tempSubscriptions.Clear();
 			if (_effectiveState != EntityState.Destroyed)
+			{
+				UnityDespawn();
 				_pool?.Return(this);
+			}
 		}
 		void FinalizeStateChange()
 		{
