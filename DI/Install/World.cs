@@ -15,6 +15,15 @@ namespace BB
             while (_entities.Count > 0)
                 PopWorld();
             PushWorld("World", install);
+            Publish<AfterWorldSpawnEvent>();
+        }
+        public static void SetGame(IEntityInstaller installer)
+        {
+            Publish<BeforeGameSpawnEvent>();
+            while (_entities.Count > 1)
+                PopWorld();
+            PushWorld("Game", installer.Install);
+            Publish<AfterGameSpawnEvent>();
         }
         public static void PushWorld(string name, Action<IDiContainer> install)
         {
