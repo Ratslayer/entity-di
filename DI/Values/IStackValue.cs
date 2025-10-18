@@ -5,20 +5,20 @@ namespace BB.Di
 {
     public interface IStackValue
     {
-        IEnumerable<SourcedValue> GetTypelessSourceValues();
+        IEnumerable<StackSourcedValue> GetTypelessSourceValues();
         string CustomToString();
     }
-    public interface IStackValue<TValue> : IVariable<TValue>, IStackValue, IReadOnlyList<TValue>, IAutoFlushable, IDirtyFlushable
+    public interface IStackValue<TValue> 
+        : IVariable<TValue>, IStackValue, IReadOnlyList<TValue>, IAutoFlushable, IDirtyFlushable
     {
-        StackValuePushDisposable<TValue> Push(in SourcedValue<TValue> value);
-        bool Pop(in SourcedValue<TValue> value);
-        TValue Pop();
+        StackValuePushDisposable<TValue> Push(in StackSourcedValue<TValue> value);
+        bool Pop(in StackSourcedValue<TValue> value);
     }
     public readonly struct StackValuePushDisposable<TValue> : IDisposable
     {
         readonly IStackValue<TValue> _stack;
-        readonly SourcedValue<TValue> _value;
-        public StackValuePushDisposable(IStackValue<TValue> stack, SourcedValue<TValue> value)
+        readonly StackSourcedValue<TValue> _value;
+        public StackValuePushDisposable(IStackValue<TValue> stack, StackSourcedValue<TValue> value)
         {
             _stack = stack;
             _value = value;

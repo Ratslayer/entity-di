@@ -9,9 +9,9 @@ namespace BB.Di
         where TSelf : StackValue<TSelf, TValue>
     {
         [Inject]
-        IEvent<TSelf> Publisher { get; set; }
+        IEvent<TSelf> _publisher;
         TValue _defaultValue;
-        readonly List<SourcedValue<TValue>> _stack = new();
+        readonly List<StackSourcedValue<TValue>> _stack = new();
         public void SetValueNoUpdate(TValue value)
         {
             _defaultValue = value;
@@ -44,24 +44,14 @@ namespace BB.Di
             if (!EqualityComparer<TValue>.Default.Equals(PreviousValue, Value))
                 this.SetDirtyAndAutoFlushChanges();
         }
-        public StackValuePushDisposable<TValue> Push(in SourcedValue<TValue> value)
+        public StackValuePushDisposable<TValue> Push(in StackSourcedValue<TValue> value)
         {
             _stack.Add(value);
             _stack.SortByPriority();
             FlushIfChanged();
             return new((TSelf)this, value);
         }
-        public TValue Pop()
-        {
-            if (_stack.Count <= 0)
-                return default;
-
-            var result = _stack.RemoveLast();
-            FlushIfChanged();
-
-            return result.Value;
-        }
-        public bool Pop(in SourcedValue<TValue> value)
+        public bool Pop(in StackSourcedValue<TValue> value)
         {
             if (!_stack.Remove(value))
                 return false;
@@ -69,18 +59,7 @@ namespace BB.Di
             FlushIfChanged();
             return true;
         }
-        public bool TryPop(out TValue value)
-        {
-            if (_stack.Count == 0)
-            {
-                value = default;
-                return false;
-            }
-
-            value = Pop();
-            return true;
-        }
-        public bool Contains(in SourcedValue<TValue> value)
+        public bool Contains(in StackSourcedValue<TValue> value)
             => _stack.Contains(value);
         public string CustomToString()
             => $"[{typeof(TSelf).Name}] {StringExtensions.SafeToString(Value)}";
@@ -110,10 +89,10 @@ namespace BB.Di
 
         public void ForceFlushChanges()
         {
-            Publisher.Publish((TSelf)this);
+            _publisher.Publish((TSelf)this);
         }
 
-        public IEnumerable<SourcedValue> GetTypelessSourceValues()
+        public IEnumerable<StackSourcedValue> GetTypelessSourceValues()
         {
             foreach (var value in _stack.Inverse())
                 yield return new()
@@ -125,7 +104,7 @@ namespace BB.Di
         }
     }
 
-    public readonly struct SourcedValue : IPriority
+    public readonly struct StackSourcedValue : IPriority
     {
         public object Value { get; init; }
         public int Priority { get; init; }
@@ -133,7 +112,7 @@ namespace BB.Di
         public override string ToString()
             => $"{Value} ({Source})";
     }
-    public readonly struct SourcedValue<TValue> : IPriority
+    public readonly struct StackSourcedValue<TValue> : IPriority
     {
         public TValue Value { get; init; }
         public int Priority { get; init; }
