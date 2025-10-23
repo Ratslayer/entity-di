@@ -144,7 +144,7 @@ namespace BB.Di
             .Inject()
             .BindEvents()
             .NonLazy();
-        public static void InjectedInstance<T>(this IDiContainer container, object instance)
+        public static void InjectedInstance<T>(this IDiContainer container, T instance)
             => container
             .Instance(typeof(T), instance)
             .Inject()
