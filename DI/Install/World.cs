@@ -14,7 +14,7 @@ namespace BB
         {
             while (_entities.Count > 0)
                 PopWorld();
-            PushWorld("World", install);
+            PushEntity("World", install);
             Publish<AfterWorldSpawnEvent>();
         }
         public static void SetGame(IEntityInstaller installer)
@@ -22,10 +22,10 @@ namespace BB
             Publish<BeforeGameSpawnEvent>();
             while (_entities.Count > 1)
                 PopWorld();
-            PushWorld("Game", installer.Install);
+            PushEntity("Game", installer.Install);
             Publish<AfterGameSpawnEvent>();
         }
-        public static void PushWorld(string name, Action<IDiContainer> install)
+        static void PushEntity(string name, Action<IDiContainer> install)
         {
             var entity = EntityImpl.CreateEntity(
                 name,
@@ -36,20 +36,21 @@ namespace BB
             _entities.Add(entity);
             entity.State = EntityState.Enabled;
         }
-        public static void PopWorldUntil(IEntity entity)
+        static void PopWorldUntil(IEntity entity)
         {
             while (_entities.Count > 0)
             {
                 if (_entities[^1] == entity)
                     return;
-                _entities[^1].Dispose();
-                _entities.RemoveAt(_entities.Count - 1);
+                PopWorld();
             }
         }
-        public static void PopWorld()
+        static void PopWorld()
         {
-            if (_entities.Count > 0)
-                _entities.RemoveAt(_entities.Count - 1);
+            if (_entities.Count == 0)
+                return;
+            _entities[^1].Dispose();
+            _entities.RemoveAt(_entities.Count - 1);
         }
 
         public static Entity Spawn(IEntityInstaller installer)

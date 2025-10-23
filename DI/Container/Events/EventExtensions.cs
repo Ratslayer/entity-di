@@ -8,8 +8,10 @@ namespace BB
 		public static void Publish<T>(this IEvent<T> e)
 			where T : new()
 			=> e.Publish(new());
-		public static IDisposable TempSubscribe<T>(this Entity entity, Action<T> action)
-			=> PooledActionSubscription<T>.GetPooled(entity, action);
+		public static DisposableToken TempSubscribe<T>(this Entity entity, Action<T> action)
+			=> PooledActionSubscription<T>
+			.GetPooled(entity, action)
+			.GetToken();
     }
 	public sealed class PooledActionSubscription<T> 
 		: ProtectedPooledObject<PooledActionSubscription<T>>, IEntitySubscription
