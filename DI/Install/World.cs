@@ -4,17 +4,20 @@ using UnityEngine;
 using BB.Di;
 namespace BB
 {
-    public static partial class World
+    public static class World
     {
         static readonly List<EntityImpl> _entities = new();
         static EntityImpl TopEntity => _entities.Count > 0 ? _entities[^1] : null;
         public static EntityImpl RootEntity => _entities[0];
-
-        public static void Init(Action<IDiContainer> install)
+        public static Entity GetWorldEntity()
+            => _entities.Count > 0 ? _entities[0].GetToken() : default;
+        public static Entity GetGameEntity()
+            => _entities.Count > 1 ? _entities[1].GetToken() : default;
+        public static void Init(IEntityInstaller installer)
         {
             while (_entities.Count > 0)
                 PopWorld();
-            PushEntity("World", install);
+            PushEntity("World", installer);
             Publish<AfterWorldSpawnEvent>();
         }
         public static void SetGame(IEntityInstaller installer)
@@ -22,15 +25,15 @@ namespace BB
             Publish<BeforeGameSpawnEvent>();
             while (_entities.Count > 1)
                 PopWorld();
-            PushEntity("Game", installer.Install);
+            PushEntity("Game", installer);
             Publish<AfterGameSpawnEvent>();
         }
-        static void PushEntity(string name, Action<IDiContainer> install)
+        static void PushEntity(string name, IEntityInstaller installer)
         {
             var entity = EntityImpl.CreateEntity(
                 name,
                 TopEntity,
-                install,
+                installer,
                 null,
                 true);
             _entities.Add(entity);

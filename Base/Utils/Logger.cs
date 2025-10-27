@@ -17,6 +17,11 @@ public static class Log
 	public static void BindLogger(ILogger logger) => Logger = logger;
 	public static void Error(string message) => Logger.Error(message);
 	public static void Info(string message) => Logger.Info(message);
+	public static void Exception(Exception e, string message)
+		=> Logger.Error(
+			$"EXCEPTION: {message}\n" +
+			$"{e.GetType().Name}\n" +
+			$"{e.Message}");
 }
 public readonly struct LoggerPrefix : IDisposable
 {

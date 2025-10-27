@@ -33,7 +33,7 @@ namespace BB.Di
         EntityImpl(
             string name,
             EntityImpl parent,
-            Action<IDiContainer> install,
+            IEntityInstaller installer,
             IEntityPool pool,
             bool isRoot)
         {
@@ -46,17 +46,17 @@ namespace BB.Di
                 _parent._children.Add(this);
             }
             _assignedState = _effectiveState = EntityState.Despawned;
-            _install = install;
+            Installer = installer;
             _isRoot = isRoot;
         }
         public static EntityImpl CreateEntity(
             string name,
             EntityImpl parent,
-            Action<IDiContainer> install,
+            IEntityInstaller installer,
             IEntityPool pool,
             bool isRoot)
         {
-            var entity = new EntityImpl(name, parent, install, pool, isRoot);
+            var entity = new EntityImpl(name, parent, installer, pool, isRoot);
             using var _ = Log.Logger.UseContext(entity);
             entity.Install();
             return entity;
@@ -387,7 +387,7 @@ namespace BB.Di
         }
         #endregion
         #region Install
-        readonly Action<IDiContainer> _install;
+        public IEntityInstaller Installer { get; init; }
         void Install()
         {
             InstallInternal();
@@ -400,7 +400,7 @@ namespace BB.Di
         void InstallInternal()
         {
             this.Instance<IEntity>(this);
-            _install?.Invoke(this);
+            Installer.Install(this);
             Installed = true;
             foreach (var element in _elements.Values)
                 if (!element.Params.HasFlag(IocParams.Lazy))
@@ -434,7 +434,7 @@ namespace BB.Di
                 child = CreateEntity(
                     $"{installer.Name} {++pool.SpawnCount}",
                     this,
-                    installer.Install,
+                    installer,
                     pool,
                     true);
             else child = pool._entities.RemoveLast();
