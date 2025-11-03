@@ -15,16 +15,24 @@ namespace BB.Di
         public void SetValueNoUpdate(TValue value)
         {
             _defaultValue = value;
-            if (_stack.Count == 0)
-                Value = _defaultValue;
         }
         [OnDespawn]
         void OnDespawn()
         {
             _stack.Clear();
-            Value = _defaultValue;
         }
-        public TValue Value { get; private set; }
+        public TValue Value
+        {
+            get
+            {
+                if (_stack.Count == 0)
+                    return _defaultValue;
+                var top = _stack[^1];
+                if (top.ValueGetter is not null)
+                    return top.ValueGetter();
+                return top.Value;
+            }
+        }
         public TValue PreviousValue { get; private set; }
 
         public int Count => _stack.Count;
@@ -37,27 +45,28 @@ namespace BB.Di
             value = Value;
             return _stack.Count > 0;
         }
-        void FlushIfChanged()
-        {
-            PreviousValue = Value;
-            Value = _stack.Count > 0 ? _stack[^1].Value : _defaultValue;
-            if (!EqualityComparer<TValue>.Default.Equals(PreviousValue, Value))
-                this.SetDirtyAndAutoFlushChanges();
-        }
         public StackValuePushDisposable<TValue> Push(in StackSourcedValue<TValue> value)
         {
+            if (!IsDirty)
+                PreviousValue = Value;
             _stack.Add(value);
             _stack.SortByPriority();
-            FlushIfChanged();
+            this.SetDirtyAndAutoFlushChanges();
             return new((TSelf)this, value);
         }
         public bool Pop(in StackSourcedValue<TValue> value)
         {
-            if (!_stack.Remove(value))
+            if (_stack.Count == 0)
                 return false;
 
-            FlushIfChanged();
-            return true;
+            if (EqualityComparer<StackSourcedValue<TValue>>.Default.Equals(_stack[^1], value))
+            {
+                _stack.RemoveLast();
+                this.SetDirtyAndAutoFlushChanges();
+                return true;
+            }
+
+            return _stack.Remove(value);
         }
         public bool Contains(in StackSourcedValue<TValue> value)
             => _stack.Contains(value);
@@ -115,9 +124,9 @@ namespace BB.Di
     public readonly struct StackSourcedValue<TValue> : IPriority
     {
         public TValue Value { get; init; }
+        public Func<TValue> ValueGetter { get; init; }
         public int Priority { get; init; }
         public DataSourceDesc Source { get; init; }
-
     }
     public readonly struct DataSourceDesc
     {

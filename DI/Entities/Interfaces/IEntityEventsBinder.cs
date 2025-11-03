@@ -14,11 +14,6 @@ namespace BB.Di
 		public void Install(IDiContainer container)
 			=> _install(container);
 	}
-	public interface IEntityInstaller
-	{
-		string Name { get; }
-		void Install(IDiContainer container);
-	}
 	public interface ISubscription
 	{
 		void Subscribe();

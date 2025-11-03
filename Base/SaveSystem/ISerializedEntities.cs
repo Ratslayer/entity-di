@@ -8,5 +8,4 @@ namespace BB
         bool Has(string serializedPath, out Entity entity);
         IEnumerable<SerializableEntity> GetAll();
     }
-
 }

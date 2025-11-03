@@ -16,7 +16,10 @@
 		{
 			if (installer is null || !target)
 				return default;
-			var entity = installer.Spawn();
+			var entity = new EntitySpawnContext
+			{
+				Installer = installer,
+			}.Spawn();
 			entity.AttachTo(target);
 			return entity;
 		}

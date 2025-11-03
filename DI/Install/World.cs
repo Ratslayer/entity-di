@@ -56,8 +56,6 @@ namespace BB
             _entities.RemoveAt(_entities.Count - 1);
         }
 
-        public static Entity Spawn(IEntityInstaller installer)
-            => installer.Spawn(Entity);
         public static T Require<T>()
         {
             if (!Has(out T result))
