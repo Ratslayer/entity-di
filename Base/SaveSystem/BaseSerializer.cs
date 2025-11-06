@@ -15,29 +15,15 @@ namespace BB
                 return _default;
             }
         }
-        public void Apply(Entity entity, object serializedData)
-        {
-            if (!entity.Has(out TTarget target))
-                return;
-            var data = JsonConvert.DeserializeObject<TData>(serializedData.ToString());
-            Apply(target, data);
-        }
+        protected virtual void ApplySpawn(TTarget target, TData data) { }
+        protected virtual void ApplyAfterSpawn(TTarget target, TData data) { }
+        protected abstract TData Serialize(TTarget target);
 
         public object Serialize(object target)
         {
             AssertProperType(target);
             return Serialize((TTarget)target);
         }
-        protected abstract void Apply(TTarget target, TData data);
-        protected abstract TData Serialize(TTarget target);
-        void AssertProperType(object target)
-        {
-            if (target is not TTarget)
-                throw new ArgumentException(
-                    $"{GetType().Name} serializer expects target of type{typeof(TTarget).Name}. " +
-                    $"Actual type: {target.GetType().Name}.");
-        }
-
         protected bool IsLoadableBehaviour(in TransformAdapter transform, out string key)
         {
             if (!transform._transform.TryGetComponent(out LoadableBehaviour lb))
@@ -51,15 +37,15 @@ namespace BB
         protected string GetLoadableBehaviourKey(in TransformAdapter transform)
             => IsLoadableBehaviour(transform, out var key) ? key : null;
         protected bool HasLoadableBehaviour<T>(string key, out T result)
-            where T:Component
+            where T : Component
         {
-            if(!World.Require<ILoadableBehaviours>().TryGet(key, out var lb))
+            if (!World.Require<ILoadableBehaviours>().TryGet(key, out var lb))
             {
                 result = default;
                 return false;
             }
 
-            if(!lb.TryGetComponent(out result))
+            if (!lb.TryGetComponent(out result))
             {
                 Log.Error($"{key} loadable behaviour was found, " +
                     $"but it had no component of type {typeof(T).Name}");
@@ -68,5 +54,51 @@ namespace BB
 
             return true;
         }
-    }
+
+        void AssertProperType(object target)
+        {
+            if (target is not TTarget)
+                throw new ArgumentException(
+                    $"{GetType().Name} serializer expects target of type{typeof(TTarget).Name}. " +
+                    $"Actual type: {target.GetType().Name}.");
+        }
+        protected bool HasLoadableAsset<T>(string key, out T asset)
+            where T : BaseScriptableObject
+        {
+            asset = null;
+            var assets = World.Require<ILoadableAssets>();
+            if (!assets.HasAsset(key, out var a) || !a)
+            {
+                Log.Error($"No loadable asset found for key {key}");
+                return false;
+            }
+
+            if (a is not T t)
+            {
+                Log.Error(
+                    $"Asset for key {key} is of type {a.GetType().Name} " +
+                    $"and not of type {typeof(T).Name}");
+                return false;
+            }
+
+            asset = t;
+            return true;
+        }
+
+		public void ApplySpawn(in DeserializationContext context)
+		{
+            if (!context.Entity.Has(out TTarget target))
+                return;
+            var data = JsonConvert.DeserializeObject<TData>(context.SerializedData.ToString());
+            ApplySpawn(target, data);
+        }
+
+		public void ApplyAfterSpawn(in DeserializationContext context)
+		{
+            if (!context.Entity.Has(out TTarget target))
+                return;
+            var data = JsonConvert.DeserializeObject<TData>(context.SerializedData.ToString());
+            ApplyAfterSpawn(target, data);
+        }
+	}
 }

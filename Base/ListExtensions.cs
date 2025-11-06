@@ -1,6 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+public static class LinqExtensions
+{
+    public static IEnumerable<T2> SelectNotNull<T1, T2>(this IEnumerable<T1> source, Func<T1, T2> converter)
+        where T2 : class
+        => source
+        .Select(converter)
+        .Where(t => t is not null);
+}
 public static class ListExtensions
 {
     public static IEnumerable<T> EmptyIfNull<T>(this IEnumerable<T> collection)
