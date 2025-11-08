@@ -25,6 +25,7 @@ namespace BB
                         _invertedEntityNames.Add(path, e);
                         return;
                     }
+                    parent = parent.Parent;
                 }
             }
             _entityNames.Add(e, serializedName);
