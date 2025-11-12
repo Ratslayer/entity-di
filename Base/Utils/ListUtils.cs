@@ -97,6 +97,9 @@ public static class ListUtils
     }
     public static void SetRange<T>(this List<T> list, IEnumerable<T> other)
     {
+        if (list == other)
+            return;
+
         list.Clear();
         if (other is not null)
             list.AddRange(other);
