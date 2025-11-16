@@ -34,6 +34,16 @@ namespace BB
             if (entity)
                 entity._ref.State = EntityState.Despawned;
         }
+        public static bool IsChildOf(this Entity entity, Entity parent)
+        {
+            if (!entity)
+                return false;
+            if (entity == World.Entity)
+                return false;
+            if (entity == parent)
+                return true;
+            return entity._ref.Parent.GetToken().IsChildOf(parent);
+        }
         public static void DespawnAndClear<T>(this ICollection<T> collection)
             where T : Component
         {
