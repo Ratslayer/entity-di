@@ -28,6 +28,14 @@ public static class MathUtils
         => min + (max - min) * f;
     public static float ClampToRange(this float f, float min, float max)
         => f.Clamp01().MapToRange(min, max);
+    public static float ClampAngle(this float f, float min, float max)
+    {
+        var numFullCircles = Math.Floor(f / 360);
+        var angle = f - (float)numFullCircles * 360;
+        if (angle > 180)
+            angle -= 360;
+        return angle.Clamp(min, max);
+    }
     public static bool IsBetween(this double d, double min, double max)
         => d >= min && d <= max;
     public static bool IsZero(this float value) => value.Approximately(0);

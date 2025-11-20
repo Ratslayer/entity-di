@@ -96,7 +96,7 @@ namespace BB.Di
         public virtual bool IsCurrentValue(TValue value)
             => EqualityComparer<TValue>.Default.Equals(Value, value);
 
-        public void ForceFlushChanges()
+        public virtual void ForceFlushChanges()
         {
             _publisher.Publish((TSelf)this);
         }
