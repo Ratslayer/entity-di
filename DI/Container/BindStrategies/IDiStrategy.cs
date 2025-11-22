@@ -18,8 +18,4 @@ namespace BB.Di
 		Lazy = 1 << 2,
 		BindEvents = 1 << 3
 	}
-	public static class IIocStrategyExtensions
-	{
-		
-	}
 }

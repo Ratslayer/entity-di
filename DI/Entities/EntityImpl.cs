@@ -12,6 +12,52 @@ namespace BB.Di
         public static implicit operator float(UpdateTime time)
             => time._delta;
     }
+    public sealed class DiContainer : IDiContainer, IDiResolver, IDisposable
+    {
+        public bool Locked { get; private set; }
+        public IDiResolver Parent { get; set; }
+
+        readonly Dictionary<Type, IDiStrategy> _elements = new();
+
+
+        public void BindStrategy(Type contract, IDiStrategy element)
+        {
+            if (Locked)
+                throw new Exception($"Attempting to bind {contract.Name} resolving roots.");
+            element.AssertValidContract(contract);
+            _elements.TryAdd(contract, element);
+        }
+        public IEnumerable<(Type, object)> GetElements()
+        {
+            foreach (var kvp in _elements)
+                yield return (kvp.Key, kvp.Value.Resolve());
+        }
+        public bool TryResolve(Type contract, out object result)
+        {
+            if (!Locked)
+                throw new Exception($"Attempting to resolve {contract.Name} before locking the container");
+            if (_elements.TryGetValue(contract, out var element))
+            {
+                result = element.Resolve();
+                return true;
+            }
+            if (Parent?.TryResolve(contract, out result) is true)
+                return true;
+
+            result = default;
+            return false;
+        }
+
+        public void ResolveBindings()
+        {
+            Locked = true;
+        }
+
+        public void Dispose()
+        {
+            throw new NotImplementedException();
+        }
+    }
     public sealed partial class EntityImpl :
         IEntity,
         IDisposable,
@@ -132,22 +178,10 @@ namespace BB.Di
             => _subscriptionsOnAttach.Add(subscription);
         #endregion
         #region Container
-        readonly Dictionary<Type, IDiStrategy> _elements = new();
         readonly IEntityEventsBinder _eventsBinder;
-        public IEnumerable<(Type, object)> GetElements()
-        {
-            foreach (var kvp in _elements)
-                yield return (kvp.Key, kvp.Value.Resolve());
-        }
+
         public IEnumerable<IEntity> GetChildren() => _children.EmptyIfNull();
         public bool Installed { get; private set; }
-        public void BindStrategy(Type contract, IDiStrategy element)
-        {
-            if (Installed)
-                throw new Exception($"Attempting to bind {contract.Name} after installing.");
-            element.AssertValidContract(contract);
-            _elements.TryAdd(contract, element);
-        }
         public bool TryResolve(Type contract, out object result)
         {
             if (!Installed)

@@ -1,20 +1,21 @@
 using System;
 using System.Collections.Generic;
-using System.Threading;
 namespace BB.Di
 {
-    public interface IEntityAttachments
-    {
-        IEntity AttachedToEntity { get; }
-        void AttachTo(IEntity entity);
-        void Detach();
-    }
     public enum EntityState
     {
         Enabled = 0,
         Disabled = 1,
         Despawned = 2,
         Destroyed = 3
+    }
+    public interface IDiResolver
+    {
+        IDiResolver Parent { get; set; }
+        bool Locked { get; }
+        void ResolveBindings();
+        bool TryResolve(Type contract, out object result);
+        IEnumerable<(Type, object)> GetElements();
     }
     public interface IEntity
     {
@@ -23,14 +24,19 @@ namespace BB.Di
         ulong CurrentSpawnId { get; }
         EntityState State { get; set; }
         bool TryResolve(Type type, out object result);
-        IEntity CreateChild(IEntityInstaller installer);
-        void AddSubscription(IEntityEventMethod subscription);
-        void RemoveSubscription(IEntityEventMethod subscription);
-        void AddTemporarySubscription(IEntitySubscription subscription);
-        void RemoveTemporarySubscription(IEntitySubscription subscription);
-        void AddDespawnDisposable(IDisposable disposable);
-        void RemoveDespawnDisposable(IDisposable disposable);
-        CancellationToken DespawnCancellationToken { get; }
+        void AddSubscription(in EntitySubscriptionContext context);
+        void RemoveSubscription(in EntitySubscriptionContext context);
+        //IEntity CreateChild(IEntityInstaller installer);
+        //void AddTemporarySubscription(IEntitySubscription subscription);
+        //void RemoveTemporarySubscription(IEntitySubscription subscription);
+        //void AddDespawnDisposable(IDisposable disposable);
+        //void RemoveDespawnDisposable(IDisposable disposable);
+        //CancellationToken DespawnCancellationToken { get; }
+    }
+    public readonly struct EntitySubscriptionContext
+    {
+        public IEntitySubscription Subscription { get; init; }
+        public bool Temporary { get; init; }
     }
     public interface IEntityProvider
     {
