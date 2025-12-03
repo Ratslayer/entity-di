@@ -4,7 +4,9 @@ namespace BB.Di
 	public interface IDiStrategy
 	{
 		IocParams Params { get; set; }
-		object Resolve();
+		bool HasDynamicDependencies { get; init; }
+		object Create();
+		void Update(object obj, IDiContainer container);
 		void AssertValidContract(Type type);
 	}
 	public interface IDiConstructorStrategy : IDiStrategy

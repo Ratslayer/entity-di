@@ -6,17 +6,20 @@ namespace BB
         public IEntityInstaller Installer { get; init; }
         public Entity? Parent { get; init; }
         public string SerializationName { get; init; }
-        public Entity Spawn()
-        {
-            var p = Parent ?? World.Entity;
-            var entity = p._ref.CreateChild(Installer);
-            entity.State = EntityState.Enabled;
-            var token = entity.GetToken();
+        //public Entity Spawn()
+        //{
+        //    var p = Parent ?? World.Entity;
+        //    var pools = World.Require<IEntityPools>();
+        //    var pool = pools.GetPool(Installer);
 
-            if (!string.IsNullOrWhiteSpace(SerializationName))
-                EntitySerializationUtils.RegisterAsSerializedEntity(token, SerializationName);
+        //    var entity = pool.GetUnspawnedEntity(Parent);
+        //    entity.SetState(EntityState.Enabled);
+        //    var token = entity.GetToken();
 
-            return token;
-        }
+        //    if (!string.IsNullOrWhiteSpace(SerializationName))
+        //        EntitySerializationUtils.RegisterAsSerializedEntity(token, SerializationName);
+
+        //    return token;
+        //}
     }
 }

@@ -9,34 +9,57 @@ namespace BB.Di
         Despawned = 2,
         Destroyed = 3
     }
-    public interface IDiResolver
-    {
-        IDiResolver Parent { get; set; }
-        bool Locked { get; }
-        void ResolveBindings();
-        bool TryResolve(Type contract, out object result);
-        IEnumerable<(Type, object)> GetElements();
-    }
+
     public interface IEntity
     {
         string Name { get; }
-        IEntity Parent { get; }
+        IEntity Parent { get; set; }
         ulong CurrentSpawnId { get; }
-        EntityState State { get; set; }
+        EntityState State { get; }
+        void SetState(EntityState state);
         bool TryResolve(Type type, out object result);
         void AddSubscription(in EntitySubscriptionContext context);
         void RemoveSubscription(in EntitySubscriptionContext context);
-        //IEntity CreateChild(IEntityInstaller installer);
-        //void AddTemporarySubscription(IEntitySubscription subscription);
-        //void RemoveTemporarySubscription(IEntitySubscription subscription);
-        //void AddDespawnDisposable(IDisposable disposable);
-        //void RemoveDespawnDisposable(IDisposable disposable);
-        //CancellationToken DespawnCancellationToken { get; }
+        //void AddUpdateSubscription(Action<UpdateTime> action, UpdateType type);
+        //void Update(in UpdateTime time, UpdateType type);
+        void AddChild(IFullEntity entity);
+        void RemoveChild(IFullEntity entity);
+        IReadOnlyCollection<IEntity> Children { get; }
+    }
+    public interface IFullEntity : IEntity, IEntityStateHandler, IEntityDetails
+    {
+
+    }
+    public readonly struct SetEntityStateContext
+    {
+        public EntityState State { get; init; }
+    }
+    public enum EntityStateEvents
+    {
+        //upstream
+        Spawn,
+        PostSpawn,
+        Enable,
+        //downstream
+        Disable,
+        Despawn
+    }
+    public interface IEntityStateHandler
+    {
+        void UpdateEffectiveState();
+        void PrepareForSpawn();
+        void FinalizeDespawn();
+        void PublishSpawnEvent();
+        void PublishPostSpawnEvent();
+        void PublishEnableEvent();
+        void PublishDisableEvent();
+        void PublishDespawnEvent();
+        void FinalizeDestroy();
     }
     public readonly struct EntitySubscriptionContext
     {
-        public IEntitySubscription Subscription { get; init; }
-        public bool Temporary { get; init; }
+        public ISubscription Subscription { get; init; }
+        public InjectionSource? Source { get; init; }
     }
     public interface IEntityProvider
     {

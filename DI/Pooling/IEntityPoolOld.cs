@@ -1,6 +1,6 @@
 ﻿namespace BB.Di
 {
-	public interface IEntityPool
+	public interface IEntityPoolOld
 	{
 		void Return(IEntity entity);
 		void Remove(IEntity entity);

@@ -1,17 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using System.Threading;
 namespace BB.Di
 {
-    public readonly partial struct UpdateTime
-    {
-        public readonly float _delta;
-
-        public static implicit operator float(UpdateTime time)
-            => time._delta;
-    }
     public sealed class DiContainer : IDiContainer, IDiResolver, IDisposable
     {
         public bool Locked { get; private set; }
@@ -70,7 +62,7 @@ namespace BB.Di
         public IEntity Parent => _parent;
         readonly bool _isRoot;
         readonly EntityImpl _parent;
-        readonly IEntityPool _pool;
+        readonly IEntityPoolOld _pool;
         readonly OptimizedCancellationTokenSource _despawnCtSource = new();
         public ulong CurrentSpawnId { get; private set; }
         public CancellationToken DespawnCancellationToken
@@ -80,7 +72,7 @@ namespace BB.Di
             string name,
             EntityImpl parent,
             IEntityInstaller installer,
-            IEntityPool pool,
+            IEntityPoolOld pool,
             bool isRoot)
         {
             Name = name;
@@ -99,7 +91,7 @@ namespace BB.Di
             string name,
             EntityImpl parent,
             IEntityInstaller installer,
-            IEntityPool pool,
+            IEntityPoolOld pool,
             bool isRoot)
         {
             var entity = new EntityImpl(name, parent, installer, pool, isRoot);
@@ -445,7 +437,7 @@ namespace BB.Di
         }
         #endregion
         #region Pooling
-        sealed class Pool : IEntityPool
+        sealed class Pool : IEntityPoolOld
         {
             public readonly List<EntityImpl> _entities = new();
             public int SpawnCount = 0;
