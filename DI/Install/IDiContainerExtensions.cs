@@ -84,6 +84,10 @@ namespace BB.Di
             => container
             .Construct<IEvent<T>, DefaultEventImpl<T>>()
             .Lazy();
+        public static void CascadingEvent<T>(this IDiContainer container)
+            => container
+            .Construct<IEvent<T>, CascadingEvent<T>>()
+            .Lazy();
         public static IDiStrategy WithArgsExplicit(this IDiConstructorStrategy strategy, params (Type, object)[] args)
         {
             strategy.SetConstructorArgs(args);

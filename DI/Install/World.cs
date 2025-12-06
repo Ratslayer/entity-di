@@ -1,60 +1,64 @@
-﻿using System;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using BB.Di;
 namespace BB
 {
     public static class World
     {
-        static readonly List<EntityImpl> _entities = new();
-        static EntityImpl TopEntity => _entities.Count > 0 ? _entities[^1] : null;
-        public static EntityImpl RootEntity => _entities[0];
+
+        //static readonly List<IEntity> _entities = new();
+        //static IEntity TopEntity => _entities.Count > 0 ? _entities[^1] : null;
+        public static IEntity RootEntity => _entities[0];
         public static Entity GetWorldEntity()
             => _entities.Count > 0 ? _entities[0].GetToken() : default;
         public static Entity GetGameEntity()
             => _entities.Count > 1 ? _entities[1].GetToken() : default;
-        public static void Init(IEntityInstaller installer)
-        {
-            while (_entities.Count > 0)
-                PopWorld();
-            PushEntity("World", installer);
-            Publish<AfterWorldSpawnEvent>();
-        }
+        //public static void Init(IEntityInstaller installer)
+        //{
+        //    while (_entities.Count > 0)
+        //        PopWorld();
+        //    PushEntity("World", installer);
+        //    Publish<AfterWorldSpawnEvent>();
+        //}
+        //public static void Init(IEntity entity)
+        //{
+        //    _entities.Add(entity);
+        //    Publish<AfterWorldSpawnEvent>();
+
+        //}
         public static void SetGame(IEntityInstaller installer)
         {
             Publish<BeforeGameSpawnEvent>();
-            while (_entities.Count > 1)
-                PopWorld();
-            PushEntity("Game", installer);
+            WorldBootstrap.ClearWorldEntitiesExceptBase();
+            WorldBootstrap.AddWorld("Game", installer);
             Publish<AfterGameSpawnEvent>();
         }
-        static void PushEntity(string name, IEntityInstaller installer)
-        {
-            var entity = EntityImpl.CreateEntity(
-                name,
-                TopEntity,
-                installer,
-                null,
-                true);
-            _entities.Add(entity);
-            entity.State = EntityState.Enabled;
-        }
-        static void PopWorldUntil(IEntity entity)
-        {
-            while (_entities.Count > 0)
-            {
-                if (_entities[^1] == entity)
-                    return;
-                PopWorld();
-            }
-        }
-        static void PopWorld()
-        {
-            if (_entities.Count == 0)
-                return;
-            _entities[^1].Dispose();
-            _entities.RemoveAt(_entities.Count - 1);
-        }
+        //static void PushEntity(string name, IEntityInstaller installer)
+        //{
+        //    var entity = EntityImpl.CreateEntity(
+        //        name,
+        //        TopEntity,
+        //        installer,
+        //        null,
+        //        true);
+        //    _entities.Add(entity);
+        //    entity.State = EntityState.Enabled;
+        //}
+        //static void PopWorldUntil(IEntity entity)
+        //{
+        //    while (_entities.Count > 0)
+        //    {
+        //        if (_entities[^1] == entity)
+        //            return;
+        //        PopWorld();
+        //    }
+        //}
+        //static void PopWorld()
+        //{
+        //    if (_entities.Count == 0)
+        //        return;
+        //    _entities[^1].SetState(EntityState.Destroyed);
+        //    _entities.RemoveAt(_entities.Count - 1);
+        //}
 
         public static T Require<T>()
         {
@@ -88,11 +92,11 @@ namespace BB
             Has(out T result);
             return result;
         }
-        public static void DestroyAllWorldEntities()
-        {
-            foreach (var _ in _entities.Count)
-                PopWorld();
-        }
+        //public static void DestroyAllWorldEntities()
+        //{
+        //    foreach (var _ in _entities.Count)
+        //        PopWorld();
+        //}
         public static IEntity EntityRef
             => Application.isPlaying ? TopEntity : null;//EditorWorld.Entity;
         public static Entity Entity => EntityRef.GetToken();

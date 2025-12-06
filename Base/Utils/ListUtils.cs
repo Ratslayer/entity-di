@@ -146,6 +146,12 @@ public static class ListUtils
         foreach (var item in other)
             list.Remove(item);
     }
+    public static T AtIndexOrDefault<T>(this IReadOnlyList<T> list, int index)
+    {
+        if (list.Count <= index)
+            return default;
+        return list[index];
+    }
     public static bool TryGetValue<T>(
         this IEnumerable<T> list, Predicate<T> predicate, out T element)
     {

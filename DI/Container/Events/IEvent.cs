@@ -1,4 +1,5 @@
-﻿using System;
+﻿using BB.Di;
+using System;
 using System.Threading;
 namespace BB
 {
@@ -7,7 +8,7 @@ namespace BB
     {
         CancellationToken NextEventCancellationToken { get; }
         void Publish(T message);
-        void Subscribe(Action<T> action);
-        void Unsubscribe(Action<T> action);
+        void Subscribe(IEventHandler<T> subscription);
+        void Unsubscribe(IEventHandler<T> subscription);
     }
 }

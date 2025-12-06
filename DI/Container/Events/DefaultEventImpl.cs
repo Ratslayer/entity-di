@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading;
+namespace BB.Di
+{
+}
 namespace BB
 {
     public sealed class DefaultEventImpl<T> : IEvent<T>, IDisposable

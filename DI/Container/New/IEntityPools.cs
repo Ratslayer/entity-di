@@ -154,13 +154,20 @@ namespace BB.Di
         readonly Dictionary<Type, IDiComponent> _components = new();
         readonly List<IDiComponent> _dynamicComponents = new();
         readonly IEntityInstaller _installer;
-        public EntityInjector(IEntityInstaller installer, in InitDiComponentContext context)
+        public EntityInjector(IEntityInstaller installer, in InitInjectorContext context)
         {
             _installer = installer;
             installer.Install(this);
+            var componentContext = new InitDiComponentContext
+            {
+                WorldComponents = context.WorldComponents,
+                GameComponents = context.GameComponents,
+                ForcedDynamicTypes = context.ForcedDynamicTypes,
+                InstallerComponents = _components
+            };
 
             foreach (var component in _components.Values)
-                component.Init(context);
+                component.Init(componentContext);
 
             foreach (var component in _components.Values)
                 if (component.Dynamic)
@@ -171,7 +178,7 @@ namespace BB.Di
 
         public void BindStrategy(IDiComponent component)
         {
-            if (!component.Validate())
+            if (!component.Validate(_installer))
                 return;
 
             if (_components.ContainsKey(component.ContractType))

@@ -13,7 +13,6 @@ namespace BB.Di
     public interface IEntity
     {
         string Name { get; }
-        IEntity Parent { get; set; }
         ulong CurrentSpawnId { get; }
         EntityState State { get; }
         void SetState(EntityState state);
@@ -22,8 +21,9 @@ namespace BB.Di
         void RemoveSubscription(in EntitySubscriptionContext context);
         //void AddUpdateSubscription(Action<UpdateTime> action, UpdateType type);
         //void Update(in UpdateTime time, UpdateType type);
-        void AddChild(IFullEntity entity);
-        void RemoveChild(IFullEntity entity);
+        //void AddChild(IFullEntity entity);
+        //void RemoveChild(IFullEntity entity);
+        IEntity Parent { get; set; }
         IReadOnlyCollection<IEntity> Children { get; }
     }
     public interface IFullEntity : IEntity, IEntityStateHandler, IEntityDetails

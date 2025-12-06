@@ -38,11 +38,12 @@ namespace BB.Di
         public static readonly HashSet<Type> _forcedDynamicTypes = new();
         readonly Dictionary<Type, IDiComponent> _components = new();
         readonly List<IDiComponent> _dynamicComponents = new();
-        protected readonly IEntityPool _pool;
-        protected BaseEntityFactory(IEntityPool pool)
+        readonly IEntityInstaller _installer;
+        protected BaseEntityFactory(IEntityInstaller installer)
         {
-            _pool = pool;
-            pool.Installer.Install(this);
+            _installer = installer;
+            UnityWorldBootstrapV0.BaseInstaller.Install(this);
+            _installer.Install(this);
 
             var initContext = new InitDiComponentContext()
             {
@@ -66,7 +67,7 @@ namespace BB.Di
 
             if (_components.ContainsKey(component.ContractType))
                 Log.Error(
-                    $"Entity installer {_pool.Installer.Name} " +
+                    $"Entity installer {_installer.Name} " +
                     $"binds multiple components to {component.ContractType}");
 
             _components[component.ContractType] = component;
@@ -133,7 +134,7 @@ namespace BB.Di
         Type InstanceType { get; }
         bool Lazy { get; }
         bool Dynamic { get; }
-        bool Validate();
+        bool Validate(IEntityInstaller installer);
         void Init(in InitDiComponentContext context);
         object Create(in DiComponentCreateContext context);
         void Inject(in DiComponentInjectContext context);
@@ -148,6 +149,12 @@ namespace BB.Di
     public readonly struct InitDiComponentContext
     {
         public IReadOnlyDictionary<Type, IDiComponent> InstallerComponents { get; init; }
+        public IReadOnlyCollection<Type> ForcedDynamicTypes { get; init; }
+        public IReadOnlyDictionary<Type, IDiComponent> WorldComponents { get; init; }
+        public IReadOnlyDictionary<Type, IDiComponent> GameComponents { get; init; }
+    }
+    public readonly struct InitInjectorContext
+    {
         public IReadOnlyCollection<Type> ForcedDynamicTypes { get; init; }
         public IReadOnlyDictionary<Type, IDiComponent> WorldComponents { get; init; }
         public IReadOnlyDictionary<Type, IDiComponent> GameComponents { get; init; }
