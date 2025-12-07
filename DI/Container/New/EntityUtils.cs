@@ -6,12 +6,12 @@ namespace BB.Di
     {
         public static void BindBaseEntityEvents(IDiContainer container)
         {
-            container.Event<CreatedEvent>();
-            container.Event<SpawnedEvent>();
-            container.Event<PostSpawnedEvent>();
-            container.Event<EnabledEvent>();
-            container.Event<DisabledEvent>();
-            container.Event<DespawnedEvent>();
+            container.Event<EntityCreatedEvent>();
+            container.Event<EntitySpawnedEvent>();
+            container.Event<PostEntitySpawnedEvent>();
+            container.Event<EntityEnabledEvent>();
+            container.Event<EntityDisabledEvent>();
+            container.Event<EntityDespawnedEvent>();
         }
     }
 }

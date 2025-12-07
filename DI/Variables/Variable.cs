@@ -8,9 +8,9 @@ namespace BB
 		T PreviousValue { get; }
 		void SetValueNoUpdate(T value);
 	}
-	public abstract record Variable<TValue> : IVariable<TValue>
+	public abstract class Variable<TValue> : IVariable<TValue>
 	{
-        [OnDespawn]
+        [OnEvent(typeof(EntityDespawnedEvent))]
         void Reset() => _value = PreviousValue = default;
         TValue _value;
         public TValue Value
@@ -37,7 +37,7 @@ namespace BB
             => s is not null ? s.Value : default;
     }
 
-    public abstract record Variable<TSelf, TValue> : Variable<TValue>
+    public abstract class Variable<TSelf, TValue> : Variable<TValue>
 		where TSelf : Variable<TSelf, TValue>
 	{
 		[Inject]

@@ -34,12 +34,12 @@ namespace BB.Di
 
         public virtual void Install(IDiContainer container)
         {
-            container.Event<CreatedEvent>();
-            container.Event<SpawnedEvent>();
-            container.Event<PostSpawnedEvent>();
-            container.Event<EnabledEvent>();
-            container.Event<DisabledEvent>();
-            container.Event<DespawnedEvent>();
+            container.Event<EntityCreatedEvent>();
+            container.Event<EntitySpawnedEvent>();
+            container.Event<PostEntitySpawnedEvent>();
+            container.Event<EntityEnabledEvent>();
+            container.Event<EntityDisabledEvent>();
+            container.Event<EntityDespawnedEvent>();
         }
     }
     public readonly struct WorldSetupConfig
@@ -80,7 +80,7 @@ namespace BB.Di
         public static void AddWorld(string name, IEntityInstaller installer)
         {
             var injector = new EntityInjector(installer, Setup.GetInjectorContext());
-            var factory = new EntityFactory(null, injector);
+            var factory = new EntityFactory(null, injector, installer);
             var entity = factory.Create(new() { Name = name });
 
             Setup.Worlds.Add(new(factory, injector, entity));
@@ -88,6 +88,10 @@ namespace BB.Di
             entity.SetState(EntityState.Enabled);
         }
         public static void ClearWorldEntitiesExceptBase()
+            => ClearWorldEntities(1);
+        public static void ClearWorldEntities()
+            => ClearWorldEntities(0);
+        private static void ClearWorldEntities(int leaveNum)
         {
             while (Setup.Worlds.Count > 1)
             {

@@ -1,6 +1,6 @@
 ﻿namespace BB.Di
 {
-	public abstract record EntityStackValue<TSelf> : StackValue<TSelf, Entity>
+	public abstract class EntityStackValue<TSelf> : StackValue<TSelf, Entity>
 		where TSelf : EntityStackValue<TSelf>
 	{
 		public bool Has<T>(out T value) => Value.Has(out value);
@@ -8,7 +8,7 @@
 			=> e.Value;
 	}
 
-	public abstract record BoolStackValue<TSelf> : StackValue<TSelf, bool>
+	public abstract class BoolStackValue<TSelf> : StackValue<TSelf, bool>
 		where TSelf : BoolStackValue<TSelf>
 	{
 		public static implicit operator bool(BoolStackValue<TSelf> e)

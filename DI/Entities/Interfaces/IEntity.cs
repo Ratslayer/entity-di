@@ -25,10 +25,12 @@ namespace BB.Di
         //void RemoveChild(IFullEntity entity);
         IEntity Parent { get; set; }
         IReadOnlyCollection<IEntity> Children { get; }
+       
     }
     public interface IFullEntity : IEntity, IEntityStateHandler, IEntityDetails
     {
-
+        void AddChild(IFullEntity child);
+        void RemoveChild(IFullEntity child);
     }
     public readonly struct SetEntityStateContext
     {
@@ -67,9 +69,13 @@ namespace BB.Di
     }
     public interface IEntityDetails : IEntity
     {
-        IEnumerable<(Type, object)> GetElements();
-        IEnumerable<IEntity> GetChildren();
-        bool Installed { get; }
+        IEnumerable<EntityElement> GetElements();
         IEntityInstaller Installer { get; }
+    }
+    public readonly struct EntityElement
+    {
+        public Type ContractType { get; init; }
+        public object Instance { get; init; }
+        public IDiComponent DiComponent { get; init; }
     }
 }

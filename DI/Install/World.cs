@@ -1,17 +1,18 @@
 ﻿using UnityEngine;
 using BB.Di;
+using System.Linq;
 namespace BB
 {
     public static class World
     {
 
         //static readonly List<IEntity> _entities = new();
-        //static IEntity TopEntity => _entities.Count > 0 ? _entities[^1] : null;
-        public static IEntity RootEntity => _entities[0];
+        static IEntity TopEntity => WorldBootstrap.Setup.Worlds.LastOrDefault()?.Entity;
+        public static IEntity RootEntity => WorldBootstrap.Setup.Worlds[0].Entity;
         public static Entity GetWorldEntity()
-            => _entities.Count > 0 ? _entities[0].GetToken() : default;
+            => WorldBootstrap.Setup.Worlds.AtIndexOrDefault(0)?.Entity.GetToken() ?? default;
         public static Entity GetGameEntity()
-            => _entities.Count > 1 ? _entities[1].GetToken() : default;
+            => WorldBootstrap.Setup.Worlds.AtIndexOrDefault(1)?.Entity.GetToken() ?? default;
         //public static void Init(IEntityInstaller installer)
         //{
         //    while (_entities.Count > 0)

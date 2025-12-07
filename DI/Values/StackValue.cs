@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 namespace BB.Di
 {
-    public abstract record StackValue<TSelf, TValue> : IStackValue<TValue>
+    public abstract class StackValue<TSelf, TValue> : IStackValue<TValue>
         where TSelf : StackValue<TSelf, TValue>
     {
         [Inject]
@@ -16,7 +16,7 @@ namespace BB.Di
         {
             _defaultValue = value;
         }
-        [OnDespawn]
+        [OnEvent(typeof(EntityDespawnedEvent))]
         void OnDespawn()
         {
             _stack.Clear();

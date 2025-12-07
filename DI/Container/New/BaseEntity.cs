@@ -2,37 +2,27 @@
 using System.Collections.Generic;
 namespace BB
 {
-    public readonly struct CreatedEvent { }
-    public readonly struct SpawnedEvent { }
-    public readonly struct PostSpawnedEvent { }
-    public readonly struct EnabledEvent { }
-    public readonly struct DisabledEvent { }
-    public readonly struct DespawnedEvent { }
+    public readonly struct EntityCreatedEvent { }
+    public readonly struct EntitySpawnedEvent { }
+    public readonly struct PostEntitySpawnedEvent { }
+    public readonly struct EntityEnabledEvent { }
+    public readonly struct EntityDisabledEvent { }
+    public readonly struct EntityDespawnedEvent { }
 }
 namespace BB.Di
 {
-    public sealed class EntityV1 : BaseEntity
-    {
-        public EntityV1(
-            string name,
-            IEntityPool pool,
-            IReadOnlyDictionary<Type, IDiComponent> components)
-            : base(name, pool) { }
-    }
-    public abstract class BaseEntity : IFullEntity
+    public sealed record EntityV1(
+        string Name,
+        IEntityPool Pool,
+        IEntityInstaller Installer) : BaseEntity(Name, Pool, Installer);
+
+    public abstract record BaseEntity(
+        string Name,
+        IEntityPool Pool,
+        IEntityInstaller Installer) : IFullEntity
     {
         static ulong _lastSpawnId = 0;
         Dictionary<Type, Component> _components;
-        readonly IEntityPool _pool;
-        public BaseEntity(
-            string name,
-            IEntityPool pool)
-        {
-            Name = name;
-            _pool = pool;
-        }
-
-        public string Name { get; private set; }
 
         public IEntity Parent { get; set; }
 
@@ -95,11 +85,11 @@ namespace BB.Di
         #region State
         EntityState _effectiveState, _previousEffectiveState, _assignedState;
         public EntityState State => _effectiveState;
-        public void SetState(in SetEntityStateContext context)
+        public void SetState(EntityState state)
         {
-            if (_assignedState == context.State)
+            if (_assignedState == state)
                 return;
-            _assignedState = context.State;
+            _assignedState = state;
             UpdateEffectiveState();
             if (_effectiveState == _previousEffectiveState)
                 return;
@@ -160,8 +150,8 @@ namespace BB.Di
             foreach (var child in _children)
                 child.FinalizeDespawn();
             CurrentSpawnId = 0;
-            Parent.RemoveChild(this);
-            _pool.ReturnEntity(this);
+            (Parent as IFullEntity).RemoveChild(this);
+            Pool?.ReturnEntity(this);
         }
         private void Subscribe(List<ISubscription> subscriptions)
         {
@@ -182,7 +172,7 @@ namespace BB.Di
         {
             if (!IsEntered(EntityState.Disabled))
                 return;
-            this.Publish(new SpawnedEvent());
+            this.Publish(new EntitySpawnedEvent());
             foreach (var child in _children)
                 child.PublishSpawnEvent();
         }
@@ -191,7 +181,7 @@ namespace BB.Di
         {
             if (!IsEntered(EntityState.Disabled))
                 return;
-            this.Publish(new PostSpawnedEvent());
+            this.Publish(new PostEntitySpawnedEvent());
             foreach (var child in _children)
                 child.PublishPostSpawnEvent();
         }
@@ -200,7 +190,7 @@ namespace BB.Di
         {
             if (!IsEntered(EntityState.Enabled))
                 return;
-            this.Publish(new EnabledEvent());
+            this.Publish(new EntityEnabledEvent());
             foreach (var child in _children)
                 child.PublishEnableEvent();
         }
@@ -209,7 +199,7 @@ namespace BB.Di
         {
             if (!IsEntered(EntityState.Disabled))
                 return;
-            this.Publish(new DisabledEvent());
+            this.Publish(new EntityDisabledEvent());
             foreach (var child in _children)
                 child.PublishSpawnEvent();
         }
@@ -218,7 +208,7 @@ namespace BB.Di
         {
             if (!IsEntered(EntityState.Despawned))
                 return;
-            this.Publish(new DespawnedEvent());
+            this.Publish(new EntityDespawnedEvent());
             foreach (var child in _children)
                 child.PublishSpawnEvent();
         }
@@ -266,47 +256,10 @@ namespace BB.Di
             subscriptions?.Remove(context.Subscription);
         }
         #endregion
-        #region Update
-        List<Action<UpdateTime>> _updateActions, _fixedUpdateActions, _lateUpdateActions;
-        public void AddUpdateSubscription(Action<UpdateTime> action, UpdateType type)
-        {
-            switch (type)
-            {
-                case UpdateType.Fixed:
-                    _fixedUpdateActions ??= new();
-                    _fixedUpdateActions.Add(action);
-                    break;
-                case UpdateType.Late:
-                    _lateUpdateActions ??= new();
-                    _lateUpdateActions.Add(action);
-                    break;
-                default:
-                    _updateActions ??= new();
-                    _updateActions.Add(action);
-                    break;
-            }
-        }
-        public void Update(in UpdateTime time, UpdateType type)
-        {
-            if (State is not EntityState.Enabled)
-                return;
-
-            var subscriptions = type switch
-            {
-                UpdateType.Fixed => _fixedUpdateActions,
-                UpdateType.Late => _lateUpdateActions,
-                _ => _updateActions
-            };
-            if (subscriptions is not null)
-                foreach (var action in subscriptions)
-                    action(time);
-            if (_children is not null)
-                foreach (var child in _children)
-                    child.Update(time, type);
-        }
-        #endregion
         #region Children
-        public IReadOnlyCollection<IEntity> Children => _children;
+        public IReadOnlyCollection<IEntity> Children
+            => _children
+            ?? (IReadOnlyCollection<IEntity>)Array.Empty<IEntity>();
         List<IFullEntity> _children;
         public void AddChild(IFullEntity entity)
         {
@@ -317,6 +270,20 @@ namespace BB.Di
         public void RemoveChild(IFullEntity entity)
         {
             _children?.Remove(entity);
+        }
+
+        public IEnumerable<EntityElement> GetElements()
+        {
+            if (_components is null)
+                yield break;
+
+            foreach (var (type, comp) in _components)
+                yield return new EntityElement
+                {
+                    ContractType = type,
+                    Instance = comp.Instance,
+                    DiComponent = comp.FactoryComponent
+                };
         }
         #endregion
 

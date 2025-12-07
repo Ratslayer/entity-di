@@ -3,7 +3,7 @@ using System.Threading;
 
 namespace BB.Di
 {
-    public abstract record EntityVariable<TSelf> : Variable<TSelf, Entity>
+    public abstract class EntityVariable<TSelf> : Variable<TSelf, Entity>
         where TSelf : Variable<TSelf, Entity>
     {
         public bool Has<T>(out T comp)

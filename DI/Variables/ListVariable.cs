@@ -5,7 +5,7 @@ using System.Collections.Generic;
 namespace BB
 {
 	public interface IListVariable { }
-	public abstract record ListVariable<SelfType, ElementType>
+	public abstract class ListVariable<SelfType, ElementType>
 		: IList<ElementType>,
 		IReadOnlyList<ElementType>,
 		IAutoFlushable,
@@ -65,7 +65,7 @@ namespace BB
 		}
 		public ElementType this[int index] => _elements[index];
 		public int Count => _elements.Count;
-		[OnDespawn]
+		[OnEvent(typeof(EntityDespawnedEvent))]
 		void OnDespawn() => Clear();
 		public void Clear()
 		{

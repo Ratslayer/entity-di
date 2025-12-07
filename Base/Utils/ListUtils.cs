@@ -79,6 +79,12 @@ public static class ListUtils
         list.RemoveAt(list.Count - 1);
         return result;
     }
+    public static T RemoveLastOrDefault<T>(this List<T> list)
+    {
+        if (list.Count == 0)
+            return default;
+        return list.RemoveLast();
+    }
     public static bool TryRemoveLast<T>(this List<T> list, out T lastElement)
     {
         if (list.Count == 0)

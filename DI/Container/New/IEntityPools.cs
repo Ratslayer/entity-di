@@ -24,10 +24,10 @@ namespace BB
 namespace BB.Di
 {
 
-    public interface IEntityPools
-    {
-        IEntityPool GetPool(IEntityInstaller installer);
-    }
+    //public interface IEntityPools
+    //{
+    //    IEntityPool GetPool(IEntityInstaller installer);
+    //}
     public interface IEntitySpawnManager
     {
         Entity Spawn(in Context context);
@@ -64,7 +64,7 @@ namespace BB.Di
         {
             var pool = new EntityPool();
             var injector = CreateInjector(context);
-            var factory = new EntityFactory(pool, injector);
+            var factory = new EntityFactory(pool, injector, context.Installer);
             return new()
             {
                 Pool = new EntityPool(),
@@ -92,10 +92,7 @@ namespace BB.Di
         }
         protected IEntityInjector CreateInjector(in TContext context)
         {
-            var injector = new EntityInjector(context.Installer, new()
-            {
-
-            });
+            return new EntityInjector(context.Installer, WorldBootstrap.Setup.GetInjectorContext());
         }
         private EntitySpawnData GetData(in TContext context)
         {
@@ -130,7 +127,7 @@ namespace BB.Di
             });
 
             if (firstTime)
-                entity.Publish(new CreatedEvent());
+                entity.Publish(new EntityCreatedEvent());
 
             return entity;
         }
@@ -176,7 +173,7 @@ namespace BB.Di
 
         public IReadOnlyDictionary<Type, IDiComponent> Components => _components;
 
-        public void BindStrategy(IDiComponent component)
+        public void AddComponent(IDiComponent component)
         {
             if (!component.Validate(_installer))
                 return;
@@ -204,9 +201,6 @@ namespace BB.Di
             };
             foreach (var component in components)
                 component.Inject(injectionContext);
-
-            if (context.FirstTime)
-                context.Entity.Publish(new CreatedEvent());
         }
     }
     public interface IEntityPool
@@ -214,66 +208,66 @@ namespace BB.Di
         bool TryGetEntity(out IEntity entity);
         void ReturnEntity(IEntity entity);
     }
-    public sealed class EntityPools : IEntityPools
-    {
-        readonly Dictionary<IEntityInstaller, IEntityPool> _pools = new();
-        public IEntityPool GetPool(IEntityInstaller installer)
-        {
-            if (_pools.TryGetValue(installer, out IEntityPool pool))
-                return pool;
+    //public sealed class EntityPools : IEntityPools
+    //{
+    //    readonly Dictionary<IEntityInstaller, IEntityPool> _pools = new();
+    //    public IEntityPool GetPool(IEntityInstaller installer)
+    //    {
+    //        if (_pools.TryGetValue(installer, out IEntityPool pool))
+    //            return pool;
 
-            var newPool = new EntityPool(installer);
-            _pools.Add(installer, newPool);
-            return newPool;
-        }
-    }
-    public abstract class BaseEntityPool<> : IEntityPool
-    {
-        readonly EntityFactory _entityFactory;
-        readonly List<IEntity> _entities = new(), _availableEntities = new();
-        public IEntityInstaller Installer { get; private set; }
-        public BaseEntityPool(IEntityInstaller installer)
-        {
-            Installer = installer;
-            _entityFactory = BEF.Get(this);
-        }
-        protected abstract
-        public IEntity GetUnspawnedEntity(IEntity parent)
-        {
-            parent ??= World.RootEntity;
-            IEntity entity;
-            if (_availableEntities.Count == 0)
-            {
-                entity = _entityFactory.Create(new()
-                {
-                    Name = $"{Installer.Name} {_entities.Count + 1}"
-                });
+    //        var newPool = new EntityPool(installer);
+    //        _pools.Add(installer, newPool);
+    //        return newPool;
+    //    }
+    //}
+    //public abstract class BaseEntityPool<> : IEntityPool
+    //{
+    //    readonly EntityFactory _entityFactory;
+    //    readonly List<IEntity> _entities = new(), _availableEntities = new();
+    //    public IEntityInstaller Installer { get; private set; }
+    //    public BaseEntityPool(IEntityInstaller installer)
+    //    {
+    //        Installer = installer;
+    //        _entityFactory = BEF.Get(this);
+    //    }
+    //    protected abstract
+    //    public IEntity GetUnspawnedEntity(IEntity parent)
+    //    {
+    //        parent ??= World.RootEntity;
+    //        IEntity entity;
+    //        if (_availableEntities.Count == 0)
+    //        {
+    //            entity = _entityFactory.Create(new()
+    //            {
+    //                Name = $"{Installer.Name} {_entities.Count + 1}"
+    //            });
 
-                _entities.Add(entity);
-                _entityFactory.PrepareEntityForSpawn(new()
-                {
-                    Entity = entity,
-                    Parent = parent,
-                    FirstTime = true
-                });
-            }
-            else
-            {
-                entity = _availableEntities.RemoveLast();
-                _entityFactory.PrepareEntityForSpawn(new()
-                {
-                    Entity = entity,
-                    Parent = parent,
-                    FirstTime = false
-                });
-            }
+    //            _entities.Add(entity);
+    //            _entityFactory.PrepareEntityForSpawn(new()
+    //            {
+    //                Entity = entity,
+    //                Parent = parent,
+    //                FirstTime = true
+    //            });
+    //        }
+    //        else
+    //        {
+    //            entity = _availableEntities.RemoveLast();
+    //            _entityFactory.PrepareEntityForSpawn(new()
+    //            {
+    //                Entity = entity,
+    //                Parent = parent,
+    //                FirstTime = false
+    //            });
+    //        }
 
-            return entity;
-        }
+    //        return entity;
+    //    }
 
-        public void ReturnEntity(IEntity entity)
-        {
-            _availableEntities.Add(entity);
-        }
-    }
+    //    public void ReturnEntity(IEntity entity)
+    //    {
+    //        _availableEntities.Add(entity);
+    //    }
+    //}
 }

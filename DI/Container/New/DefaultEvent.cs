@@ -11,13 +11,13 @@ namespace BB.Di
         IEvent<T> _parentEvent;
         [Inject] IEntity _entity;
         [OnEvent]
-        void OnSpawn(SpawnedEvent _)
+        void OnSpawn(EntitySpawnedEvent _)
         {
             _parentEvent = _entity.Parent?.Require<IEvent<T>>();
             _parentEvent?.Subscribe(this);
         }
         [OnEvent]
-        void OnDespawn(DespawnedEvent _)
+        void OnDespawn(EntityDespawnedEvent _)
         {
             _parentEvent?.Unsubscribe(this);
             _parentEvent = null;

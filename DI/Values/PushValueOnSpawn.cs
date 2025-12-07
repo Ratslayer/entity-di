@@ -2,19 +2,19 @@
 
 namespace BB
 {
-    public abstract record PushValueOnSpawn<TStack, TValue>(
-        TStack Stack,
-        TValue Value) : EntitySystem
+    public abstract class PushValueOnSpawn<TStack, TValue> : EntitySystem
         where TStack : StackValue<TStack, TValue>
     {
-        [OnSpawn]
-        void OnSpawn() => Stack.Push(new()
+        [Inject] TStack _stack;
+        public abstract TValue Value { get; }
+        [OnEvent(typeof(EntitySpawnedEvent))]
+        void OnSpawn() => _stack.Push(new()
         {
             Value = Value,
             Source = this
         });
-        [OnDespawn]
-        void OnDespawn() => Stack.Pop(new()
+        [OnEvent(typeof(EntityDespawnedEvent))]
+        void OnDespawn() => _stack.Pop(new()
         {
             Value = Value,
             Source = this
