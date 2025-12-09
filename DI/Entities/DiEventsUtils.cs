@@ -7,159 +7,159 @@ namespace BB
 {
 	public static class DiEventsUtils
 	{
-		public static void BindMembersWithAttributes(IEntityEventsBinder binder, IEntity entity, object obj)
-		{
-			var type = obj.GetType();
-			ReflectionUtils.ProcessAllMethods(type, Process);
-			foreach (var info in ReflectionUtils.GetAllMembersWithAttribute<InjectFromAttachAttribute>(type))
-				switch (info)
-				{
-					case PropertyInfo prop:
-						binder.RegisterAttachedSubscription(new EntityPropertyAttachment
-						{
-							_info = prop,
-							_target = obj
-						});
-						break;
-					case FieldInfo field:
-						binder.RegisterAttachedSubscription(new EntityFieldAttachment
-						{
-							_info = field,
-							_target = obj
-						});
-						break;
-				}
-			void Process(MethodInfo[] methods)
-			{
-				Action action;
-				foreach (var method in methods)
-				{
-					foreach (var attribute in method.GetCustomAttributes(false))
-						switch (attribute)
-						{
-							case OnPostSpawnAttribute:
-								if (BindAction<OnPostSpawnAttribute>(
-									method, obj,entity, out action))
-									binder.PostSpawnEvent += action;
-								break;
-							case OnUpdateAttribute:
-								if (BindUpdateAction<OnUpdateAttribute>(
-									method, obj, entity, out var updateAction))
-									binder.UpdateEvent += updateAction;
-								break;
-							case OnFixedUpdateAttribute:
-								if (BindUpdateAction<OnFixedUpdateAttribute>(
-									method, obj, entity, out updateAction))
-									binder.FixedUpdateEvent
-										+= updateAction;
-								break;
-							case OnLateUpdateAttribute:
-								if (BindUpdateAction<OnLateUpdateAttribute>(
-									method, obj, entity, out updateAction))
-									binder.LateUpdateEvent
-										+= updateAction;
-								break;
-							case OnCreateAttribute:
-								if (BindAction<OnCreateAttribute>(
-									method, obj, entity, out action))
-									binder.CreateEvent += action;
-								break;
-							case OnSpawnAttribute:
-								if (BindAction<OnSpawnAttribute>(
-									method, obj, entity, out action))
-									binder.SpawnEvent += action;
-								break;
-							case OnDespawnAttribute:
-								if (BindAction<OnDespawnAttribute>(
-									method, obj, entity, out action))
-									binder.DespawnEvent += action;
-								break;
-							case OnAttachAttribute:
-								if (BindAction<OnAttachAttribute>(
-									method, obj, entity, out action))
-									binder.AttachEvent += action;
-								break;
-							case OnEnableAttribute:
-								if (BindAction<OnEnableAttribute>(
-									method, obj, entity, out action))
-									binder.EnableEvent += action;
-								break;
-							case OnDisableAttribute:
-								if (BindAction<OnDisableAttribute>(
-									method, obj, entity, out action))
-									binder.DisableEvent += action;
-								break;
-							case OnEventAttribute ea:
-								if (ea._eventTypes is null || ea._eventTypes.Length == 0)
-									BindEvent(binder, obj, method, entity, null);
-								else foreach (var e in ea._eventTypes)
-										BindEvent(binder, obj, method, entity, e);
-								break;
-							case OnEventAttachedAttribute eaa:
-								if (eaa._eventTypes is null || eaa._eventTypes.Length == 0)
-									BindEventAttached(binder, obj, method, entity, null);
-								else foreach (var e in eaa._eventTypes)
-										BindEventAttached(binder, obj, method, entity, e);
-								break;
-						}
-				}
-			}
-		}
+		//public static void BindMembersWithAttributes(IEntityEventsBinder binder, IEntity entity, object obj)
+		//{
+		//	var type = obj.GetType();
+		//	ReflectionUtils.ProcessAllMethods(type, Process);
+		//	foreach (var info in ReflectionUtils.GetAllMembersWithAttribute<InjectFromAttachAttribute>(type))
+		//		switch (info)
+		//		{
+		//			case PropertyInfo prop:
+		//				binder.RegisterAttachedSubscription(new EntityPropertyAttachment
+		//				{
+		//					_info = prop,
+		//					_target = obj
+		//				});
+		//				break;
+		//			case FieldInfo field:
+		//				binder.RegisterAttachedSubscription(new EntityFieldAttachment
+		//				{
+		//					_info = field,
+		//					_target = obj
+		//				});
+		//				break;
+		//		}
+		//	void Process(MethodInfo[] methods)
+		//	{
+		//		Action action;
+		//		foreach (var method in methods)
+		//		{
+		//			foreach (var attribute in method.GetCustomAttributes(false))
+		//				switch (attribute)
+		//				{
+		//					case OnPostSpawnAttribute:
+		//						if (BindAction<OnPostSpawnAttribute>(
+		//							method, obj,entity, out action))
+		//							binder.PostSpawnEvent += action;
+		//						break;
+		//					case OnUpdateAttribute:
+		//						if (BindUpdateAction<OnUpdateAttribute>(
+		//							method, obj, entity, out var updateAction))
+		//							binder.UpdateEvent += updateAction;
+		//						break;
+		//					case OnFixedUpdateAttribute:
+		//						if (BindUpdateAction<OnFixedUpdateAttribute>(
+		//							method, obj, entity, out updateAction))
+		//							binder.FixedUpdateEvent
+		//								+= updateAction;
+		//						break;
+		//					case OnLateUpdateAttribute:
+		//						if (BindUpdateAction<OnLateUpdateAttribute>(
+		//							method, obj, entity, out updateAction))
+		//							binder.LateUpdateEvent
+		//								+= updateAction;
+		//						break;
+		//					case OnCreateAttribute:
+		//						if (BindAction<OnCreateAttribute>(
+		//							method, obj, entity, out action))
+		//							binder.CreateEvent += action;
+		//						break;
+		//					case OnSpawnAttribute:
+		//						if (BindAction<OnSpawnAttribute>(
+		//							method, obj, entity, out action))
+		//							binder.SpawnEvent += action;
+		//						break;
+		//					case OnDespawnAttribute:
+		//						if (BindAction<OnDespawnAttribute>(
+		//							method, obj, entity, out action))
+		//							binder.DespawnEvent += action;
+		//						break;
+		//					case OnAttachAttribute:
+		//						if (BindAction<OnAttachAttribute>(
+		//							method, obj, entity, out action))
+		//							binder.AttachEvent += action;
+		//						break;
+		//					case OnEnableAttribute:
+		//						if (BindAction<OnEnableAttribute>(
+		//							method, obj, entity, out action))
+		//							binder.EnableEvent += action;
+		//						break;
+		//					case OnDisableAttribute:
+		//						if (BindAction<OnDisableAttribute>(
+		//							method, obj, entity, out action))
+		//							binder.DisableEvent += action;
+		//						break;
+		//					case OnEventAttribute ea:
+		//						if (ea._eventTypes is null || ea._eventTypes.Length == 0)
+		//							BindEvent(binder, obj, method, entity, null);
+		//						else foreach (var e in ea._eventTypes)
+		//								BindEvent(binder, obj, method, entity, e);
+		//						break;
+		//					case OnEventAttachedAttribute eaa:
+		//						if (eaa._eventTypes is null || eaa._eventTypes.Length == 0)
+		//							BindEventAttached(binder, obj, method, entity, null);
+		//						else foreach (var e in eaa._eventTypes)
+		//								BindEventAttached(binder, obj, method, entity, e);
+		//						break;
+		//				}
+		//		}
+		//	}
+		//}
 
 		public static void LogError(object target, MethodInfo method, string msg)
 			=> Log.Logger.Error($"{GetTypeMethodName(target, method)}: {msg}");
 		public static string GetTypeMethodName(object target, MethodInfo method)
 			=> $"{target.GetType().Name}.{method.Name}";
-		private static void BindEvent(
-			IEntityEventsBinder binder,
-			object target,
-			MethodInfo method,
-			IEntity entity,
-			Type wrappedType)
-		{
-			if (!AssertIsValidMethod<OnEventAttribute>(
-				method,
-				target,
-				MethodData.Optional,
-				true))
-				return;
+		//private static void BindEvent(
+		//	IEntityEventsBinder binder,
+		//	object target,
+		//	MethodInfo method,
+		//	IEntity entity,
+		//	Type wrappedType)
+		//{
+		//	if (!AssertIsValidMethod<OnEventAttribute>(
+		//		method,
+		//		target,
+		//		MethodData.Optional,
+		//		true))
+		//		return;
 		
-			var subscription = (InternalSubscription)CreateEventSubscription(
-				target,
-				method,
-				typeof(MethodInfoSubscription<>),
-				wrappedType);
-			subscription._method = method;
-			subscription._target = target;
-			subscription._entity = entity;
-			subscription.Init();
-			binder.RegisterSubscription(subscription);
-		}
-		static void BindEventAttached(
-			IEntityEventsBinder binder,
-			object target,
-			MethodInfo method,
-			IEntity entity,
-			Type wrappedEvent)
-		{
-			var dataType = wrappedEvent is null ? MethodData.Required : MethodData.None;
-			if (!AssertIsValidMethod<OnEventAttachedAttribute>(
-				method,
-				target,
-				dataType,
-				true))
-				return;
+		//	var subscription = (InternalSubscription)CreateEventSubscription(
+		//		target,
+		//		method,
+		//		typeof(MethodInfoSubscription<>),
+		//		wrappedType);
+		//	subscription._method = method;
+		//	subscription._target = target;
+		//	subscription._entity = entity;
+		//	subscription.Init();
+		//	binder.RegisterSubscription(subscription);
+		//}
+		//static void BindEventAttached(
+		//	IEntityEventsBinder binder,
+		//	object target,
+		//	MethodInfo method,
+		//	IEntity entity,
+		//	Type wrappedEvent)
+		//{
+		//	var dataType = wrappedEvent is null ? MethodData.Required : MethodData.None;
+		//	if (!AssertIsValidMethod<OnEventAttachedAttribute>(
+		//		method,
+		//		target,
+		//		dataType,
+		//		true))
+		//		return;
 
-			var subscription = (DiExternalSubscription)CreateEventSubscription(
-				target,
-				method,
-				typeof(DiExternalSubscription<>),
-				wrappedEvent);
-			subscription._method = method;
-			subscription._target = target;
-			subscription.Init();
-			binder.RegisterAttachedSubscription(subscription);
-		}
+		//	var subscription = (DiExternalSubscription)CreateEventSubscription(
+		//		target,
+		//		method,
+		//		typeof(DiExternalSubscription<>),
+		//		wrappedEvent);
+		//	subscription._method = method;
+		//	subscription._target = target;
+		//	subscription.Init();
+		//	binder.RegisterAttachedSubscription(subscription);
+		//}
 		enum MethodData
 		{
 			None,
@@ -301,13 +301,13 @@ namespace BB
 					case 2:
 						var a2 = (Func<T, CancellationToken, UniTaskVoid>)Delegate
 							.CreateDelegate(typeof(Func<T, CancellationToken, UniTaskVoid>), target, method);
-						return t => a2(t, entity.DespawnCancellationToken).Forget();
+						return t => a2(t, entity.Require<IEvent<EntityDespawnedEvent>>().NextEventCancellationToken).Forget();
 					case 1:
 						if (args[0].ParameterType == typeof(CancellationToken))
 						{
 							var a1 = (Func<CancellationToken, UniTaskVoid>)Delegate
 								.CreateDelegate(typeof(Func<CancellationToken, UniTaskVoid>), target, method);
-							return _ => a1(entity.DespawnCancellationToken).Forget();
+							return _ => a1(entity.Require<IEvent<EntityDespawnedEvent>>().NextEventCancellationToken).Forget();
 						}
 						else
 						{
@@ -346,7 +346,7 @@ namespace BB
 					var asyncMethod
 						= (Func<CancellationToken, UniTaskVoid>)Delegate
 						.CreateDelegate(typeof(Func<CancellationToken, UniTaskVoid>), target, method);
-					return () => asyncMethod(entity.DespawnCancellationToken).Forget();
+					return () => asyncMethod(entity.Require<IEvent<EntityDespawnedEvent>>().NextEventCancellationToken).Forget();
 				}
 			}
 			else

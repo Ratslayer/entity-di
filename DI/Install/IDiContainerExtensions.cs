@@ -46,11 +46,12 @@ namespace BB.Di
         public static void System<T>(
             this IDiContainer container,
             params object[] args)
+            where T : new()
             => container.System<T, T>(args);
         public static void System<TContract, TInstance>(
             this IDiContainer container,
             params object[] args)
-            where TInstance : TContract
+            where TInstance : TContract, new()
             => container.AddComponent(new ConstructDiComponent(new()
             {
                 ContractType = typeof(TContract),
@@ -58,6 +59,17 @@ namespace BB.Di
                 Lazy = false,
                 TypelessAdditionalParams = args
             }));
+        public static void SystemWithArgs<TContract, TInstance>(
+           this IDiContainer container,
+           params (Type, object)[] args)
+           where TInstance : TContract, new()
+           => container.AddComponent(new ConstructDiComponent(new()
+           {
+               ContractType = typeof(TContract),
+               InstanceType = typeof(TInstance),
+               Lazy = false,
+               AdditionalParams = args
+           }));
 
         public static void Event<T>(this IDiContainer container)
             => container.AddComponent(new ConstructDiComponent(new()

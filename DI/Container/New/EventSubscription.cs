@@ -1,7 +1,8 @@
 ﻿using System;
 namespace BB.Di
 {
-	public sealed class EventSubscription<TEvent> : ProtectedPooledObject<EventSubscription<TEvent>>, ISubscription
+    public sealed class EventSubscription<TEvent>
+        : ProtectedPooledObject<EventSubscription<TEvent>>, ISubscription, IEventHandler<TEvent>
     {
         IEvent<TEvent> _event;
         Action<TEvent> _action;
@@ -15,12 +16,12 @@ namespace BB.Di
 
         public void Subscribe()
         {
-            _event?.Subscribe(_action);
+            _event?.Subscribe(this);
         }
 
         public void Unsubscribe()
         {
-            _event?.Unsubscribe(_action);
+            _event?.Unsubscribe(this);
         }
         public override void Dispose()
         {
@@ -28,5 +29,7 @@ namespace BB.Di
             _action = null;
             base.Dispose();
         }
-    }
+
+        public void OnEvent(TEvent msg) => _action.Invoke(msg);
+	}
 }

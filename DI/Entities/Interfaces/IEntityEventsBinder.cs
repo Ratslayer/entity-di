@@ -19,10 +19,7 @@ namespace BB.Di
         void Subscribe();
         void Unsubscribe();
     }
-    public interface IEventHandler<T>
-    {
-        void OnEvent(T action);
-    }
+
     public interface IEntityEventsBinder
     {
         public event Action<UpdateTime>
@@ -97,4 +94,11 @@ namespace BB.Di
     //        _lastPublisher?.Unsubscribe(_action);
     //    }
     //}
+}
+namespace BB
+{
+    public interface IEventHandler<T>
+    {
+        void OnEvent(T msg);
+    }
 }

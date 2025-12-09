@@ -9,16 +9,16 @@ namespace BB.Di
         void Inject(in ElementInjectContext context);
     }
 
-    public sealed class UpdateSubscriptionInjector : BaseElementInjector
-    {
-        public MethodInfo Method { get; init; }
-        public override Type InjectedType => null;
-        public override void Inject(in ElementInjectContext context)
-        {
-            var action = DiEventsUtils.CreateAction<UpdateTime>(Method, context.Instance, context.Entity);
-            var attribute = (OnUpdateAttribute)Attribute;
-            var updateType = attribute._type;
-            context.Entity.AddUpdateSubscription(action, updateType);
-        }
-    }
+    //public sealed class UpdateSubscriptionInjector : BaseElementInjector
+    //{
+    //    public MethodInfo Method { get; init; }
+    //    public override Type InjectedType => null;
+    //    public override void Inject(in ElementInjectContext context)
+    //    {
+    //        var action = DiEventsUtils.CreateAction<UpdateTime>(Method, context.Instance, context.Entity);
+    //        var attribute = (OnUpdateAttribute)Attribute;
+    //        var updateType = attribute._type;
+    //        context.Entity.AddUpdateSubscription(action, updateType);
+    //    }
+    //}
 }

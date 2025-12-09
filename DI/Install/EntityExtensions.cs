@@ -32,7 +32,7 @@ namespace BB
         public static void Despawn(this Entity entity)
         {
             if (entity)
-                entity._ref.State = EntityState.Despawned;
+                entity._ref.SetState(EntityState.Despawned);
         }
         public static bool IsChildOf(this Entity entity, Entity parent)
         {

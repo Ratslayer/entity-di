@@ -15,11 +15,12 @@ namespace BB
         public Task Write(WriteFileContext context);
         public Task<T> Read<T>(ReadFileContext context);
     }
-    public sealed record FileSystem(FileSystemParams Params) : IFileSystem
+    public sealed class FileSystem : IFileSystem
     {
+        [Inject] FileSystemParams _params;
         public Task<T> Read<T>(ReadFileContext context)
         {
-            var path = $"{Params.RootPath}/{context.Path}";
+            var path = $"{_params.RootPath}/{context.Path}";
             try
             {
                 return ReadFromPath(path);
@@ -41,7 +42,7 @@ namespace BB
 
         public async Task Write(WriteFileContext context)
         {
-            var path = $"{Params.RootPath}/{context.Path}";
+            var path = $"{_params.RootPath}/{context.Path}";
             if (!File.Exists(path))
             {
                 Directory.CreateDirectory(path);
