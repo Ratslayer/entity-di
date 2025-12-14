@@ -10,7 +10,7 @@ namespace BB.Di
             _instance = instance;
         }
 
-        public override object Create(in DiComponentCreateContext context)
+        public override object Create(IEntity entity)
             => _instance;
 
         public override bool Validate(IEntityInstaller installer)

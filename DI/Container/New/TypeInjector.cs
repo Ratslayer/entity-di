@@ -5,7 +5,7 @@ using System.Reflection;
 using System.Threading;
 namespace BB.Di
 {
-	public sealed class TypeInjector
+    public sealed class TypeInjector
     {
         public readonly Type _type;
         public readonly List<IElementInjector> _elementInjectors = new();
@@ -16,13 +16,15 @@ namespace BB.Di
             var currentType = type;
             while (currentType != typeof(object))
             {
-                var members = type.GetMembers(
+                var members = currentType.GetMembers(
                     BindingFlags.Instance
                     | BindingFlags.Public
                     | BindingFlags.NonPublic);
 
                 foreach (var member in members)
                 {
+                    if (member.DeclaringType != currentType)
+                        continue;
                     switch (member)
                     {
                         case FieldInfo fieldInfo:
@@ -172,21 +174,5 @@ namespace BB.Di
                 return attribute._eventTypes;
             }
         }
-        #region Cache
-        static readonly Dictionary<Type, TypeInjector> _injectors = new();
-        public static TypeInjector Get(Type type)
-        {
-            if (!_injectors.TryGetValue(type, out var result))
-            {
-                result = new TypeInjector(type);
-                _injectors.Add(type, result);
-            }
-            if (result._errors.Count > 0)
-                throw new ArgumentException(
-                    $"Errors encountered during creation of {type.Name} type injector:\n" +
-                    $"{string.Join('\n', result._errors)}");
-            return result;
-        }
-        #endregion
     }
 }

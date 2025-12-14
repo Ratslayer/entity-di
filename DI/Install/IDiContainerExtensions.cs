@@ -70,6 +70,11 @@ namespace BB.Di
                Lazy = false,
                AdditionalParams = args
            }));
+        public static void SystemWithArgs<TContract>(
+           this IDiContainer container,
+           params (Type, object)[] args)
+            where TContract : new()
+            => SystemWithArgs<TContract, TContract>(container, args);
 
         public static void Event<T>(this IDiContainer container)
             => container.AddComponent(new ConstructDiComponent(new()

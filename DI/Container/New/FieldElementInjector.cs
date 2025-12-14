@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Reflection;
+using UnityEngine.XR;
 namespace BB.Di
 {
 	public sealed class FieldElementInjector : BaseElementInjector
@@ -7,11 +8,11 @@ namespace BB.Di
         public FieldInfo Field { get; init; }
 
         public override Type InjectedType => Field.FieldType;
+		protected override MemberInfo Member => Field;
 
         public override void Inject(in ElementInjectContext context)
         {
-            var injectedValue = GetInjectedValue(context);
-            Field.SetValue(context.Instance, injectedValue);
+            Field.SetValue(context.InjectedInstance, context.ElementValue);
         }
     }
 }

@@ -247,39 +247,39 @@ namespace BB
 			return Activator.CreateInstance(subscriptionType);
 		}
 
-		static bool BindUpdateAction<AttributeType>(
-			MethodInfo method,
-			object target,
-			IEntity entity,
-			out Action<UpdateTime> action)
-		{
-			if (!AssertIsValidMethod<AttributeType>(
-				method,
-				target,
-				MethodData.Optional,
-				false))
-			{
-				action = null;
-				return false;
-			}
-			action = CreateAction<UpdateTime>(method, target, entity);
-			return true;
-		}
-		static bool BindAction<AttributeType>(
-			MethodInfo method, object target, IEntity entity, out Action action)
-		{
-			if (!AssertIsValidMethod<OnEventAttachedAttribute>(
-				method,
-				target,
-				MethodData.None,
-				true))
-			{
-				action = null;
-				return false;
-			}
-			action = CreateAction(method, target, entity);
-			return action is not null;
-		}
+		//static bool BindUpdateAction<AttributeType>(
+		//	MethodInfo method,
+		//	object target,
+		//	IEntity entity,
+		//	out Action<UpdateTime> action)
+		//{
+		//	if (!AssertIsValidMethod<AttributeType>(
+		//		method,
+		//		target,
+		//		MethodData.Optional,
+		//		false))
+		//	{
+		//		action = null;
+		//		return false;
+		//	}
+		//	action = CreateAction<UpdateTime>(method, target, entity);
+		//	return true;
+		//}
+		//static bool BindAction<AttributeType>(
+		//	MethodInfo method, object target, IEntity entity, out Action action)
+		//{
+		//	if (!AssertIsValidMethod<OnEventAttachedAttribute>(
+		//		method,
+		//		target,
+		//		MethodData.None,
+		//		true))
+		//	{
+		//		action = null;
+		//		return false;
+		//	}
+		//	action = CreateAction(method, target, entity);
+		//	return action is not null;
+		//}
 		public static Action<T> CreateAction<T>(MethodInfo method, object target, IEntity entity)
 		{
 			var args = method.GetParameters();

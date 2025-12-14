@@ -21,19 +21,21 @@ namespace BB.Di
 
     public readonly struct ElementInjectContext
     {
-        public object Instance { get; init; }
-        public (Type, object)[] AdditionalParams { get; init; }
+        public object InjectedInstance { get; init; }
+        public object ElementValue { get; init; }
         public IEntity Entity { get; init; }
         public InjectionSource Source { get; init; }
     }
-    public sealed record EntityFactory(
-        IEntityPool Pool, 
+    public record EntityFactory(
+        IEntityPool Pool,
         IEntityInjector Injector,
         IEntityInstaller Installer) : IEntityFactory
     {
-        public IEntity Create(in CreateEntityContext context)
+        public virtual IEntity Create(in CreateEntityContext context)
         {
-            return new EntityV1(context.Name, Pool, Installer);
+            var result = new EntityV1(context.Name, Pool, Injector, Installer);
+            result.Init();
+            return result;
         }
     }
     //public abstract class BaseEntityFactory : IEntityFactory, IDiContainer
@@ -130,6 +132,8 @@ namespace BB.Di
     {
         public InjectionSource Source { get; init; }
         public IElementInjector Injector { get; init; }
+        public override string ToString()
+            => $"{Injector}:{Source}";
     }
     public readonly struct DiComponentContext
     {
@@ -168,7 +172,7 @@ namespace BB.Di
         {
         }
 
-        public override object Create(in DiComponentCreateContext context)
+        public override object Create(IEntity entity)
             => Activator.CreateInstance(InstanceType);
 
         public override bool Validate(IEntityInstaller installer)
@@ -188,6 +192,7 @@ namespace BB.Di
         public IEntity Entity { get; init; }
         public object Instance { get; init; }
         public bool DynamicOnly { get; init; }
+        public IList<IDiComponent> ComponentsToBeInjected { get; init; }
     }
     public interface IEntityFactory
     {
@@ -201,7 +206,7 @@ namespace BB.Di
     public readonly struct PrepareEntityForSpawnContext
     {
         public IEntity Entity { get; init; }
-        public IEntity Parent { get; init; }
-        public bool FirstTime { get; init; }
+        public IList<IDiComponent> ComponentsToBeInjected { get; init; }
+        public bool DynamicOnly { get; init; }
     }
 }

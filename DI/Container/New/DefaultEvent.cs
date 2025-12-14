@@ -9,11 +9,11 @@ namespace BB.Di
             => throw new DiException($"Awaiting {typeof(T).Name} events is not supported.");
 
         IEvent<T> _parentEvent;
-        [Inject] IEntity _entity;
+        [Inject] EntityWrapper _entity;
         [OnEvent]
         void OnSpawn(EntitySpawnedEvent _)
         {
-            _parentEvent = _entity.Parent?.Require<IEvent<T>>();
+            _parentEvent = _entity.Entity.Parent?.Require<IEvent<T>>();
             _parentEvent?.Subscribe(this);
         }
         [OnEvent]

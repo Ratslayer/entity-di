@@ -19,18 +19,13 @@ namespace BB.Di
         bool TryResolve(Type type, out object result);
         void AddSubscription(in EntitySubscriptionContext context);
         void RemoveSubscription(in EntitySubscriptionContext context);
-        //void AddUpdateSubscription(Action<UpdateTime> action, UpdateType type);
-        //void Update(in UpdateTime time, UpdateType type);
-        //void AddChild(IFullEntity entity);
-        //void RemoveChild(IFullEntity entity);
+
         IEntity Parent { get; set; }
         IReadOnlyCollection<IEntity> Children { get; }
-       
+
     }
     public interface IFullEntity : IEntity, IEntityStateHandler, IEntityDetails
     {
-        void AddChild(IFullEntity child);
-        void RemoveChild(IFullEntity child);
     }
     public readonly struct SetEntityStateContext
     {
@@ -69,8 +64,20 @@ namespace BB.Di
     }
     public interface IEntityDetails : IEntity
     {
-        IEnumerable<EntityElement> GetElements();
+        IReadOnlyCollection<EntityComponentData> GetElements();
+        EntityComponentData GetComponentData(in GetComponentDataContext context);
         IEntityInstaller Installer { get; }
+    }
+    public readonly struct GetComponentDataContext
+    {
+        public Type ContractType { get; init; }
+        public Type RequestingType { get; init; }
+        public bool Init { get; init; }
+    }
+    public readonly struct ResolvedEntityElement
+    {
+        public object Instance { get; init; }
+        public bool NeedsInjecting { get; init; }
     }
     public readonly struct EntityElement
     {

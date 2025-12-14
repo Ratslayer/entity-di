@@ -5,7 +5,7 @@ namespace BB
 {
     public readonly partial struct Entity
     {
-        public static Entity Spawn(in EntitySpawnContext context)
+        public static Entity Spawn(in SpawnEntityContext context)
         {
             var spawner = World.Require<IEntitySpawnManager>();
             var entity = spawner.Spawn(new()
@@ -59,20 +59,6 @@ namespace BB.Di
             entity.SetState(EntityState.Enabled);
             return entity.GetToken();
         }
-
-        protected override EntitySpawnData CreateNewData(in IEntitySpawnManager.Context context)
-        {
-            var pool = new EntityPool();
-            var injector = CreateInjector(context);
-            var factory = new EntityFactory(pool, injector, context.Installer);
-            return new()
-            {
-                Pool = new EntityPool(),
-                Injector = injector,
-                Factory = factory,
-                Installer = context.Installer,
-            };
-        }
     }
     public interface ISpawnContext
     {
@@ -83,7 +69,24 @@ namespace BB.Di
     {
         readonly Dictionary<IEntityInstaller, EntitySpawnData> _spawnDatas = new();
 
-        protected abstract EntitySpawnData CreateNewData(in TContext context);
+        protected EntitySpawnData CreateNewData(in TContext context)
+        {
+            var pool = new EntityPool();
+            var injector = CreateInjector(context);
+            var factory = CreateFactory(context, pool, injector);
+            return new EntitySpawnData
+            {
+                Pool = pool,
+                Injector = injector,
+                Installer = context.Installer,
+                Factory = factory
+            };
+        }
+        protected virtual IEntityFactory CreateFactory(
+            in TContext context,
+            IEntityPool pool,
+            IEntityInjector injector)
+            => new EntityFactory(pool, injector, context.Installer);
         protected IEntity GetUnspawnedEntity(in TContext context)
         {
             var data = GetData(context);
@@ -106,7 +109,6 @@ namespace BB.Di
         private IEntity GetUnspawnedEntity(EntitySpawnData data, Entity? parent)
         {
             var parentEntity = parent?._ref ?? World.RootEntity;
-            var firstTime = false;
             if (!data.Pool.TryGetEntity(out var entity))
             {
                 entity = data.Factory.Create(new()
@@ -114,24 +116,17 @@ namespace BB.Di
                     Name = $"{data.Installer.Name} {data.AllEntities.Count + 1}",
                 });
                 data.AllEntities.Add(entity);
-                firstTime = true;
-
+                entity.Parent = parentEntity;
+                data.Injector.InjectEntityAfterCreate(entity);
             }
-
-            entity.Parent = parentEntity;
-            data.Injector.InjectEntity(new()
+            else
             {
-                Entity = entity,
-                Parent = parentEntity,
-                FirstTime = firstTime
-            });
-
-            if (firstTime)
-                entity.Publish(new EntityCreatedEvent());
-
+                entity.Parent = parentEntity;
+                data.Injector.InjectEntityBeforeSpawn(entity);
+            }
             return entity;
         }
-        protected sealed class EntitySpawnData
+        protected class EntitySpawnData
         {
             public List<IEntity> AllEntities { get; private set; } = new();
             public IEntityInstaller Installer { get; init; }
@@ -139,11 +134,6 @@ namespace BB.Di
             public IEntityFactory Factory { get; init; }
             public IEntityInjector Injector { get; init; }
         }
-    }
-    public interface IEntityInjector
-    {
-        IReadOnlyDictionary<Type, IDiComponent> Components { get; }
-        void InjectEntity(in PrepareEntityForSpawnContext context);
     }
 
     public sealed class EntityInjector : IEntityInjector, IDiContainer
@@ -154,6 +144,7 @@ namespace BB.Di
         public EntityInjector(IEntityInstaller installer, in InitInjectorContext context)
         {
             _installer = installer;
+            WorldBootstrap.Setup.BaseInstaller.Install(this);
             installer.Install(this);
             var componentContext = new InitDiComponentContext
             {
@@ -189,18 +180,66 @@ namespace BB.Di
 
         public void InjectEntity(in PrepareEntityForSpawnContext context)
         {
-            IReadOnlyCollection<IDiComponent> components
-                = !context.FirstTime
-                ? _dynamicComponents
-                : _components.Values;
+            var components = context.ComponentsToBeInjected;
             if (components is null)
                 return;
-            var injectionContext = new DiComponentInjectContext
+            var entity = (IFullEntity)context.Entity;
+            for (var i = 0; i < components.Count; i++)
             {
-                Entity = context.Entity
-            };
-            foreach (var component in components)
-                component.Inject(injectionContext);
+                var component = components[i];
+
+                var componentData = entity.GetComponentData(new()
+                {
+                    ContractType = component.ContractType,
+                    Init = true
+                });
+
+                var elements = context.DynamicOnly ? component.DynamicElements : component.Elements;
+                if (elements is null)
+                    continue;
+
+                foreach (var element in elements)
+                {
+                    var elementEntity = (IFullEntity)(element.Source switch
+                    {
+                        InjectionSource.Game => World.GetGameEntity()._ref,
+                        InjectionSource.World => World.GetWorldEntity()._ref,
+                        _ => entity
+                    });
+
+                    var elementData = GetInjectedValue(element.Injector.InjectedType);
+
+                    element.Injector.Inject(new ElementInjectContext
+                    {
+                        Entity = elementEntity,
+                        ElementValue = elementData,
+                        InjectedInstance = componentData.Instance,
+                        Source = element.Source
+                    });
+
+                    object GetInjectedValue(Type injectedType)
+                    {
+                        if (component.AdditionalParams?.Length > 0)
+                        {
+                            foreach (var (type, value) in component.AdditionalParams)
+                            {
+                                if (type == injectedType)
+                                    return value;
+                            }
+                        }
+
+                        var data = elementEntity.GetComponentData(new()
+                        {
+                            ContractType = injectedType,
+                            RequestingType = component.InstanceType
+                        });
+                        if (data.Init())
+                            components.Add(data.FactoryComponent);
+
+                        return data.Instance;
+                    }
+                }
+            }
         }
     }
     public interface IEntityPool

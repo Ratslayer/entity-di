@@ -14,46 +14,37 @@ namespace BB.Di
     public sealed record EntityV1(
         string Name,
         IEntityPool Pool,
-        IEntityInstaller Installer) : BaseEntity(Name, Pool, Installer);
+        IEntityInjector Injector,
+        IEntityInstaller Installer) : BaseEntity(Name, Pool, Injector, Installer);
 
     public abstract record BaseEntity(
         string Name,
         IEntityPool Pool,
+        IEntityInjector Injector,
         IEntityInstaller Installer) : IFullEntity
     {
         static ulong _lastSpawnId = 0;
-        Dictionary<Type, Component> _components;
+        Dictionary<Type, EntityComponentData> _components;
 
-        public IEntity Parent { get; set; }
 
         public ulong CurrentSpawnId { get; private set; }
-        public void Init(IReadOnlyCollection<IDiComponent> components)
+        public void Init()
         {
-            if (components.IsNullOrEmpty())
+            if (Injector.Components.IsNullOrEmpty())
                 return;
-            _components = new(components.Count);
-            var createContext = new DiComponentCreateContext
+            _components = new(Injector.Components.Count);
+
+            foreach (var comp in Injector.Components.Values)
+                _components.Add(comp.ContractType, new EntityComponentData(this, comp, comp.ContractType));
+
+            var entityWrapperComponent = GetComponentData(new()
             {
-                Entity = this
-            };
-            foreach (var comp in components)
-            {
-                var instance = comp.Lazy ? null : comp.Create(createContext);
-                _components.Add(comp.ContractType, new Component
-                {
-                    Instance = instance,
-                    FactoryComponent = comp
-                });
-            }
-            foreach (var value in _components.Values)
-            {
-                if (value.Instance is not null)
-                    value.FactoryComponent.Inject(new()
-                    {
-                        Instance = value.Instance,
-                        Entity = this
-                    });
-            }
+                ContractType = typeof(EntityWrapper),
+                Init = true
+            });
+
+            var entityWrapper = (EntityWrapper)entityWrapperComponent.Instance;
+            entityWrapper.Entity = this;
         }
 
         public bool TryResolve(Type type, out object result)
@@ -61,16 +52,13 @@ namespace BB.Di
             if (!_components.TryGetValue(type, out var comp))
             {
                 result = null;
-                return false;
+                return Parent?.TryResolve(type, out result) is true;
             }
 
             result = comp.Instance;
             if (result is null)
             {
-                comp.Instance = comp.FactoryComponent.Create(new()
-                {
-                    Entity = this,
-                });
+                comp.Instance = comp.FactoryComponent.Create(this);
                 comp.FactoryComponent.Inject(new()
                 {
                     Instance = comp.Instance,
@@ -83,7 +71,11 @@ namespace BB.Di
         }
 
         #region State
-        EntityState _effectiveState, _previousEffectiveState, _assignedState;
+        bool _createEventInvoked;
+        EntityState
+            _effectiveState = EntityState.Despawned,
+            _previousEffectiveState = EntityState.Despawned,
+            _assignedState = EntityState.Despawned;
         public EntityState State => _effectiveState;
         public void SetState(EntityState state)
         {
@@ -112,45 +104,52 @@ namespace BB.Di
                 PublishEnableEvent();
             }
         }
-        bool IsEntered(EntityState state)
+        bool IsEnteredUpstream(EntityState state)
         {
-            var from = (int)_previousEffectiveState;
-            var to = (int)_effectiveState;
-            var value = (int)state;
-            var dir = to - from;
-            return dir switch
-            {
-                > 0 => value > from && value <= to,
-                < 0 => value < to && value >= from,
-                _ => false
-            };
+            var s = (int)state;
+            return s >= (int)_effectiveState && s < (int)_previousEffectiveState;
         }
+        bool IsEnteredDownstream(EntityState state)
+        {
+            var s = (int)state;
+            return s <= (int)_effectiveState && s > (int)_previousEffectiveState;
+        }
+
         public void UpdateEffectiveState()
         {
             _previousEffectiveState = _effectiveState;
-            _effectiveState = (EntityState)Math.Max((int)_assignedState, (int)_effectiveState);
-            foreach (var child in _children)
-                child.UpdateEffectiveState();
+            _effectiveState = Parent is BaseEntity parent
+                ? (EntityState)Math.Max((int)_assignedState, (int)parent._effectiveState)
+                : _assignedState;
+            if (_children is not null)
+                foreach (var child in _children)
+                    child.UpdateEffectiveState();
         }
 
         public void PrepareForSpawn()
         {
-            if (!IsEntered(EntityState.Disabled))
+            if (!IsEnteredUpstream(EntityState.Disabled))
                 return;
             CurrentSpawnId = ++_lastSpawnId;
             Subscribe(_worldSubscriptions);
             Subscribe(_tempSubscriptions);
+            if (!_createEventInvoked)
+            {
+                _createEventInvoked = true;
+                this.Publish<EntityCreatedEvent>();
+            }
         }
         public void FinalizeDespawn()
         {
-            if (!IsEntered(EntityState.Despawned))
+            if (!IsEnteredDownstream(EntityState.Despawned))
                 return;
             ClearSubscriptions(_worldSubscriptions);
             ClearSubscriptions(_tempSubscriptions);
-            foreach (var child in _children)
-                child.FinalizeDespawn();
+            if (_children is not null)
+                foreach (var child in _children)
+                    child.FinalizeDespawn();
             CurrentSpawnId = 0;
-            (Parent as IFullEntity).RemoveChild(this);
+            Parent = null;
             Pool?.ReturnEntity(this);
         }
         private void Subscribe(List<ISubscription> subscriptions)
@@ -170,51 +169,56 @@ namespace BB.Di
         }
         public void PublishSpawnEvent()
         {
-            if (!IsEntered(EntityState.Disabled))
+            if (!IsEnteredUpstream(EntityState.Disabled))
                 return;
             this.Publish(new EntitySpawnedEvent());
-            foreach (var child in _children)
-                child.PublishSpawnEvent();
+            if (_children is not null)
+                foreach (var child in _children)
+                    child.PublishSpawnEvent();
         }
 
         public void PublishPostSpawnEvent()
         {
-            if (!IsEntered(EntityState.Disabled))
+            if (!IsEnteredUpstream(EntityState.Disabled))
                 return;
             this.Publish(new PostEntitySpawnedEvent());
-            foreach (var child in _children)
-                child.PublishPostSpawnEvent();
+            if (_children is not null)
+                foreach (var child in _children)
+                    child.PublishPostSpawnEvent();
         }
 
         public void PublishEnableEvent()
         {
-            if (!IsEntered(EntityState.Enabled))
+            if (!IsEnteredUpstream(EntityState.Enabled))
                 return;
             this.Publish(new EntityEnabledEvent());
-            foreach (var child in _children)
-                child.PublishEnableEvent();
+            if (_children is not null)
+                foreach (var child in _children)
+                    child.PublishEnableEvent();
         }
 
         public void PublishDisableEvent()
         {
-            if (!IsEntered(EntityState.Disabled))
+            if (!IsEnteredDownstream(EntityState.Disabled))
                 return;
             this.Publish(new EntityDisabledEvent());
-            foreach (var child in _children)
-                child.PublishSpawnEvent();
+            if (_children is not null)
+                foreach (var child in _children)
+                    child.PublishSpawnEvent();
         }
 
         public void PublishDespawnEvent()
         {
-            if (!IsEntered(EntityState.Despawned))
+            if (!IsEnteredDownstream(EntityState.Despawned))
                 return;
             this.Publish(new EntityDespawnedEvent());
-            foreach (var child in _children)
-                child.PublishSpawnEvent();
+            if (_children is not null)
+                foreach (var child in _children)
+                    child.PublishSpawnEvent();
         }
         public void FinalizeDestroy()
         {
-            if (!IsEntered(EntityState.Destroyed))
+            if (!IsEnteredDownstream(EntityState.Destroyed))
                 return;
             ClearSubscriptions(_selfSubscriptions);
         }
@@ -261,36 +265,65 @@ namespace BB.Di
             => _children
             ?? (IReadOnlyCollection<IEntity>)Array.Empty<IEntity>();
         List<IFullEntity> _children;
-        public void AddChild(IFullEntity entity)
+        IEntity _parent;
+        public IEntity Parent
         {
-            _children ??= new();
-            _children.Add(entity);
-        }
-
-        public void RemoveChild(IFullEntity entity)
-        {
-            _children?.Remove(entity);
-        }
-
-        public IEnumerable<EntityElement> GetElements()
-        {
-            if (_components is null)
-                yield break;
-
-            foreach (var (type, comp) in _components)
-                yield return new EntityElement
+            get => _parent;
+            set
+            {
+                if(_parent is BaseEntity parent)
+                    parent._children?.Remove(this);
+                _parent = value;
+                if(_parent is BaseEntity newParent)
                 {
-                    ContractType = type,
-                    Instance = comp.Instance,
-                    DiComponent = comp.FactoryComponent
-                };
+                    newParent._children ??= new();
+                    newParent._children.Add(this);
+                }
+            }
+        }
+
+        public IReadOnlyCollection<EntityComponentData> GetElements()
+            => _components?.Values
+            ?? (IReadOnlyCollection<EntityComponentData>)Array.Empty<EntityComponentData>();
+
+        public EntityComponentData GetComponentData(in GetComponentDataContext context)
+        {
+            var data = GetComponentData(this, context.ContractType);
+            if (data is null)
+                throw new DiException(
+                    $"Could not resolve {context.ContractType} " +
+                    $"in component {context.RequestingType?.Name} " +
+                    $"in entity {Name}");
+
+            if (context.Init)
+                data.Init();
+            return data;
+        }
+
+        static EntityComponentData GetComponentData(BaseEntity entity, Type contractType)
+        {
+            if (entity._components.TryGetValue(contractType, out var result))
+                return result;
+            if (entity.Parent is BaseEntity parent)
+                return GetComponentData(parent, contractType);
+            return null;
         }
         #endregion
 
-        sealed class Component
+    }
+    public sealed record EntityComponentData(
+        IEntity Entity,
+        IDiComponent FactoryComponent,
+        Type ContractType)
+    {
+        public object Instance { get; set; }
+        public bool Init()
         {
-            public object Instance { get; set; }
-            public IDiComponent FactoryComponent { get; init; }
+            if (Instance is not null)
+                return false;
+
+            Instance = FactoryComponent.Create(Entity);
+            return true;
         }
     }
 }

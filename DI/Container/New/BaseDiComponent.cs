@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 namespace BB.Di
 {
-	public abstract class BaseDiComponent : IDiComponent
+    public abstract class BaseDiComponent : IDiComponent
     {
         public Type ContractType { get; private set; }
         public Type InstanceType { get; private set; }
@@ -12,19 +12,17 @@ namespace BB.Di
         public (Type, object)[] AdditionalParams { get; private set; }
         public IReadOnlyCollection<DiElement> Elements { get; private set; }
         public IReadOnlyCollection<DiElement> DynamicElements { get; private set; }
-
         public bool Dynamic { get; private set; }
-
         public BaseDiComponent(in DiComponentContext context)
         {
             ContractType = context.ContractType;
             InstanceType = context.InstanceType;
             Lazy = context.Lazy;
             AdditionalParams = context.AdditionalParams;
-            Injector = TypeInjector.Get(InstanceType);
+            Injector = WorldBootstrap.Setup.GetTypeInjector(InstanceType);
         }
 
-        public abstract object Create(in DiComponentCreateContext context);
+        public abstract object Create(IEntity entity);
 
         public void Inject(in DiComponentInjectContext context)
         {
@@ -35,17 +33,15 @@ namespace BB.Di
             {
                 var entity = element.Source switch
                 {
-                    InjectionSource.Self => context.Entity,
                     InjectionSource.Game => World.GetGameEntity()._ref,
                     InjectionSource.World => World.GetWorldEntity()._ref,
-                    _ => context.Entity.Parent
+                    _ => context.Entity
                 };
+
                 element.Injector.Inject(new ElementInjectContext
                 {
-                    Source = element.Source,
                     Entity = entity,
-                    Instance = context.Instance,
-                    AdditionalParams = AdditionalParams
+                    InjectedInstance = context.Instance,
                 });
             }
         }
@@ -58,7 +54,9 @@ namespace BB.Di
             foreach (var injector in Injector._elementInjectors)
             {
                 InjectionSource source;
-                if (context.InstallerComponents.ContainsKey(injector.InjectedType))
+                if (AdditionalParams?.Contains((arg) => injector.InjectedType.IsAssignableFrom(arg.Item1)) is true)
+                    source = InjectionSource.Self;
+                else if (context.InstallerComponents.ContainsKey(injector.InjectedType))
                     source = InjectionSource.Self;
                 else if (context.ForcedDynamicTypes.Contains(injector.InjectedType))
                     source = InjectionSource.Parent;
@@ -90,5 +88,7 @@ namespace BB.Di
         {
             Log.Error($"{installer.Name}:{ContractType.Name}: {error}");
         }
+        public override string ToString()
+            => $"{ContractType}:{InstanceType}";
     }
 }

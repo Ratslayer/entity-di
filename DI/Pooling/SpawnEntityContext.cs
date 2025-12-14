@@ -1,7 +1,7 @@
 ﻿using BB.Di;
 namespace BB
 {
-    public readonly struct EntitySpawnContext
+    public readonly struct SpawnEntityContext
     {
         public IEntityInstaller Installer { get; init; }
         public Entity? Parent { get; init; }
