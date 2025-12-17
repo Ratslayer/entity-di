@@ -20,24 +20,24 @@ namespace BB.Di
         void Unsubscribe();
     }
 
-    public interface IEntityEventsBinder
-    {
-        public event Action<UpdateTime>
-            UpdateEvent,
-            LateUpdateEvent,
-            FixedUpdateEvent;
+    //public interface IEntityEventsBinder
+    //{
+    //    public event Action<UpdateTime>
+    //        UpdateEvent,
+    //        LateUpdateEvent,
+    //        FixedUpdateEvent;
 
-        event Action
-            CreateEvent,
-            SpawnEvent,
-            DespawnEvent,
-            PostSpawnEvent,
-            AttachEvent,
-            EnableEvent,
-            DisableEvent;
-        void RegisterSubscription(ISubscription subscription);
-        void RegisterAttachedSubscription(IEntitySubscription subscription);
-    }
+    //    event Action
+    //        CreateEvent,
+    //        SpawnEvent,
+    //        DespawnEvent,
+    //        PostSpawnEvent,
+    //        AttachEvent,
+    //        EnableEvent,
+    //        DisableEvent;
+    //    void RegisterSubscription(ISubscription subscription);
+    //    void RegisterAttachedSubscription(IEntitySubscription subscription);
+    //}
     public abstract class InternalSubscription : ISubscription
     {
         public MethodInfo _method;

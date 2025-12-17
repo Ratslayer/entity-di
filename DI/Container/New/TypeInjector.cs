@@ -13,6 +13,8 @@ namespace BB.Di
         public TypeInjector(Type type)
         {
             _type = type;
+            if (type.IsInterface)
+                return;
             var currentType = type;
             while (currentType != typeof(object))
             {

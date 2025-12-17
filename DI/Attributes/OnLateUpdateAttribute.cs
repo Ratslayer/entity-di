@@ -1,3 +1,3 @@
-﻿using System;
+﻿//using System;
 
-public sealed class OnLateUpdateAttribute : Attribute { }
+//public sealed class OnLateUpdateAttribute : Attribute { }

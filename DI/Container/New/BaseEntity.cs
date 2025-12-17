@@ -104,12 +104,12 @@ namespace BB.Di
                 PublishEnableEvent();
             }
         }
-        bool IsEnteredUpstream(EntityState state)
+        bool EnteredStateUpstream(EntityState state)
         {
             var s = (int)state;
             return s >= (int)_effectiveState && s < (int)_previousEffectiveState;
         }
-        bool IsEnteredDownstream(EntityState state)
+        bool EnteredStateDownstream(EntityState state)
         {
             var s = (int)state;
             return s <= (int)_effectiveState && s > (int)_previousEffectiveState;
@@ -127,7 +127,7 @@ namespace BB.Di
 
         public void PrepareForSpawn()
         {
-            if (!IsEnteredUpstream(EntityState.Disabled))
+            if (!EnteredStateUpstream(EntityState.Disabled))
                 return;
             CurrentSpawnId = ++_lastSpawnId;
             Subscribe(_worldSubscriptions);
@@ -140,7 +140,7 @@ namespace BB.Di
         }
         public void FinalizeDespawn()
         {
-            if (!IsEnteredDownstream(EntityState.Despawned))
+            if (!EnteredStateDownstream(EntityState.Despawned))
                 return;
             ClearSubscriptions(_worldSubscriptions);
             ClearSubscriptions(_tempSubscriptions);
@@ -167,7 +167,7 @@ namespace BB.Di
         }
         public void PublishSpawnEvent()
         {
-            if (!IsEnteredUpstream(EntityState.Disabled))
+            if (!EnteredStateUpstream(EntityState.Disabled))
                 return;
             this.Publish(new EntitySpawnedEvent());
             foreach (var i in _children?.Count)
@@ -176,7 +176,7 @@ namespace BB.Di
 
         public void PublishPostSpawnEvent()
         {
-            if (!IsEnteredUpstream(EntityState.Disabled))
+            if (!EnteredStateUpstream(EntityState.Disabled))
                 return;
             this.Publish(new PostEntitySpawnedEvent());
             foreach (var i in _children?.Count)
@@ -185,7 +185,7 @@ namespace BB.Di
 
         public void PublishEnableEvent()
         {
-            if (!IsEnteredUpstream(EntityState.Enabled))
+            if (!EnteredStateUpstream(EntityState.Enabled))
                 return;
             this.Publish(new EntityEnabledEvent());
             foreach (var i in _children?.Count)
@@ -195,7 +195,7 @@ namespace BB.Di
 
         public void PublishDisableEvent()
         {
-            if (!IsEnteredDownstream(EntityState.Disabled))
+            if (!EnteredStateDownstream(EntityState.Disabled))
                 return;
             this.Publish(new EntityDisabledEvent());
             foreach (var i in -_children?.Count)
@@ -204,7 +204,7 @@ namespace BB.Di
 
         public void PublishDespawnEvent()
         {
-            if (!IsEnteredDownstream(EntityState.Despawned))
+            if (!EnteredStateDownstream(EntityState.Despawned))
                 return;
             this.Publish(new EntityDespawnedEvent());
             foreach (var i in -_children?.Count)
@@ -212,7 +212,9 @@ namespace BB.Di
         }
         public void FinalizeDestroy()
         {
-            if (!IsEnteredDownstream(EntityState.Destroyed))
+            var isDestroyed = EnteredStateDownstream(EntityState.Destroyed);
+            _previousEffectiveState = _effectiveState;
+            if (!isDestroyed)
                 return;
             ClearSubscriptions(_selfSubscriptions);
         }

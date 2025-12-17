@@ -108,7 +108,7 @@ namespace BB.Di
         }
         private IEntity GetUnspawnedEntity(EntitySpawnData data, Entity? parent)
         {
-            var parentEntity = parent?._ref ?? World.RootEntity;
+            var parentEntity = parent?._ref ?? World.EntityRef;
             if (!data.Pool.TryGetEntity(out var entity))
             {
                 entity = data.Factory.Create(new()
