@@ -88,7 +88,10 @@ public static class ReflectionUtils
 			var type = objectType;
 			while (type is not null)
 			{
-				var typeMembers = type.GetMembers(BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic);
+				var typeMembers = type.GetMembers(
+					BindingFlags.Public 
+					| BindingFlags.Instance 
+					| BindingFlags.NonPublic);
 				foreach (var member in typeMembers)
 					if (member.GetCustomAttribute(attributeType) != null)
 						members.Add(member);

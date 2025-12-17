@@ -121,9 +121,8 @@ namespace BB.Di
             _effectiveState = Parent is BaseEntity parent
                 ? (EntityState)Math.Max((int)_assignedState, (int)parent._effectiveState)
                 : _assignedState;
-            if (_children is not null)
-                foreach (var child in _children)
-                    child.UpdateEffectiveState();
+            foreach (var i in -_children?.Count)
+                _children[i].UpdateEffectiveState();
         }
 
         public void PrepareForSpawn()
@@ -145,9 +144,8 @@ namespace BB.Di
                 return;
             ClearSubscriptions(_worldSubscriptions);
             ClearSubscriptions(_tempSubscriptions);
-            if (_children is not null)
-                foreach (var child in _children)
-                    child.FinalizeDespawn();
+            foreach (var i in -_children?.Count)
+                _children[i].FinalizeDespawn();
             CurrentSpawnId = 0;
             Parent = null;
             Pool?.ReturnEntity(this);
@@ -172,9 +170,8 @@ namespace BB.Di
             if (!IsEnteredUpstream(EntityState.Disabled))
                 return;
             this.Publish(new EntitySpawnedEvent());
-            if (_children is not null)
-                foreach (var child in _children)
-                    child.PublishSpawnEvent();
+            foreach (var i in _children?.Count)
+                _children[i].PublishSpawnEvent();
         }
 
         public void PublishPostSpawnEvent()
@@ -182,9 +179,8 @@ namespace BB.Di
             if (!IsEnteredUpstream(EntityState.Disabled))
                 return;
             this.Publish(new PostEntitySpawnedEvent());
-            if (_children is not null)
-                foreach (var child in _children)
-                    child.PublishPostSpawnEvent();
+            foreach (var i in _children?.Count)
+                _children[i].PublishPostSpawnEvent();
         }
 
         public void PublishEnableEvent()
@@ -192,9 +188,9 @@ namespace BB.Di
             if (!IsEnteredUpstream(EntityState.Enabled))
                 return;
             this.Publish(new EntityEnabledEvent());
-            if (_children is not null)
-                foreach (var child in _children)
-                    child.PublishEnableEvent();
+            foreach (var i in _children?.Count)
+                _children[i].PublishEnableEvent();
+            _previousEffectiveState = _effectiveState;
         }
 
         public void PublishDisableEvent()
@@ -202,9 +198,8 @@ namespace BB.Di
             if (!IsEnteredDownstream(EntityState.Disabled))
                 return;
             this.Publish(new EntityDisabledEvent());
-            if (_children is not null)
-                foreach (var child in _children)
-                    child.PublishSpawnEvent();
+            foreach (var i in -_children?.Count)
+                _children[i].PublishSpawnEvent();
         }
 
         public void PublishDespawnEvent()
@@ -212,9 +207,8 @@ namespace BB.Di
             if (!IsEnteredDownstream(EntityState.Despawned))
                 return;
             this.Publish(new EntityDespawnedEvent());
-            if (_children is not null)
-                foreach (var child in _children)
-                    child.PublishSpawnEvent();
+            foreach (var i in -_children?.Count)
+                _children[i].PublishSpawnEvent();
         }
         public void FinalizeDestroy()
         {
@@ -271,10 +265,10 @@ namespace BB.Di
             get => _parent;
             set
             {
-                if(_parent is BaseEntity parent)
+                if (_parent is BaseEntity parent)
                     parent._children?.Remove(this);
                 _parent = value;
-                if(_parent is BaseEntity newParent)
+                if (_parent is BaseEntity newParent)
                 {
                     newParent._children ??= new();
                     newParent._children.Add(this);

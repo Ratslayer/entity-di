@@ -1,6 +1,6 @@
 ﻿using System;
 
-public static class ILoggerExtensions
+public static class ILoggerExtensionsMap
 {
 	public static void Info(this ILogger logger, string msg) => logger.Log(msg, LogLevel.Info);
 	public static void Error(this ILogger logger, string msg) => logger.Log(msg, LogLevel.Error);
