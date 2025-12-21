@@ -9,8 +9,8 @@ namespace BB
     {
         public static T Require<T>(this Entity entity)
         {
-            if (entity._ref is null)
-                throw new DiException($"Trying to get component from a null entity");
+            if (!entity)
+                throw new DiException($"Trying to get component from an invalid entity {entity}");
             return entity._ref.Require<T>();
         }
         public static void Require<T1, T2>(this Entity entity, out T1 t1, out T2 t2)

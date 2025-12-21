@@ -7,39 +7,6 @@ namespace BB
 	{
 		ulong Counter { get; }
 	}
-	public readonly struct DisposableToken : IDisposable
-	{
-		readonly IDisposable _disposable;
-		readonly ulong _counter;
-		public DisposableToken(IDisposable disposable)
-		{
-			_disposable = disposable;
-			_counter = disposable is IPooledDisposable pd
-				? pd.Counter : 0;
-		}
-		public DisposableToken(IDisposable disposable, ulong counter)
-		{
-			_disposable = disposable;
-			_counter = counter;
-		}
-		public void Dispose()
-		{
-			if (_disposable is null)
-				return;
-			if (_disposable is IPooledDisposable pd
-				&& (_counter == 0 || pd.Counter != _counter))
-				return;
-
-			_disposable.Dispose();
-		}
-		public bool HasValue(out IDisposable disposable)
-		{
-			disposable = _disposable;
-			return _disposable is IPooledDisposable pd
-			? _counter != 0 && pd.Counter == _counter
-			: _disposable is not null;
-		}
-	}
 	public readonly struct DisposableToken<T> : IDisposable
 		where T : IPooledDisposable
 	{

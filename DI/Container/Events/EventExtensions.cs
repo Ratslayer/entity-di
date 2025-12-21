@@ -8,10 +8,12 @@ namespace BB
         public static void Publish<T>(this IEvent<T> e)
             where T : new()
             => e.Publish(new());
-        public static DisposableToken TempSubscribe<T>(this Entity entity, Action<T> action)
-            => PooledActionSubscription<T>
-            .GetPooled(entity, action)
-            .GetToken();
+        public static DisposableToken Subscribe<T>(this Entity entity, Action<T> action)
+        {
+            var subscription = PooledActionSubscription<T>.GetPooled(entity, action);
+            subscription.Subscribe();
+            return subscription.GetToken();
+        }
     }
     public sealed class PooledActionSubscription<T>
         : ProtectedPooledObject<PooledActionSubscription<T>>, IEntitySubscription, IEventHandler<T>
@@ -30,17 +32,18 @@ namespace BB
             return result;
         }
 
-        public void Subscribe(IEntity _)
+        public void Subscribe(IEntity _ = null)
         {
             _event.Subscribe(this);
         }
 
-        public void Unsubscribe(IEntity _)
+        public void Unsubscribe(IEntity _ = null)
         {
             _event.Unsubscribe(this);
         }
         public override void Dispose()
         {
+            Unsubscribe();
             _entity = null;
             _action = null;
             _event = null;
@@ -48,5 +51,5 @@ namespace BB
         }
 
         public void OnEvent(T msg) => _action(msg);
-	}
+    }
 }

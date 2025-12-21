@@ -45,22 +45,26 @@ namespace BB.Di
 
         public virtual void Publish(T message)
         {
-            try
+            _isInvoking = true;
+            for (var i = 0; i < _subscriptions.Count; i++)
             {
-                _isInvoking = true;
-                for (var i = 0; i < _subscriptions.Count; i++)
-                    _subscriptions[i].OnEvent(message);
+                var subscription = _subscriptions[i];
+                try
+                {
+                    subscription.OnEvent(message);
+                }
+                catch (Exception e)
+                {
+                    Log.Logger.Error(
+                        $"Exception occured during event {typeof(T).Name} " +
+                        $"in subscription {subscription}");
+                    Log.Logger.LogException(e);
+                }
             }
-            catch (Exception e)
-            {
-                Log.Logger.LogException(e);
-            }
-            finally
-            {
-                _isInvoking = false;
-                _subscriptions.AddRange(_tempAddSubscriptions);
-                _tempAddSubscriptions.Clear();
-            }
+            _isInvoking = false;
+
+            _subscriptions.AddRange(_tempAddSubscriptions);
+            _tempAddSubscriptions.Clear();
         }
 
         public void Subscribe(IEventHandler<T> subscription)

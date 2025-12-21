@@ -102,7 +102,7 @@ namespace BB
             => Application.isPlaying ? TopEntity : null;//EditorWorld.Entity;
         public static Entity Entity => EntityRef.GetToken();
         public static void Publish<T>(T msg = default) => Entity.Publish(msg);
-        public static bool Has<T>(out T system) => EntityRef.Has(out system);
+        public static bool Has<T>(out T system) => Entity.Has(out system);
         public static bool Has<T1, T2>(out T1 t1, out T2 t2) => Entity.Has(out t1, out t2);
         public static bool Has<T1, T2, T3>(out T1 t1, out T2 t2, out T3 t3)
             => Entity.Has(out t1, out t2, out t3);
