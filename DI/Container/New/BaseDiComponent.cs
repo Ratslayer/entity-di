@@ -9,6 +9,7 @@ namespace BB.Di
         public Type InstanceType { get; private set; }
         public TypeInjector Injector { get; private set; }
         public bool Lazy { get; private set; }
+        public virtual bool AlwaysCreate => false;
         public (Type, object)[] AdditionalParams { get; private set; }
         public IReadOnlyCollection<DiElement> Elements { get; private set; }
         public IReadOnlyCollection<DiElement> DynamicElements { get; private set; }

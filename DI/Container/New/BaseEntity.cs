@@ -69,6 +69,19 @@ namespace BB.Di
 
             return true;
         }
+        bool _injected;
+        public void Inject()
+        {
+            if (_injected)
+            {
+                Injector.InjectEntityBeforeSpawn(this);
+            }
+            else
+            {
+                Injector.InjectEntityAfterCreate(this);
+                _injected = true;
+            }
+        }
 
         #region State
         bool _createEventInvoked;
@@ -305,7 +318,6 @@ namespace BB.Di
             return null;
         }
         #endregion
-
     }
     public sealed record EntityComponentData(
         IEntity Entity,
@@ -315,6 +327,9 @@ namespace BB.Di
         public object Instance { get; set; }
         public bool Init()
         {
+            if (FactoryComponent.AlwaysCreate)
+                Instance = FactoryComponent.Create(Entity);
+
             if (Instance is not null)
                 return false;
 

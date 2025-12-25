@@ -90,8 +90,23 @@ namespace BB.Di
         protected IEntity GetUnspawnedEntity(in TContext context)
         {
             var data = GetData(context);
-            var entity = GetUnspawnedEntity(data, context.Parent);
+
+            var parentEntity = context.Parent?._ref ?? World.EntityRef;
+            if (!data.Pool.TryGetEntity(out var entity))
+            {
+                entity = data.Factory.Create(new()
+                {
+                    Name = $"{data.Installer.Name} {data.AllEntities.Count + 1}",
+                });
+                data.AllEntities.Add(entity);
+            }
+            entity.Parent = parentEntity;
+            InitEntityBeforeInjection(entity, context);
+            entity.Inject();
             return entity;
+        }
+        protected virtual void InitEntityBeforeInjection(IEntity entity, in TContext context)
+        {
         }
         protected IEntityInjector CreateInjector(in TContext context)
         {
@@ -106,26 +121,24 @@ namespace BB.Di
             _spawnDatas.Add(context.Installer, data);
             return data;
         }
-        private IEntity GetUnspawnedEntity(EntitySpawnData data, Entity? parent)
-        {
-            var parentEntity = parent?._ref ?? World.EntityRef;
-            if (!data.Pool.TryGetEntity(out var entity))
-            {
-                entity = data.Factory.Create(new()
-                {
-                    Name = $"{data.Installer.Name} {data.AllEntities.Count + 1}",
-                });
-                data.AllEntities.Add(entity);
-                entity.Parent = parentEntity;
-                data.Injector.InjectEntityAfterCreate(entity);
-            }
-            else
-            {
-                entity.Parent = parentEntity;
-                data.Injector.InjectEntityBeforeSpawn(entity);
-            }
-            return entity;
-        }
+        //private IEntity GetUnspawnedEntity(EntitySpawnData data, Entity? parent)
+        //{
+        //    var parentEntity = parent?._ref ?? World.EntityRef;
+        //    if (!data.Pool.TryGetEntity(out var entity))
+        //    {
+        //        entity = data.Factory.Create(new()
+        //        {
+        //            Name = $"{data.Installer.Name} {data.AllEntities.Count + 1}",
+        //        });
+        //        data.AllEntities.Add(entity);
+        //    }
+        //    entity.Parent = parentEntity;
+        //    //entity.Parent = parentEntity;
+        //    //data.Injector.InjectEntityAfterCreate(entity);
+        //    //entity.Parent = parentEntity;
+        //    //data.Injector.InjectEntityBeforeSpawn(entity);
+        //    return entity;
+        //}
         protected class EntitySpawnData
         {
             public List<IEntity> AllEntities { get; private set; } = new();
@@ -180,13 +193,13 @@ namespace BB.Di
 
         public void InjectEntity(in PrepareEntityForSpawnContext context)
         {
-            var components = context.ComponentsToBeInjected;
-            if (components is null)
+            var componentsToBeInjected = context.ComponentsToBeInjected;
+            if (componentsToBeInjected is null)
                 return;
             var entity = (IFullEntity)context.Entity;
-            for (var i = 0; i < components.Count; i++)
+            for (var i = 0; i < componentsToBeInjected.Count; i++)
             {
-                var component = components[i];
+                var component = componentsToBeInjected[i];
 
                 var componentData = entity.GetComponentData(new()
                 {
@@ -234,7 +247,7 @@ namespace BB.Di
                             RequestingType = component.InstanceType
                         });
                         if (data.Init())
-                            components.Add(data.FactoryComponent);
+                            componentsToBeInjected.Add(data.FactoryComponent);
 
                         return data.Instance;
                     }

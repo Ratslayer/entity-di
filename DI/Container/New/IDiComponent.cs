@@ -8,6 +8,7 @@ namespace BB.Di
         Type InstanceType { get; }
         bool Lazy { get; }
         bool Dynamic { get; }
+        bool AlwaysCreate { get; }
         (Type, object)[] AdditionalParams { get; }
         IReadOnlyCollection<DiElement> Elements { get; }
         IReadOnlyCollection<DiElement> DynamicElements { get; }

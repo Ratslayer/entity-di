@@ -22,6 +22,12 @@ public static class Log
             $"EXCEPTION: {message}\n" +
             $"{e.GetType().Name}\n" +
             $"{e.Message}");
+    public static bool Assert(bool value, string message)
+    {
+        if (!value)
+            Error(message);
+        return !value;
+    }
 }
 public readonly struct LoggerPrefix : IDisposable
 {

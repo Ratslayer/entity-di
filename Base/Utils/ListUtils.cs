@@ -172,6 +172,15 @@ public static class ListUtils
     }
     public static bool Contains<T>(this IEnumerable<T> list, Predicate<T> predicate)
         => list.TryGetValue(predicate, out _);
+    public static bool Contains<T>(this T[] arr, T value)
+    {
+        if (arr is null)
+            return false;
+        foreach (var i in arr.Length)
+            if (EqualityComparer<T>.Default.Equals(arr[i], value))
+                return true;
+        return false;
+    }
     public static bool HasOfType<T>(this IEnumerable list, out T element)
     {
         foreach (var e in list)

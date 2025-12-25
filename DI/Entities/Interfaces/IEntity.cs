@@ -15,6 +15,7 @@ namespace BB.Di
         string Name { get; }
         ulong CurrentSpawnId { get; }
         EntityState State { get; }
+        void Inject();
         void SetState(EntityState state);
         bool TryResolve(Type type, out object result);
         void AddSubscription(in EntitySubscriptionContext context);
