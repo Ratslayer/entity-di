@@ -242,7 +242,7 @@ namespace BB.Di
                     _selfSubscriptions ??= new();
                     _selfSubscriptions.Add(context.Subscription);
                     break;
-                case InjectionSource.World:
+                case InjectionSource.Core:
                 case InjectionSource.Game:
                     _worldSubscriptions ??= new();
                     _worldSubscriptions.Add(context.Subscription);
@@ -262,7 +262,7 @@ namespace BB.Di
             var subscriptions = context.Source switch
             {
                 InjectionSource.Self => _selfSubscriptions,
-                InjectionSource.World => _worldSubscriptions,
+                InjectionSource.Core => _worldSubscriptions,
                 InjectionSource.Game => _worldSubscriptions,
                 _ => _tempSubscriptions
             };

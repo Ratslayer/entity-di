@@ -14,7 +14,7 @@ namespace BB.Di
     public enum InjectionSource
     {
         Self,
-        World,
+        Core,
         Game,
         Parent
     }

@@ -5,62 +5,13 @@ namespace BB
 {
     public static class World
     {
-
-        //static readonly List<IEntity> _entities = new();
-        static IEntity TopEntity => WorldBootstrap.Setup.Worlds.LastOrDefault()?.Entity;
-        public static IEntity RootEntity => WorldBootstrap.Setup.Worlds[0].Entity;
-        public static Entity GetWorldEntity()
-            => WorldBootstrap.Setup.Worlds.AtIndexOrDefault(0)?.Entity.GetToken() ?? default;
-        public static Entity GetGameEntity()
-            => WorldBootstrap.Setup.Worlds.AtIndexOrDefault(1)?.Entity.GetToken() ?? default;
-        //public static void Init(IEntityInstaller installer)
-        //{
-        //    while (_entities.Count > 0)
-        //        PopWorld();
-        //    PushEntity("World", installer);
-        //    Publish<AfterWorldSpawnEvent>();
-        //}
-        //public static void Init(IEntity entity)
-        //{
-        //    _entities.Add(entity);
-        //    Publish<AfterWorldSpawnEvent>();
-
-        //}
         public static void SetGame(IEntityInstaller installer)
         {
             Publish<BeforeGameSpawnEvent>();
-            WorldBootstrap.ClearWorldEntitiesExceptBase();
-            WorldBootstrap.AddWorld("Game", installer);
+            WorldBootstrap.World.ClearGame();
+            WorldBootstrap.World.CreateGame(installer);
             Publish<AfterGameSpawnEvent>();
         }
-        //static void PushEntity(string name, IEntityInstaller installer)
-        //{
-        //    var entity = EntityImpl.CreateEntity(
-        //        name,
-        //        TopEntity,
-        //        installer,
-        //        null,
-        //        true);
-        //    _entities.Add(entity);
-        //    entity.State = EntityState.Enabled;
-        //}
-        //static void PopWorldUntil(IEntity entity)
-        //{
-        //    while (_entities.Count > 0)
-        //    {
-        //        if (_entities[^1] == entity)
-        //            return;
-        //        PopWorld();
-        //    }
-        //}
-        //static void PopWorld()
-        //{
-        //    if (_entities.Count == 0)
-        //        return;
-        //    _entities[^1].SetState(EntityState.Destroyed);
-        //    _entities.RemoveAt(_entities.Count - 1);
-        //}
-
         public static T Require<T>()
         {
             if (!Has(out T result))
@@ -93,14 +44,8 @@ namespace BB
             Has(out T result);
             return result;
         }
-        //public static void DestroyAllWorldEntities()
-        //{
-        //    foreach (var _ in _entities.Count)
-        //        PopWorld();
-        //}
-        public static IEntity EntityRef
-            => Application.isPlaying ? TopEntity : null;//EditorWorld.Entity;
-        public static Entity Entity => EntityRef.GetToken();
+        public static Entity Entity => (WorldBootstrap.World.Game?.Entity
+            ?? WorldBootstrap.World.Core.Entity)?.GetToken() ?? default;
         public static void Publish<T>(T msg = default) => Entity.Publish(msg);
         public static bool Has<T>(out T system) => Entity.Has(out system);
         public static bool Has<T1, T2>(out T1 t1, out T2 t2) => Entity.Has(out t1, out t2);

@@ -20,7 +20,7 @@ namespace BB.Di
             InstanceType = context.InstanceType;
             Lazy = context.Lazy;
             AdditionalParams = context.AdditionalParams;
-            Injector = WorldBootstrap.Setup.GetTypeInjector(InstanceType);
+            Injector = WorldBootstrap.World.GetTypeInjector(InstanceType);
         }
 
         public abstract object Create(IEntity entity);
@@ -34,8 +34,8 @@ namespace BB.Di
             {
                 var entity = element.Source switch
                 {
-                    InjectionSource.Game => World.GetGameEntity()._ref,
-                    InjectionSource.World => World.GetWorldEntity()._ref,
+                    InjectionSource.Game => WorldBootstrap.World.Game.Entity,
+                    InjectionSource.Core => WorldBootstrap.World.Core.Entity,
                     _ => context.Entity
                 };
 
@@ -64,7 +64,7 @@ namespace BB.Di
                 else if (context.GameComponents?.ContainsKey(injector.InjectedType) is true)
                     source = InjectionSource.Game;
                 else if (context.WorldComponents?.ContainsKey(injector.InjectedType) is true)
-                    source = InjectionSource.World;
+                    source = InjectionSource.Core;
                 else source = InjectionSource.Parent;
 
                 var element = new DiElement

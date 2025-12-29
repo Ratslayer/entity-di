@@ -84,7 +84,7 @@ namespace BB
                     if (!_entityNames.TryGetValue(e, out var name))
                         return false;
                     names.Prepend(name);
-                    if (e._ref.Parent == World.EntityRef)
+                    if (e._ref.Parent == WorldBootstrap.World.Core.Entity)
                         return true;
 
                     return TryBuildPath(e._ref.Parent.GetToken());

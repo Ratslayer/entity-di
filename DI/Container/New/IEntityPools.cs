@@ -91,7 +91,7 @@ namespace BB.Di
         {
             var data = GetData(context);
 
-            var parentEntity = context.Parent?._ref ?? World.EntityRef;
+            var parentEntity = context.Parent?._ref ?? WorldBootstrap.World.ParentEntity;
             if (!data.Pool.TryGetEntity(out var entity))
             {
                 entity = data.Factory.Create(new()
@@ -110,7 +110,7 @@ namespace BB.Di
         }
         protected IEntityInjector CreateInjector(in TContext context)
         {
-            return new EntityInjector(context.Installer, WorldBootstrap.Setup.GetInjectorContext());
+            return new EntityInjector(context.Installer, WorldBootstrap.World.GetInjectorContext());
         }
         private EntitySpawnData GetData(in TContext context)
         {
@@ -157,7 +157,7 @@ namespace BB.Di
         public EntityInjector(IEntityInstaller installer, in InitInjectorContext context)
         {
             _installer = installer;
-            WorldBootstrap.Setup.BaseInstaller.Install(this);
+            WorldBootstrap.World.BaseInstaller.Install(this);
             installer.Install(this);
             var componentContext = new InitDiComponentContext
             {
@@ -215,8 +215,8 @@ namespace BB.Di
                 {
                     var elementEntity = (IFullEntity)(element.Source switch
                     {
-                        InjectionSource.Game => World.GetGameEntity()._ref,
-                        InjectionSource.World => World.GetWorldEntity()._ref,
+                        InjectionSource.Game => WorldBootstrap.World.Game.Entity,
+                        InjectionSource.Core => WorldBootstrap.World.Core.Entity,
                         _ => entity
                     });
 
