@@ -44,7 +44,9 @@ namespace BB
 		public readonly IEvent<TSelf> _event;
 		protected override void PublishUpdate()
 			=> _event.Publish((TSelf)this);
-	}
+        public override string ToString()
+           => $"{typeof(TSelf).Name}: {StringExtensions.SafeToString(Value)}";
+    }
 	public static class VariableUtils
 	{
 		public static bool Toggle<TVar>(this TVar v)

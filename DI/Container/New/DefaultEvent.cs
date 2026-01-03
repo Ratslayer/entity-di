@@ -31,24 +31,29 @@ namespace BB.Di
 
         public void OnEvent(T action) => Publish(action);
     }
-    public abstract class BaseEvent<T> : IEvent<T>, IDisposable
+
+    public interface IEventHandlers
     {
-        readonly List<IEventHandler<T>> _subscriptions = new(), _tempAddSubscriptions = new();
+        IReadOnlyCollection<IEventHandler> Handlers { get; }
+    }
+    public abstract class BaseEvent<T> : IEvent<T>, IDisposable, IEventHandlers
+    {
+        readonly List<IEventHandler<T>> _handlers = new(), _tempAddSubscriptions = new();
         bool _isInvoking;
         public abstract CancellationToken NextEventCancellationToken { get; }
-
+        public IReadOnlyCollection<IEventHandler> Handlers => _handlers;
         public virtual void Dispose()
         {
-            _subscriptions.Clear();
+            _handlers.Clear();
             _tempAddSubscriptions.Clear();
         }
 
         public virtual void Publish(T message)
         {
             _isInvoking = true;
-            for (var i = 0; i < _subscriptions.Count; i++)
+            for (var i = 0; i < _handlers.Count; i++)
             {
-                var subscription = _subscriptions[i];
+                var subscription = _handlers[i];
                 try
                 {
                     subscription.OnEvent(message);
@@ -63,7 +68,7 @@ namespace BB.Di
             }
             _isInvoking = false;
 
-            _subscriptions.AddRange(_tempAddSubscriptions);
+            _handlers.AddRange(_tempAddSubscriptions);
             _tempAddSubscriptions.Clear();
         }
 
@@ -71,12 +76,12 @@ namespace BB.Di
         {
             if (_isInvoking)
                 _tempAddSubscriptions.Add(subscription);
-            else _subscriptions.Add(subscription);
+            else _handlers.Add(subscription);
         }
 
         public void Unsubscribe(IEventHandler<T> subscription)
         {
-            _subscriptions.Remove(subscription);
+            _handlers.Remove(subscription);
         }
     }
     public sealed class DefaultEvent<T> : BaseEvent<T>

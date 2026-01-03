@@ -70,8 +70,8 @@ namespace BB.Di
         }
         public bool Contains(in StackSourcedValue<TValue> value)
             => _stack.Contains(value);
-        public string CustomToString()
-            => $"[{typeof(TSelf).Name}] {StringExtensions.SafeToString(Value)}";
+        public override string ToString()
+            => $"{typeof(TSelf).Name}: {StringExtensions.SafeToString(Value)}";
 
         public IEnumerator<TValue> GetEnumerator()
             => _stack.Select(x => x.Value).GetEnumerator();

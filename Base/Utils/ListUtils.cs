@@ -138,6 +138,9 @@ public static class ListUtils
             return l.CompareTo(r);
         }
     }
+    public static void SortByToString<T>(this List<T> list)
+        => list.Sort((l, r) => Comparer<string>.Default.Compare(l.ToString(), r.ToString()));
+
     public static void SortByPriorityTyped<T>(this List<T> list)
         where T : IPriority
     {

@@ -97,7 +97,8 @@ namespace BB.Di
 }
 namespace BB
 {
-    public interface IEventHandler<T>
+    public interface IEventHandler { }
+    public interface IEventHandler<T> : IEventHandler
     {
         void OnEvent(T msg);
     }

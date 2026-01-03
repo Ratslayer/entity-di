@@ -6,7 +6,6 @@ namespace BB.Di
     public interface IStackValue
     {
         IEnumerable<StackSourcedValue> GetTypelessSourceValues();
-        string CustomToString();
     }
     public interface IStackValue<TValue> 
         : IVariable<TValue>, IStackValue, IReadOnlyList<TValue>, IAutoFlushable, IDirtyFlushable

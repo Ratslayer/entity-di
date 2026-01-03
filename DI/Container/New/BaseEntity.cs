@@ -336,5 +336,15 @@ namespace BB.Di
             Instance = FactoryComponent.Create(Entity);
             return true;
         }
+        public override string ToString()
+        {
+            var cType = ContractType;
+            var iType = FactoryComponent.InstanceType;
+            if (typeof(IEvent).IsAssignableFrom(cType) && cType.IsGenericType)
+                return cType.GetGenericArguments()[0].Name;
+            if (Instance is null)
+                return $"{iType.Name}:NULL";
+            return iType.Name;
+        }
     }
 }
