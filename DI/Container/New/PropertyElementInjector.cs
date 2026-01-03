@@ -2,7 +2,7 @@
 using System.Reflection;
 namespace BB.Di
 {
-    public sealed class PropertyElementInjector : BaseElementInjector
+    public sealed class PropertyElementInjector : BaseInjectAttributeInjector
     {
         public PropertyInfo Property { get; init; }
 
@@ -11,7 +11,7 @@ namespace BB.Di
 
         public override void Inject(in ElementInjectContext context)
         {
-            Property.SetValue(context.InjectedInstance, context.ElementValue);
+            Property.SetValue(context.InjectionTarget, context.InjectedValue);
         }
     }
 }

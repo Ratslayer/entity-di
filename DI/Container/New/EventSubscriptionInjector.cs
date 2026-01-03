@@ -7,9 +7,8 @@ namespace BB.Di
         public MethodInfo Method { get; private set; }
         public Type EventType { get; private set; }
         public override Type InjectedType { get; }
-        protected override MemberInfo Member => Method;
-
         readonly MethodInfo _subscriptionCreationMethod;
+        protected override MemberInfo Member => Method;
         public EventSubscriptionInjector(MethodInfo method, Type eventType, Attribute attribute)
         {
             Method = method;
@@ -26,7 +25,7 @@ namespace BB.Di
         {
             var subscription = (ISubscription)_subscriptionCreationMethod.Invoke(null, new[]
             {
-                context.ElementValue, Method, context.InjectedInstance, context.Entity
+                context.InjectedValue, Method, context.InjectionTarget, context.Entity
             });
 
             context.Entity.AddSubscription(new()
@@ -35,9 +34,9 @@ namespace BB.Di
                 Source = context.Source
             });
         }
-		public override string ToString()
-		{
-			return base.ToString();
-		}
+        public override string ToString()
+        {
+            return base.ToString();
+        }
     }
 }

@@ -42,7 +42,7 @@ namespace BB.Di
                 element.Injector.Inject(new ElementInjectContext
                 {
                     Entity = entity,
-                    InjectedInstance = context.Instance,
+                    InjectionTarget = context.Instance,
                 });
             }
         }

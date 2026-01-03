@@ -23,6 +23,22 @@ namespace BB
             entity.Has(out T instance);
             return instance;
         }
+        public static bool IsInHierarchyOf(this Entity entity, Entity potentialParent)
+        {
+            if (!entity)
+                return false;
+            if (!potentialParent)
+                return false;
+
+            var entityRef = entity._ref;
+            while (entityRef is not null)
+            {
+                if (potentialParent._ref == entityRef)
+                    return true;
+                entityRef = entityRef.Parent;
+            }
+            return false;
+        }
         public static async UniTask WaitForEvent<T>(this Entity entity, CancellationToken ct)
         {
             if (!entity.Has(out IEvent<T> e))

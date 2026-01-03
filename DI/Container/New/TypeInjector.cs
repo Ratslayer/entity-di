@@ -36,7 +36,7 @@ namespace BB.Di
                                     _elementInjectors.Add(new FieldElementInjector
                                     {
                                         Field = fieldInfo,
-                                        Attribute = fieldAttribute
+                                        Attribute = fieldAttribute,
                                     });
                             }
                             break;
@@ -46,7 +46,7 @@ namespace BB.Di
                                     _elementInjectors.Add(new PropertyElementInjector
                                     {
                                         Property = propertyInfo,
-                                        Attribute = propertyAttribute
+                                        Attribute = propertyAttribute,
                                     });
                             }
                             break;
@@ -67,39 +67,6 @@ namespace BB.Di
                                                     eventType,
                                                     eventAttribute));
                                 }
-                                //if (methodInfo.HasAttribute(out OnUpdateAttribute updateAttribute))
-                                //{
-                                //    if (methodInfo.ReturnType != typeof(void))
-                                //    {
-                                //        _errors.Add(
-                                //            $"Can't subscribe method {methodInfo.Name} to OnUpdate. " +
-                                //            $"Return type must be void.");
-                                //        break;
-                                //    }
-
-                                //    var args = methodInfo.GetParameters();
-                                //    if (args.Length != 1)
-                                //    {
-                                //        _errors.Add(
-                                //            $"Can't subscribe method {methodInfo.Name} to OnUpdate. " +
-                                //            $"Must have only 1 parameter of type {typeof(UpdateTime).Name}.");
-                                //        break;
-                                //    }
-
-                                //    if (args[0].ParameterType != typeof(UpdateTime))
-                                //    {
-                                //        _errors.Add(
-                                //           $"Can't subscribe method {methodInfo.Name} to OnUpdate. " +
-                                //           $"Parameter must be of type {typeof(UpdateTime).Name}.");
-                                //        break;
-                                //    }
-
-                                //    _elementInjectors.Add(new UpdateSubscriptionInjector
-                                //    {
-                                //        Attribute = updateAttribute,
-                                //        Method = methodInfo
-                                //    });
-                                //}
                             }
                             break;
                     }

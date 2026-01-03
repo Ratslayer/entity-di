@@ -21,8 +21,8 @@ namespace BB.Di
 
     public readonly struct ElementInjectContext
     {
-        public object InjectedInstance { get; init; }
-        public object ElementValue { get; init; }
+        public object InjectionTarget { get; init; }
+        public object InjectedValue { get; init; }
         public IEntity Entity { get; init; }
         public InjectionSource Source { get; init; }
     }

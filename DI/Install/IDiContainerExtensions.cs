@@ -28,7 +28,11 @@ namespace BB.Di
                 InstanceType = typeof(TVar),
                 ContractType = typeof(TVar),
                 Lazy = true,
-                AdditionalParams = new[] { (typeof(TValue), (object)default(TValue)) }
+                AdditionalParams = new[]
+                {
+                    (typeof(InitialVariableValue),
+                    (object)new InitialVariableValue { Value=value})
+                }
             }));
             container.Event<TVar>();
         }
@@ -40,6 +44,11 @@ namespace BB.Di
                 InstanceType = typeof(T),
                 ContractType = typeof(T),
                 Lazy = true,
+                AdditionalParams = new[]
+                {
+                    (typeof(InitialVariableValue),
+                    (object)new InitialVariableValue())
+                }
             }));
             container.Event<T>();
         }

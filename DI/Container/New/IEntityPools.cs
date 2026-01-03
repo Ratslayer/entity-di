@@ -224,9 +224,9 @@ namespace BB.Di
 
                     element.Injector.Inject(new ElementInjectContext
                     {
-                        Entity = elementEntity,
-                        ElementValue = elementData,
-                        InjectedInstance = componentData.Instance,
+                        Entity = entity,
+                        InjectedValue = elementData,
+                        InjectionTarget = componentData.Instance,
                         Source = element.Source
                     });
 

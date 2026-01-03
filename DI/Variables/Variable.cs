@@ -1,18 +1,31 @@
 ﻿using System.Collections.Generic;
 namespace BB
 {
-	public interface IVariable { }
-	public interface IVariable<T> : IVariable
-	{
-		T Value { get; }
-		T PreviousValue { get; }
-		void SetValueNoUpdate(T value);
-	}
-	public abstract class Variable<TValue> : IVariable<TValue>
-	{
-        [OnEvent(typeof(EntityDespawnedEvent))]
-        void Reset() => _value = PreviousValue = default;
+    public interface IVariable { }
+    public interface IVariable<T> : IVariable
+    {
+        T Value { get; }
+        T PreviousValue { get; }
+        void SetValueNoUpdate(T value);
+    }
+    public sealed class InitialVariableValue
+    {
+        public object Value { get; init; }
+    }
+    public abstract class Variable<TValue> : IVariable<TValue>
+    {
+        [Inject] InitialVariableValue _startingValue;
         TValue _value;
+        [OnEvent]
+        void InitValue(EntitySpawnedEvent _)
+        {
+            if (_startingValue.Value is null)
+                return;
+            Value = (TValue)_startingValue.Value;
+        }
+
+        [OnEvent]
+        void ClearValue(EntityDespawnedEvent _) => _value = PreviousValue = default;
         public TValue Value
         {
             get => _value;
@@ -30,7 +43,7 @@ namespace BB
             _value = value;
             PublishUpdate();
         }
-		protected abstract void PublishUpdate();
+        protected abstract void PublishUpdate();
         public override string ToString()
             => StringExtensions.SafeToString(_value);
         public static implicit operator TValue(Variable<TValue> s)
@@ -38,29 +51,28 @@ namespace BB
     }
 
     public abstract class Variable<TSelf, TValue> : Variable<TValue>
-		where TSelf : Variable<TSelf, TValue>
-	{
-		[Inject]
-		public readonly IEvent<TSelf> _event;
-		protected override void PublishUpdate()
-			=> _event.Publish((TSelf)this);
+        where TSelf : Variable<TSelf, TValue>
+    {
+        [Inject] IEvent<TSelf> _event;
+        protected override void PublishUpdate()
+            => _event.Publish((TSelf)this);
         public override string ToString()
            => $"{typeof(TSelf).Name}: {StringExtensions.SafeToString(Value)}";
     }
-	public static class VariableUtils
-	{
-		public static bool Toggle<TVar>(this TVar v)
-			where TVar : Variable<TVar, bool>
-		{
-			v.Value = !v.Value;
-			return v.Value;
-		}
-		public static TValue Var<TVar, TValue>(this Entity entity, TValue defaultValue = default)
-			where TVar : Variable<TVar, TValue>
-		{
-			if (entity.Has(out TVar variable))
-				return variable.Value;
-			return defaultValue;
-		}
-	}
+    public static class VariableUtils
+    {
+        public static bool Toggle<TVar>(this TVar v)
+            where TVar : Variable<TVar, bool>
+        {
+            v.Value = !v.Value;
+            return v.Value;
+        }
+        public static TValue Var<TVar, TValue>(this Entity entity, TValue defaultValue = default)
+            where TVar : Variable<TVar, TValue>
+        {
+            if (entity.Has(out TVar variable))
+                return variable.Value;
+            return defaultValue;
+        }
+    }
 }

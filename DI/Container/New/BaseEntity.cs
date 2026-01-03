@@ -137,20 +137,6 @@ namespace BB.Di
             foreach (var i in -_children?.Count)
                 _children[i].UpdateEffectiveState();
         }
-
-        public void PrepareForSpawn()
-        {
-            if (!EnteredStateUpstream(EntityState.Disabled))
-                return;
-            CurrentSpawnId = ++_lastSpawnId;
-            Subscribe(_worldSubscriptions);
-            Subscribe(_tempSubscriptions);
-            if (!_createEventInvoked)
-            {
-                _createEventInvoked = true;
-                this.Publish<EntityCreatedEvent>();
-            }
-        }
         public void FinalizeDespawn()
         {
             if (!EnteredStateDownstream(EntityState.Despawned))
@@ -177,6 +163,21 @@ namespace BB.Di
             foreach (var subscription in subscriptions)
                 subscription.Unsubscribe();
             subscriptions.Clear();
+        }
+        public void PrepareForSpawn()
+        {
+            if (!EnteredStateUpstream(EntityState.Disabled))
+                return;
+            CurrentSpawnId = ++_lastSpawnId;
+            Subscribe(_worldSubscriptions);
+            Subscribe(_tempSubscriptions);
+            if (!_createEventInvoked)
+            {
+                _createEventInvoked = true;
+                this.Publish<EntityCreatedEvent>();
+            }
+            foreach (var i in _children?.Count)
+                _children[i].PrepareForSpawn();
         }
         public void PublishSpawnEvent()
         {
@@ -212,7 +213,7 @@ namespace BB.Di
                 return;
             this.Publish(new EntityDisabledEvent());
             foreach (var i in -_children?.Count)
-                _children[i].PublishSpawnEvent();
+                _children[i].PublishDisableEvent();
         }
 
         public void PublishDespawnEvent()
@@ -221,7 +222,7 @@ namespace BB.Di
                 return;
             this.Publish(new EntityDespawnedEvent());
             foreach (var i in -_children?.Count)
-                _children[i].PublishSpawnEvent();
+                _children[i].PublishDespawnEvent();
         }
         public void FinalizeDestroy()
         {
