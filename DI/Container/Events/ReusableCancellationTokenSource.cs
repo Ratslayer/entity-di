@@ -2,7 +2,7 @@
 using System.Threading;
 namespace BB
 {
-	public class OptimizedCancellationTokenSource : IDisposable
+	public class ReusableCancellationTokenSource : IDisposable
 	{
 		CancellationTokenSource _source;
 		public CancellationToken Token
@@ -13,6 +13,7 @@ namespace BB
 				return _source.Token;
 			}
 		}
+		public bool Canceled => _source?.Token.IsCancellationRequested ?? false;
 		public void Cancel()
 		{
 			_source?.Cancel();

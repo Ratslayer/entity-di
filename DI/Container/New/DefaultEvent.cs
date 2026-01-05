@@ -86,7 +86,7 @@ namespace BB.Di
     }
     public sealed class DefaultEvent<T> : BaseEvent<T>
     {
-        readonly OptimizedCancellationTokenSource _tokenSource = new();
+        readonly ReusableCancellationTokenSource _tokenSource = new();
         public override CancellationToken NextEventCancellationToken => _tokenSource.Token;
         public override void Dispose()
         {
