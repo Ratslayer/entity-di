@@ -173,6 +173,13 @@ public static class ListUtils
         element = default;
         return false;
     }
+    public static bool TryRemove<T>(this IList<T> list, Predicate<T> predicate, out T element)
+    {
+        if (!list.TryGetValue(predicate, out element))
+            return false;
+        list.Remove(element);
+        return true;
+    }
     public static bool Contains<T>(this IEnumerable<T> list, Predicate<T> predicate)
         => list.TryGetValue(predicate, out _);
     public static bool Contains<T>(this T[] arr, T value)

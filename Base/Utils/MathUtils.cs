@@ -28,7 +28,7 @@ public static class MathUtils
         => min + (max - min) * f;
     public static float ClampToRange(this float f, float min, float max)
         => f.Clamp01().MapToRange(min, max);
-    public static float ClampAngle(this float f, float min, float max)
+    public static float ClampAngle(this float f, float min = -180, float max = 180)
     {
         var numFullCircles = Math.Floor(f / 360);
         var angle = f - (float)numFullCircles * 360;
