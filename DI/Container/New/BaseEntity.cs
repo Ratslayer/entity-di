@@ -13,12 +13,14 @@ namespace BB.Di
 {
     public sealed record EntityV1(
         string Name,
+        WorldSetup World,
         IEntityPool Pool,
         IEntityInjector Injector,
-        IEntityInstaller Installer) : BaseEntity(Name, Pool, Injector, Installer);
+        IEntityInstaller Installer) : BaseEntity(Name, World, Pool, Injector, Installer);
 
     public abstract record BaseEntity(
         string Name,
+        WorldSetup World,
         IEntityPool Pool,
         IEntityInjector Injector,
         IEntityInstaller Installer) : IFullEntity

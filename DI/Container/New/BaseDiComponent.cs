@@ -20,7 +20,7 @@ namespace BB.Di
             InstanceType = context.InstanceType;
             Lazy = context.Lazy;
             AdditionalParams = context.AdditionalParams;
-            Injector = WorldBootstrap.World.GetTypeInjector(InstanceType);
+            Injector = context.World.GetTypeInjector(InstanceType);
         }
 
         public abstract object Create(IEntity entity);
@@ -34,8 +34,8 @@ namespace BB.Di
             {
                 var entity = element.Source switch
                 {
-                    InjectionSource.Game => WorldBootstrap.World.Game.Entity,
-                    InjectionSource.Core => WorldBootstrap.World.Core.Entity,
+                    InjectionSource.Game => context.Entity.World.Game.Entity,
+                    InjectionSource.Core => context.Entity.World.Core.Entity,
                     _ => context.Entity
                 };
 

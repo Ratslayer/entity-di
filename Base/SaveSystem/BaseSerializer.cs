@@ -26,7 +26,7 @@ namespace BB
         }
         protected bool IsLoadableBehaviour(in TransformAdapter transform, out string key)
         {
-            if (!transform._transform.TryGetComponent(out LoadableBehaviour lb))
+            if (!transform._transform.TryGetComponent(out LoadableComponent lb))
             {
                 key = null;
                 return false;

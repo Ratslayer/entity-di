@@ -65,10 +65,10 @@ namespace BB.Di
         IEntityInstaller Installer { get; }
         Entity? Parent { get; }
     }
-    public abstract class BaseEntitySpawnManager<TContext> where TContext : ISpawnContext
+    public abstract class BaseEntitySpawnManager<TContext> : EntitySystem where TContext : ISpawnContext
     {
         readonly Dictionary<IEntityInstaller, EntitySpawnData> _spawnDatas = new();
-
+        protected WorldSetup World => Entity._ref.World;
         protected EntitySpawnData CreateNewData(in TContext context)
         {
             var pool = new EntityPool();
@@ -86,12 +86,12 @@ namespace BB.Di
             in TContext context,
             IEntityPool pool,
             IEntityInjector injector)
-            => new EntityFactory(pool, injector, context.Installer);
+            => new EntityFactory(World, pool, injector, context.Installer);
         protected IEntity GetUnspawnedEntity(in TContext context)
         {
             var data = GetData(context);
 
-            var parentEntity = context.Parent?._ref ?? WorldBootstrap.World.ParentEntity;
+            var parentEntity = context.Parent?._ref ?? World.ParentEntity;
             if (!data.Pool.TryGetEntity(out var entity))
             {
                 entity = data.Factory.Create(new()
@@ -110,7 +110,7 @@ namespace BB.Di
         }
         protected IEntityInjector CreateInjector(in TContext context)
         {
-            return new EntityInjector(context.Installer, WorldBootstrap.World.GetInjectorContext());
+            return new EntityInjector(context.Installer, World);
         }
         private EntitySpawnData GetData(in TContext context)
         {
@@ -121,24 +121,6 @@ namespace BB.Di
             _spawnDatas.Add(context.Installer, data);
             return data;
         }
-        //private IEntity GetUnspawnedEntity(EntitySpawnData data, Entity? parent)
-        //{
-        //    var parentEntity = parent?._ref ?? World.EntityRef;
-        //    if (!data.Pool.TryGetEntity(out var entity))
-        //    {
-        //        entity = data.Factory.Create(new()
-        //        {
-        //            Name = $"{data.Installer.Name} {data.AllEntities.Count + 1}",
-        //        });
-        //        data.AllEntities.Add(entity);
-        //    }
-        //    entity.Parent = parentEntity;
-        //    //entity.Parent = parentEntity;
-        //    //data.Injector.InjectEntityAfterCreate(entity);
-        //    //entity.Parent = parentEntity;
-        //    //data.Injector.InjectEntityBeforeSpawn(entity);
-        //    return entity;
-        //}
         protected class EntitySpawnData
         {
             public List<IEntity> AllEntities { get; private set; } = new();
@@ -154,16 +136,20 @@ namespace BB.Di
         readonly Dictionary<Type, IDiComponent> _components = new();
         readonly List<IDiComponent> _dynamicComponents = new();
         readonly IEntityInstaller _installer;
-        public EntityInjector(IEntityInstaller installer, in InitInjectorContext context)
+        public WorldSetup World { get; init; }
+        public EntityInjector(IEntityInstaller installer, WorldSetup world)
         {
             _installer = installer;
-            WorldBootstrap.World.BaseInstaller.Install(this);
+            World = world;
+            World.BaseInstaller.Install(this);
             installer.Install(this);
+
+            var injectorContext = World.GetInjectorContext();
             var componentContext = new InitDiComponentContext
             {
-                WorldComponents = context.WorldComponents,
-                GameComponents = context.GameComponents,
-                ForcedDynamicTypes = context.ForcedDynamicTypes,
+                WorldComponents = injectorContext.WorldComponents,
+                GameComponents = injectorContext.GameComponents,
+                ForcedDynamicTypes = injectorContext.ForcedDynamicTypes,
                 InstallerComponents = _components
             };
 
@@ -215,8 +201,8 @@ namespace BB.Di
                 {
                     var elementEntity = (IFullEntity)(element.Source switch
                     {
-                        InjectionSource.Game => WorldBootstrap.World.Game.Entity,
-                        InjectionSource.Core => WorldBootstrap.World.Core.Entity,
+                        InjectionSource.Game => World.Game.Entity,
+                        InjectionSource.Core => World.Core.Entity,
                         _ => entity
                     });
 
@@ -260,66 +246,4 @@ namespace BB.Di
         bool TryGetEntity(out IEntity entity);
         void ReturnEntity(IEntity entity);
     }
-    //public sealed class EntityPools : IEntityPools
-    //{
-    //    readonly Dictionary<IEntityInstaller, IEntityPool> _pools = new();
-    //    public IEntityPool GetPool(IEntityInstaller installer)
-    //    {
-    //        if (_pools.TryGetValue(installer, out IEntityPool pool))
-    //            return pool;
-
-    //        var newPool = new EntityPool(installer);
-    //        _pools.Add(installer, newPool);
-    //        return newPool;
-    //    }
-    //}
-    //public abstract class BaseEntityPool<> : IEntityPool
-    //{
-    //    readonly EntityFactory _entityFactory;
-    //    readonly List<IEntity> _entities = new(), _availableEntities = new();
-    //    public IEntityInstaller Installer { get; private set; }
-    //    public BaseEntityPool(IEntityInstaller installer)
-    //    {
-    //        Installer = installer;
-    //        _entityFactory = BEF.Get(this);
-    //    }
-    //    protected abstract
-    //    public IEntity GetUnspawnedEntity(IEntity parent)
-    //    {
-    //        parent ??= World.RootEntity;
-    //        IEntity entity;
-    //        if (_availableEntities.Count == 0)
-    //        {
-    //            entity = _entityFactory.Create(new()
-    //            {
-    //                Name = $"{Installer.Name} {_entities.Count + 1}"
-    //            });
-
-    //            _entities.Add(entity);
-    //            _entityFactory.PrepareEntityForSpawn(new()
-    //            {
-    //                Entity = entity,
-    //                Parent = parent,
-    //                FirstTime = true
-    //            });
-    //        }
-    //        else
-    //        {
-    //            entity = _availableEntities.RemoveLast();
-    //            _entityFactory.PrepareEntityForSpawn(new()
-    //            {
-    //                Entity = entity,
-    //                Parent = parent,
-    //                FirstTime = false
-    //            });
-    //        }
-
-    //        return entity;
-    //    }
-
-    //    public void ReturnEntity(IEntity entity)
-    //    {
-    //        _availableEntities.Add(entity);
-    //    }
-    //}
 }

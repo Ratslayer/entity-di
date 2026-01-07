@@ -18,7 +18,7 @@ namespace BB.Di
         public IEntity ParentEntity => (Game ?? Core)?.Entity;
         public Dictionary<IEntityInstaller, IEntityFactory> Factories { get; init; } = new();
         public HashSet<Type> ForcedDynamicTypes { get; init; }
-
+        readonly Dictionary<Type, TypeInjector> _injectors = new();
         public InitInjectorContext GetInjectorContext()
             => new()
             {
@@ -26,7 +26,6 @@ namespace BB.Di
                 GameComponents = Game?.Injector.Components,
                 ForcedDynamicTypes = ForcedDynamicTypes
             };
-        readonly Dictionary<Type, TypeInjector> _injectors = new();
         public TypeInjector GetTypeInjector(Type type)
         {
             if (!_injectors.TryGetValue(type, out var result))
@@ -40,7 +39,16 @@ namespace BB.Di
                     $"{string.Join('\n', result._errors)}");
             return result;
         }
+        public static WorldSetup CreateFromConfig(in WorldSetupConfig config)
+        {
+            var result = new WorldSetup
+            {
+                BaseInstaller = config.AdditionalInstaller,
+                ForcedDynamicTypes = config.ForcedDinamicTypes?.ToHashSet() ?? new()
+            };
 
+            return result;
+        }
         public void ClearGame()
         {
             Game?.Entity?.SetState(EntityState.Destroyed);
@@ -56,11 +64,13 @@ namespace BB.Di
             => CreateWorldEntity("Core", installer, data => Core = data);
         public void CreateGame(IEntityInstaller installer)
             => CreateWorldEntity("Game", installer, data => Game = data);
-        void CreateWorldEntity(string name, IEntityInstaller installer,
+        void CreateWorldEntity(
+            string name,
+            IEntityInstaller installer,
             Action<WorldData> processor)
         {
-            var injector = new EntityInjector(installer, GetInjectorContext());
-            var factory = new EntityFactory(null, injector, installer);
+            var injector = new EntityInjector(installer, this);
+            var factory = new EntityFactory(this, null, injector, installer);
             var entity = factory.Create(new() { Name = name });
             entity.Parent = ParentEntity;
 
@@ -98,7 +108,7 @@ namespace BB.Di
     public readonly struct WorldSetupConfig
     {
         public IEntityInstaller AdditionalInstaller { get; init; }
-        public IEntityInstaller WorldInstaller { get; init; }
+        public IEntityInstaller CoreInstaller { get; init; }
         public IEnumerable<Type> ForcedDinamicTypes { get; init; }
     }
     public static class WorldBootstrap
@@ -111,13 +121,8 @@ namespace BB.Di
 
             var worldSetupConfig = LoadConfig();
 
-            World = new WorldSetup
-            {
-                BaseInstaller = worldSetupConfig.AdditionalInstaller,
-                ForcedDynamicTypes = worldSetupConfig.ForcedDinamicTypes.ToHashSet()
-            };
-            World.CreateCore(worldSetupConfig.WorldInstaller);
-            World.Core.Entity.SetState(EntityState.Enabled);
+            World = WorldSetup.CreateFromConfig(worldSetupConfig);
+            World.CreateCore(worldSetupConfig.CoreInstaller);
             World.Core.Entity.Publish(new AfterWorldSpawnEvent());
         }
         public static void CreateWorld()
