@@ -15,6 +15,5 @@ namespace BB.Di
         bool Validate(IEntityInstaller installer);
         void Init(in InitDiComponentContext context);
         object Create(IEntity entity);
-        void Inject(in DiComponentInjectContext context);
     }
 }

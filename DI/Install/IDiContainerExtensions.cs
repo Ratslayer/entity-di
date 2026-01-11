@@ -21,7 +21,7 @@ namespace BB.Di
             return result;
         }
         public static void Var<TVar, TValue>(this IDiContainer container, TValue value = default)
-            where TVar : Variable<TVar, TValue>, new()
+            where TVar : IVariable<TValue>
         {
             container.AddComponent(new ConstructDiComponent(new()
             {
@@ -32,7 +32,7 @@ namespace BB.Di
                 AdditionalParams = new[]
                 {
                     (typeof(InitialVariableValue),
-                    (object)new InitialVariableValue { Value=value})
+                    (object)new InitialVariableValue { Value = value})
                 }
             }));
             container.Event<TVar>();
@@ -58,8 +58,8 @@ namespace BB.Di
             this IDiContainer container,
             params object[] args)
             where T : new()
-            => container.System<T, T>(args);
-        public static void System<TContract, TInstance>(
+            => container.Service<T, T>(args);
+        public static void Service<TContract, TInstance>(
             this IDiContainer container,
             params object[] args)
             where TInstance : TContract, new()

@@ -100,15 +100,9 @@ namespace BB.Di
             return true;
         }
     }
-    public readonly struct DiComponentInjectContext
-    {
-        public IEntity Entity { get; init; }
-        public object Instance { get; init; }
-        public bool DynamicOnly { get; init; }
-        public IList<IDiComponent> ComponentsToBeInjected { get; init; }
-    }
     public interface IEntityFactory
     {
+        IEntityInstaller Installer { get; }
         IEntity Create(in CreateEntityContext context);
     }
     public readonly struct CreateEntityContext

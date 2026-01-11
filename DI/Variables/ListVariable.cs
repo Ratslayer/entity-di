@@ -100,7 +100,7 @@ namespace BB
 			using var _ = this.DisableAutoFlush();
 			OnListUpdate();
 		}
-		public bool Contains(out ElementType e, Predicate<ElementType> predicate)
+		public bool Contains(out ElementType e, Func<ElementType,bool> predicate)
 			=> _elements.TryGetValue(predicate, out e);
 
 		public int IndexOf(ElementType item)

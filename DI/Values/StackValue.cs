@@ -8,13 +8,24 @@ namespace BB.Di
     public abstract class StackValue<TSelf, TValue> : IStackValue<TValue>
         where TSelf : StackValue<TSelf, TValue>
     {
-        [Inject]
-        IEvent<TSelf> _publisher;
+        [Inject] IEvent<TSelf> _publisher;
+        [Inject] InitialVariableValue _initialValue;
         TValue _defaultValue;
         readonly List<StackSourcedValue<TValue>> _stack = new();
         public void SetValueNoUpdate(TValue value)
         {
             _defaultValue = value;
+        }
+        [OnEvent]
+        void OnSpawn(EntitySpawnedEvent _)
+        {
+            if (_initialValue.Value is not null)
+                Push(new()
+                {
+                    Priority = -1000,
+                    Source = (default, this),
+                    Value = (TValue)_initialValue.Value
+                });
         }
         [OnEvent(typeof(EntityDespawnedEvent))]
         void OnDespawn()

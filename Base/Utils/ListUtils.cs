@@ -162,7 +162,7 @@ public static class ListUtils
         return list[index];
     }
     public static bool TryGetValue<T>(
-        this IEnumerable<T> list, Predicate<T> predicate, out T element)
+        this IEnumerable<T> list, Func<T, bool> predicate, out T element)
     {
         foreach (var item in list)
             if (predicate(item))
@@ -173,14 +173,14 @@ public static class ListUtils
         element = default;
         return false;
     }
-    public static bool TryRemove<T>(this IList<T> list, Predicate<T> predicate, out T element)
+    public static bool TryRemove<T>(this IList<T> list, Func<T, bool> predicate, out T element)
     {
         if (!list.TryGetValue(predicate, out element))
             return false;
         list.Remove(element);
         return true;
     }
-    public static bool Contains<T>(this IEnumerable<T> list, Predicate<T> predicate)
+    public static bool Contains<T>(this IEnumerable<T> list, Func<T, bool> predicate)
         => list.TryGetValue(predicate, out _);
     public static bool Contains<T>(this T[] arr, T value)
     {

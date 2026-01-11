@@ -10,8 +10,8 @@ namespace BB
         public static DisposableBag operator +(BasePooledObject l, IDisposable r)
         {
             var bag = DisposableBag.GetPooled();
-            bag.AddDisposable(l);
-            bag.AddDisposable(r);
+            bag.Add(l);
+            bag.Add(r);
             return bag;
         }
         public static DisposableBag operator +(IDisposable l, BasePooledObject r)

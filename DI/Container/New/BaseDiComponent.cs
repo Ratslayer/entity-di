@@ -25,28 +25,6 @@ namespace BB.Di
 
         public abstract object Create(IEntity entity);
 
-        public void Inject(in DiComponentInjectContext context)
-        {
-            var elements = context.DynamicOnly ? DynamicElements : Elements;
-            if (elements is null)
-                return;
-            foreach (var element in elements)
-            {
-                var entity = element.Source switch
-                {
-                    InjectionSource.Game => context.Entity.World.Game.Entity,
-                    InjectionSource.Core => context.Entity.World.Core.Entity,
-                    _ => context.Entity
-                };
-
-                element.Injector.Inject(new ElementInjectContext
-                {
-                    Entity = entity,
-                    InjectionTarget = context.Instance,
-                });
-            }
-        }
-
         public abstract bool Validate(IEntityInstaller installer);
 
         public void Init(in InitDiComponentContext context)

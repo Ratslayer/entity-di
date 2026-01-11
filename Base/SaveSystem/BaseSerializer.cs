@@ -39,7 +39,7 @@ namespace BB
         protected bool HasLoadableBehaviour<T>(string key, out T result)
             where T : Component
         {
-            if (!World.Require<ILoadableBehaviours>().TryGet(key, out var lb))
+            if (!World.Require<ILoadableComponents>().TryGet(key, out var lb))
             {
                 result = default;
                 return false;

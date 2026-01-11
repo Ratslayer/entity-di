@@ -69,6 +69,7 @@ namespace BB.Di
         IReadOnlyCollection<EntityComponentData> GetElements();
         EntityComponentData GetComponentData(in GetComponentDataContext context);
         IEntityInstaller Installer { get; }
+        IEntityPool Pool { get; }
     }
     public readonly struct GetComponentDataContext
     {

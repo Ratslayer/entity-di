@@ -1,16 +1,22 @@
-﻿using UnityEngine;
-using BB.Di;
-using System.Linq;
+﻿using BB.Di;
 namespace BB
 {
     public static class World
     {
-        public static void SetGame(IEntityInstaller installer)
+        public static void SetGame(BaseGameInstallerAsset installer)
         {
-            Publish<BeforeGameSpawnEvent>();
-            WorldBootstrap.World.ClearGame();
-            WorldBootstrap.World.CreateGame(installer);
-            Publish<AfterGameSpawnEvent>();
+            if (WorldBootstrap.World.Game is not null)
+            {
+                Publish<BeforeGameDespawnEvent>();
+                WorldBootstrap.World.ClearGame();
+                Publish<AfterGameDespawnEvent>();
+            }
+            if (installer)
+            {
+                Publish<BeforeGameSpawnEvent>();
+                WorldBootstrap.World.CreateGame(installer);
+                Publish<AfterGameSpawnEvent>();
+            }
         }
         public static T Require<T>()
         {

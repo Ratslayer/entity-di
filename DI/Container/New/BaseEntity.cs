@@ -57,18 +57,10 @@ namespace BB.Di
                 return Parent?.TryResolve(type, out result) is true;
             }
 
-            result = comp.Instance;
-            if (result is null)
-            {
-                comp.Instance = comp.FactoryComponent.Create(this);
-                comp.FactoryComponent.Inject(new()
-                {
-                    Instance = comp.Instance,
-                    Entity = this,
-                });
-                result = comp.Instance;
-            }
+            if(comp.Instance is null)
+                Injector.InjectSingleEntityComponent(this, comp.FactoryComponent);
 
+            result = comp.Instance;
             return true;
         }
         bool _injected;
@@ -345,9 +337,10 @@ namespace BB.Di
             var iType = FactoryComponent.InstanceType;
             if (typeof(IEvent).IsAssignableFrom(cType) && cType.IsGenericType)
                 return cType.GetGenericArguments()[0].Name;
+            var typeName = iType == cType ? iType.Name : $"{iType.Name}:{cType.Name}";
             if (Instance is null)
-                return $"{iType.Name}:NULL";
-            return iType.Name;
+                return $"{typeName}:NULL";
+            return typeName;
         }
     }
 }

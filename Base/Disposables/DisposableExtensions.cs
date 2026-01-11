@@ -21,19 +21,19 @@ namespace BB
 
 			if (d1 is DisposableBag b1)
 			{
-				b1.AddDisposable(d2);
+				b1.Add(d2);
 				return b1;
 			}
 
 			if (d2 is DisposableBag b2)
 			{
-				b2.AddDisposable(d1);
+				b2.Add(d1);
 				return b2;
 			}
 
 			var bag = DisposableBag.GetPooled();
-			bag.AddDisposable(d1);
-			bag.AddDisposable(d2);
+			bag.Add(d1);
+			bag.Add(d2);
 			return bag;
 		}
 
