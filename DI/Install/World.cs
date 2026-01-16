@@ -50,8 +50,16 @@ namespace BB
             Has(out T result);
             return result;
         }
-        public static Entity Entity => (WorldBootstrap.World.Game?.Entity
-            ?? WorldBootstrap.World.Core.Entity)?.GetToken() ?? default;
+        public static Entity Entity
+        {
+            get
+            {
+                if (WorldBootstrap.World.Game?.Entity is { } game
+                    && game.GetToken())
+                    return game.GetToken();
+                return WorldBootstrap.World.Core.Entity.GetToken();
+            }
+        }
         public static void Publish<T>(T msg = default) => Entity.Publish(msg);
         public static bool Has<T>(out T system) => Entity.Has(out system);
         public static bool Has<T1, T2>(out T1 t1, out T2 t2) => Entity.Has(out t1, out t2);

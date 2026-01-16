@@ -57,7 +57,7 @@ namespace BB.Di
                 return Parent?.TryResolve(type, out result) is true;
             }
 
-            if(comp.Instance is null)
+            if (comp.Instance is null)
                 Injector.InjectSingleEntityComponent(this, comp.FactoryComponent);
 
             result = comp.Instance;
@@ -337,7 +337,7 @@ namespace BB.Di
             var iType = FactoryComponent.InstanceType;
             if (typeof(IEvent).IsAssignableFrom(cType) && cType.IsGenericType)
                 return cType.GetGenericArguments()[0].Name;
-            var typeName = iType == cType ? iType.Name : $"{iType.Name}:{cType.Name}";
+            var typeName = iType == cType ? iType.Name : $"{cType.Name}:{iType.Name}";
             if (Instance is null)
                 return $"{typeName}:NULL";
             return typeName;
