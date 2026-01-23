@@ -15,4 +15,13 @@ namespace BB
 		}
 	}
 	public interface IDisposableList<T> : IList<T>, IDisposable { }
+	public static class PooledListExtensions
+	{
+		public static PooledList<T> ToPooledList<T>(this IEnumerable<T> enumerable)
+		{
+			var list = PooledList<T>.GetPooled();
+			list.AddRange(enumerable);
+			return list;
+		}
+	}
 }

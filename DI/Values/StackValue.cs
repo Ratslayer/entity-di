@@ -72,6 +72,8 @@ namespace BB.Di
 
             if (EqualityComparer<StackSourcedValue<TValue>>.Default.Equals(_stack[^1], value))
             {
+                if (!IsDirty)
+                    PreviousValue = Value;
                 _stack.RemoveLast();
                 this.SetDirtyAndAutoFlushChanges();
                 return true;
