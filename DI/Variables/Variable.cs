@@ -41,9 +41,9 @@ namespace BB
         {
             PreviousValue = _value;
             _value = value;
-            PublishUpdate();
+            OnUpdate();
         }
-        protected abstract void PublishUpdate();
+        protected abstract void OnUpdate();
         public override string ToString()
             => StringExtensions.SafeToString(_value);
         public static implicit operator TValue(Variable<TValue> s)
@@ -54,7 +54,7 @@ namespace BB
         where TSelf : Variable<TSelf, TValue>
     {
         [Inject] IEvent<TSelf> _event;
-        protected override void PublishUpdate()
+        protected override void OnUpdate()
             => _event.Publish((TSelf)this);
         public override string ToString()
            => $"{typeof(TSelf).Name}: {StringExtensions.SafeToString(Value)}";
