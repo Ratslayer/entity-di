@@ -47,7 +47,7 @@ namespace BB
 
             if (!lb.TryGetComponent(out result))
             {
-                Log.Error($"{key} loadable behaviour was found, " +
+                LogError($"{key} loadable behaviour was found, " +
                     $"but it had no component of type {typeof(T).Name}");
                 return false;
             }
@@ -69,13 +69,13 @@ namespace BB
             var assets = World.Require<ILoadableAssets>();
             if (!assets.HasAsset(key, out var a) || !a)
             {
-                Log.Error($"No loadable asset found for key {key}");
+                LogError($"No loadable asset found for key {key}");
                 return false;
             }
 
             if (a is not T t)
             {
-                Log.Error(
+                LogError(
                     $"Asset for key {key} is of type {a.GetType().Name} " +
                     $"and not of type {typeof(T).Name}");
                 return false;
@@ -84,21 +84,27 @@ namespace BB
             asset = t;
             return true;
         }
+        protected T GetLoadableAsset<T>(string key)
+            where T : BaseScriptableObject
+            => HasLoadableAsset(key, out T asset) ? asset : default;
 
-		public void ApplySpawn(in DeserializationContext context)
-		{
+
+        public void ApplySpawn(in DeserializationContext context)
+        {
             if (!context.Entity.Has(out TTarget target))
                 return;
             var data = JsonConvert.DeserializeObject<TData>(context.SerializedData.ToString());
             ApplySpawn(target, data);
         }
 
-		public void ApplyAfterSpawn(in DeserializationContext context)
-		{
+        public void ApplyAfterSpawn(in DeserializationContext context)
+        {
             if (!context.Entity.Has(out TTarget target))
                 return;
             var data = JsonConvert.DeserializeObject<TData>(context.SerializedData.ToString());
             ApplyAfterSpawn(target, data);
         }
-	}
+        protected void LogError(string msg)
+            => Log.Error(msg);
+    }
 }

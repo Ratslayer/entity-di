@@ -13,6 +13,7 @@ namespace BB.Di
     public sealed class WorldSetup : IDisposable, IWorld
     {
         public IEntityInstaller BaseInstaller { get; init; }
+        public ILogger Logger { get; init; }
         public WorldData Core { get; set; }
         public WorldData Game { get; set; }
         public IEntity ParentEntity => (Game ?? Core)?.Entity;
@@ -44,7 +45,8 @@ namespace BB.Di
             var result = new WorldSetup
             {
                 BaseInstaller = config.AdditionalInstaller,
-                ForcedDynamicTypes = config.ForcedDinamicTypes?.ToHashSet() ?? new()
+                ForcedDynamicTypes = config.ForcedDinamicTypes?.ToHashSet() ?? new(),
+                Logger = config.Logger
             };
 
             return result;
@@ -110,6 +112,7 @@ namespace BB.Di
         public IEntityInstaller AdditionalInstaller { get; init; }
         public IEntityInstaller CoreInstaller { get; init; }
         public IEnumerable<Type> ForcedDinamicTypes { get; init; }
+        public ILogger Logger { get; init; }
     }
     public static class WorldBootstrap
     {

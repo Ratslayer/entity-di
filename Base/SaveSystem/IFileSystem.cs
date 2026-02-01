@@ -12,15 +12,20 @@ namespace BB
     }
     public interface IFileSystem
     {
-        public Task Write(WriteFileContext context);
-        public Task<T> Read<T>(ReadFileContext context);
+        Task Write(WriteFileContext context);
+        Task<T> Read<T>(ReadFileContext context);
+        string GetFullPath(string localPath);
     }
     public sealed class FileSystem : IFileSystem
     {
         [Inject] FileSystemParams _params;
+
+        public string GetFullPath(string localPath)
+            => $"{_params.RootPath}/{localPath}";
+
         public Task<T> Read<T>(ReadFileContext context)
         {
-            var path = $"{_params.RootPath}/{context.Path}";
+            var path = GetFullPath(context.Path);
             try
             {
                 return ReadFromPath(path);
@@ -42,7 +47,7 @@ namespace BB
 
         public async Task Write(WriteFileContext context)
         {
-            var path = $"{_params.RootPath}/{context.Path}";
+            var path = GetFullPath(context.Path);
             if (!File.Exists(path))
             {
                 Directory.CreateDirectory(path);
@@ -65,7 +70,7 @@ namespace BB
                 {
                     Formatting = Formatting.Indented,
                 };
-                
+
                 var json = JsonConvert.SerializeObject(context.Data, settings);
                 return File.WriteAllTextAsync(path, json);
             }
