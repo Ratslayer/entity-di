@@ -75,6 +75,7 @@ namespace BB.Di
             var factory = new EntityFactory(this, null, injector, installer);
             var entity = factory.Create(new() { Name = name });
             entity.Parent = ParentEntity;
+            entity.SerializationName = name.ToLower();
 
             processor(new(factory, injector, entity));
 

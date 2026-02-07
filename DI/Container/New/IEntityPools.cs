@@ -13,8 +13,7 @@ namespace BB
                 Parent = context.Parent
             });
 
-            if (!string.IsNullOrWhiteSpace(context.SerializationName))
-                EntitySerializationUtils.RegisterAsSerializedEntity(entity, context.SerializationName);
+            EntitySerializationUtils.RegisterAsSerializedEntity(entity, context.SerializationName);
 
             return entity;
         }

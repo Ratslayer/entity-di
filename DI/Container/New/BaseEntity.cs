@@ -28,7 +28,7 @@ namespace BB.Di
         static ulong _lastSpawnId = 0;
         Dictionary<Type, EntityComponentData> _components;
 
-
+        public string SerializationName { get; set; }
         public ulong CurrentSpawnId { get; private set; }
         public void Init()
         {

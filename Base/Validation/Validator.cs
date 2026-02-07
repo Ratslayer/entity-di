@@ -18,7 +18,7 @@ namespace BB
         public override void Dispose()
         {
             _entity = default;
-            _validators.DisposeAndClear();
+            _validators.DisposeElementsAndClear();
             base.Dispose();
         }
         public bool ValidateAndDispose()

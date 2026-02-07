@@ -13,6 +13,7 @@ namespace BB.Di
     public interface IEntity
     {
         string Name { get; }
+        string SerializationName { get; set; }
         ulong CurrentSpawnId { get; }
         EntityState State { get; }
         WorldSetup World { get; }

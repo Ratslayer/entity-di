@@ -29,6 +29,11 @@ public static class Log
         return !value;
     }
 }
+public static class LoggerExtensions
+{
+    public static void LogError(this ILogger logger, string message)
+        => logger.Log(message, LogLevel.Error);
+}
 public readonly struct LoggerPrefix : IDisposable
 {
     readonly object _prefix;
@@ -87,8 +92,6 @@ public sealed class UnityLogger : ILogger
     public void LogException(Exception exception)
     {
         Debug.LogException(exception);
-        //var tags = GetCurrentMessage(null, true, "#FF0000");
-        //throw new Exception(tags, exception);
     }
     public void AddContext(object prefix) => _prefixes.Add(prefix);
     public void RemovePrefix(object prefix)

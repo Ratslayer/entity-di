@@ -37,7 +37,7 @@ namespace BB
 			return bag;
 		}
 
-		public static void DisposeAndClear(this IList collection)
+		public static void DisposeElementsAndClear(this IList collection)
 		{
 			foreach (var element in collection)
 				if (element is IDisposable disposable)
