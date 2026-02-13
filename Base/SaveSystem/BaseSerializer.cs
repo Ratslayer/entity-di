@@ -63,29 +63,19 @@ namespace BB
                     $"Actual type: {target.GetType().Name}.");
         }
         protected bool HasLoadableAsset<T>(string key, out T asset)
-            where T : BaseScriptableObject
+            where T : BaseScriptableObject, ILoadableAsset
         {
-            asset = null;
             var assets = World.Require<ILoadableAssets>();
-            if (!assets.HasAsset(key, out var a) || !a)
+            if (!assets.HasAsset(key, out asset) || !asset)
             {
                 LogError($"No loadable asset found for key {key}");
                 return false;
             }
 
-            if (a is not T t)
-            {
-                LogError(
-                    $"Asset for key {key} is of type {a.GetType().Name} " +
-                    $"and not of type {typeof(T).Name}");
-                return false;
-            }
-
-            asset = t;
             return true;
         }
         protected T GetLoadableAsset<T>(string key)
-            where T : BaseScriptableObject
+            where T : BaseScriptableObject, ILoadableAsset
             => HasLoadableAsset(key, out T asset) ? asset : default;
 
 
