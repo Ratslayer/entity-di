@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 namespace BB
 {
     public interface IVariable { }
@@ -48,6 +49,22 @@ namespace BB
             => StringExtensions.SafeToString(_value);
         public static implicit operator TValue(Variable<TValue> s)
             => s is not null ? s.Value : default;
+    }
+
+    public abstract class SerializableEnumVariable<TSelf, TValue> : Variable<TSelf, TValue>, ISerializableComponent
+        where TSelf : Variable<TSelf, TValue>
+    {
+        public IEntityComponentSerializer[] GetSerializers() => new[] { Serializer.Default };
+
+        private sealed class Serializer : BaseSerializer<Serializer, TSelf, TValue>
+        {
+            protected override TValue Serialize(TSelf target)
+                => target.Value;
+            protected override void ApplySpawn(TSelf target, TValue data)
+            {
+                target.Value = data;
+            }
+        }
     }
 
     public abstract class Variable<TSelf, TValue> : Variable<TValue>

@@ -81,7 +81,7 @@ namespace BB
 
         public void ApplySpawn(in DeserializationContext context)
         {
-            if (!context.Entity.Has(out TTarget target))
+            if (context.Component is not TTarget target)
                 return;
             var data = JsonConvert.DeserializeObject<TData>(context.SerializedData.ToString());
             ApplySpawn(target, data);
