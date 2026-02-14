@@ -13,5 +13,9 @@ namespace BB
         {
             Log.Error($"{Entity}.{GetType().Name}.{caller}: {message}");
         }
+        protected void LogInfo(string message, [CallerMemberName] string caller = null)
+        {
+            Log.Info($"{Entity}.{GetType().Name}.{caller}: {message}");
+        }
     }
 }

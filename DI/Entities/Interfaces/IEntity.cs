@@ -71,6 +71,7 @@ namespace BB.Di
         EntityComponentData GetComponentData(in GetComponentDataContext context);
         IEntityInstaller Installer { get; }
         IEntityPool Pool { get; }
+        bool OneShot { get; set; }
     }
     public readonly struct GetComponentDataContext
     {

@@ -30,6 +30,8 @@ namespace BB.Di
 
         public string SerializationName { get; set; }
         public ulong CurrentSpawnId { get; private set; }
+        public bool OneShot { get; set; }
+
         public void Init()
         {
             if (Injector.Components.IsNullOrEmpty())
@@ -140,8 +142,11 @@ namespace BB.Di
             foreach (var i in -_children?.Count)
                 _children[i].FinalizeDespawn();
             CurrentSpawnId = 0;
-            Parent = null;
-            Pool?.ReturnEntity(this);
+            if (!OneShot)
+            {
+                Parent = null;
+                Pool?.ReturnEntity(this);
+            }
         }
         private void Subscribe(List<ISubscription> subscriptions)
         {
@@ -285,7 +290,6 @@ namespace BB.Di
                 }
             }
         }
-
         public IReadOnlyCollection<EntityComponentData> GetElements()
             => _components?.Values
             ?? (IReadOnlyCollection<EntityComponentData>)Array.Empty<EntityComponentData>();
