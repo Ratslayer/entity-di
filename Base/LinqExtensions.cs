@@ -13,6 +13,8 @@ namespace BB
             => source
             .Select(converter)
             .Where(t => t is not null);
+        public static IEnumerable<T> NotDefault<T>(this IEnumerable<T> source)
+            => source.Where(t => !EqualityComparer<T>.Default.Equals(t, default!));
     }
     public readonly struct EnumerableAdapter<T> : IEnumerable<T>
     {

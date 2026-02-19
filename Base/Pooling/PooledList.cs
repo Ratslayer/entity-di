@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Cysharp.Threading.Tasks;
+using System;
 using System.Collections.Generic;
 namespace BB
 {
@@ -22,6 +23,12 @@ namespace BB
 			var list = PooledList<T>.GetPooled();
 			list.AddRange(enumerable);
 			return list;
+		}
+
+		public static async UniTask WhenAll(this PooledList<UniTask> tasks)
+		{
+			await UniTask.WhenAll(tasks);
+			tasks.Dispose();
 		}
 	}
 }

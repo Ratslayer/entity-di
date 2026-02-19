@@ -70,6 +70,7 @@ namespace BB.Di
         IReadOnlyCollection<EntityComponentData> GetElements();
         EntityComponentData GetComponentData(in GetComponentDataContext context);
         IEntityInstaller Installer { get; }
+        IEntityInjector Injector { get; }
         IEntityPool Pool { get; }
         bool OneShot { get; set; }
     }
