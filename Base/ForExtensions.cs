@@ -23,6 +23,25 @@ public static class ForExtensions
         => list.Count;
     public static int IndicesReversed<T>(this IReadOnlyList<T> list)
         => -list.Count;
+
+    public static IEnumerable<int> IndicesWithOffset<T>(this IReadOnlyList<T> list, int offset)
+    {
+        if (list?.Count is null or 0)
+            yield break;
+        for (var i = 0; i < list.Count; i++)
+            yield return (i + offset) % list.Count;
+    }
+    public static IEnumerable<int> IndicesWithRandomOffset<T>(this IReadOnlyList<T> list)
+        => list.IndicesWithOffset(RandomUtils.Range(0, list.Count));
+    public static IEnumerable<T> WithOffset<T>(this IReadOnlyList<T> list, int offset)
+    {
+        if (list?.Count is null or 0)
+            yield break;
+        for (var i = 0; i < list.Count; i++)
+            yield return list[(i + offset) % list.Count];
+    }
+    public static IEnumerable<T> WithRandomOffset<T>(this IReadOnlyList<T> list)
+        => list.WithOffset(RandomUtils.Range(0, list.Count));
 }
 public ref struct CustomIListEnumerator<T>
 {
