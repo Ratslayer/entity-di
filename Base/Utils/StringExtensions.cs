@@ -61,7 +61,7 @@ public static class StringExtensions
             return "";
         return match.Groups[^1].Value;
     }
-    public static string[] SplitByCapitalWords(string s)
+    public static string[] SplitByCapitalWords(this string s)
         => string.IsNullOrWhiteSpace(s)
         ? Array.Empty<string>()
         : Regex.Replace(s, "([A-Z\\d])", " $1").Trim().Split();
