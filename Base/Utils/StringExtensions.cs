@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 public static class EnumExtensions
@@ -61,8 +62,17 @@ public static class StringExtensions
             return "";
         return match.Groups[^1].Value;
     }
-    public static string[] SplitByCapitalWords(this string s)
+    public static string[] SplitByCapitalLetters(this string s)
         => string.IsNullOrWhiteSpace(s)
         ? Array.Empty<string>()
         : Regex.Replace(s, "([A-Z\\d])", " $1").Trim().Split();
+
+    public static string[] SplitByWords(this string s)
+        => string.IsNullOrWhiteSpace(s)
+        ? Array.Empty<string>()
+        : s.Split()
+            .SelectMany(s => s.Split('_'))
+            .SelectMany(s => s.SplitByCapitalLetters())
+            .Select(s => s.ToLower())
+            .ToArray();
 }
