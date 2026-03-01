@@ -3,14 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-public static class ThrowHelper
-{
-    public static void IfNull(object obj, string message = "")
-    {
-        if (obj is null)
-            throw new NullReferenceException(message);
-    }
-}
 public static class Log
 {
     public static ILogger Logger { get; private set; }

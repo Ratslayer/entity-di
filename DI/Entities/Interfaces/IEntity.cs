@@ -27,35 +27,6 @@ namespace BB.Di
         IReadOnlyCollection<IEntity> Children { get; }
 
     }
-    public interface IFullEntity : IEntity, IEntityStateHandler, IEntityDetails
-    {
-    }
-    public readonly struct SetEntityStateContext
-    {
-        public EntityState State { get; init; }
-    }
-    public enum EntityStateEvents
-    {
-        //upstream
-        Spawn,
-        PostSpawn,
-        Enable,
-        //downstream
-        Disable,
-        Despawn
-    }
-    public interface IEntityStateHandler
-    {
-        void UpdateEffectiveState();
-        void PrepareForSpawn();
-        void FinalizeDespawn();
-        void PublishSpawnEvent();
-        void PublishPostSpawnEvent();
-        void PublishEnableEvent();
-        void PublishDisableEvent();
-        void PublishDespawnEvent();
-        void FinalizeDestroy();
-    }
     public readonly struct EntitySubscriptionContext
     {
         public ISubscription Subscription { get; init; }
@@ -64,15 +35,6 @@ namespace BB.Di
     public interface IEntityProvider
     {
         Entity Entity { get; }
-    }
-    public interface IEntityDetails : IEntity
-    {
-        IReadOnlyCollection<EntityComponentData> GetElements();
-        EntityComponentData GetComponentData(in GetComponentDataContext context);
-        IEntityInstaller Installer { get; }
-        IEntityInjector Injector { get; }
-        IEntityPool Pool { get; }
-        bool OneShot { get; set; }
     }
     public readonly struct GetComponentDataContext
     {

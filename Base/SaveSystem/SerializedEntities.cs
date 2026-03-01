@@ -4,15 +4,8 @@ using System.Linq;
 
 namespace BB
 {
-    public readonly struct SerializedEntityName
-    {
-        public Entity Entity { get; init; }
-        public string Name { get; init; }
-    }
     public sealed record SerializedEntities : ISerializedEntities
     {
-        //readonly Dictionary<Entity, string> _entityNames = new();
-        //readonly Dictionary<string, Entity> _invertedEntityNames = new();
         readonly List<SerializedEntityName> _entities = new();
         readonly Dictionary<Entity, string> _entityNames = new();
         readonly Dictionary<string, Entity> _entityPaths = new();
@@ -26,42 +19,7 @@ namespace BB
                 Entity = entity,
                 Name = serializedName
             });
-
-            //var e = entity._ref;
-            //if (e is null)
-            //    return;
-
-            //if (!string.IsNullOrWhiteSpace(serializedName))
-            //{
-            //    var parent = e.Parent;
-            //    while (parent != World.EntityRef && parent is not null)
-            //    {
-            //        !if (_entityNames.TryGetValue(parent.GetToken(), out var parentPath))
-            //        {
-            //            var path = $"{parentPath}/{serializedName}";
-            //            _entityNames.Add(e, path);
-            //            _invertedEntityNames.Add(path, e);
-            //            return;
-            //        }
-            //        parent = parent.Parent;
-            //    }
-            //}
-            //_entityNames.Add(e, serializedName);
-            //_invertedEntityNames.Add(serializedName, e);
         }
-        //public bool Has(string path, out Entity entity)
-        //    => _invertedEntityNames.TryGetValue(path, out entity);
-        //public IEnumerable<SerializableEntity> GetAll()
-        //{
-        //    foreach (var kvp in _entityNames)
-        //        if (kvp.Key)
-        //            yield return new()
-        //            {
-        //                Entity = kvp.Key._ref,
-        //                SerializedName = kvp.Value
-        //            };
-        //}
-
         public Dictionary<string, Entity> BuildExistingEntityPaths()
         {
             _entityNames.Clear();
