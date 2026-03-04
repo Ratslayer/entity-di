@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Diagnostics.Contracts;
+using static UnityEditor.ShaderGraph.Internal.KeywordDependentCollection;
 namespace BB.Di
 {
     public static class IDiContainerExtensions
@@ -54,23 +56,31 @@ namespace BB.Di
             }));
             container.Event<T>();
         }
+        public static void System(this IDiContainer container, Type type, params object[] args)
+            => container.Service(type, type, args);
         public static void System<T>(
             this IDiContainer container,
             params object[] args)
             where T : new()
-            => container.Service<T, T>(args);
+            => container.System(typeof(T), args);
         public static void Service<TContract, TInstance>(
             this IDiContainer container,
             params object[] args)
             where TInstance : TContract, new()
-            => container.AddComponent(new ConstructDiComponent(new()
-            {
-                World = container.World,
-                ContractType = typeof(TContract),
-                InstanceType = typeof(TInstance),
-                Lazy = false,
-                TypelessAdditionalParams = args
-            }));
+            => container.Service(typeof(TContract), typeof(TInstance), args);
+        public static void Service(
+           this IDiContainer container,
+           Type contract,
+           Type instance,
+           params object[] args)
+           => container.AddComponent(new ConstructDiComponent(new()
+           {
+               World = container.World,
+               ContractType = contract,
+               InstanceType = instance,
+               Lazy = false,
+               TypelessAdditionalParams = args
+           }));
         public static void SystemWithArgs<TContract, TInstance>(
            this IDiContainer container,
            params (Type, object)[] args)

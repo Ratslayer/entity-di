@@ -50,13 +50,17 @@ public static class StringExtensions
         => string.IsNullOrWhiteSpace(s)
         ? Array.Empty<string>()
         : Regex.Replace(s, "([A-Z\\d])", " $1").Trim().Split();
+    public static IEnumerable<string> WhereNotEmpty(this IEnumerable<string> s)
+        => s.Where(s => s.IsValid());
+    public static IEnumerable<string> SelectLower(this IEnumerable<string> s)
+        => s.Select(s => s.ToLower());
 
-    public static string[] SplitByWords(this string s)
+    public static IEnumerable<string> SplitByWords(this string s)
         => string.IsNullOrWhiteSpace(s)
         ? Array.Empty<string>()
         : s.Split()
-            .SelectMany(s => s.Split('_'))
+            .SelectMany(s => s.Split('_', '.', ' '))
+            .WhereNotEmpty()
             .SelectMany(s => s.SplitByCapitalLetters())
-            .Select(s => s.ToLower())
-            .ToArray();
+            .SelectLower();
 }

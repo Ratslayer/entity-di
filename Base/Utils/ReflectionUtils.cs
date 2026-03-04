@@ -16,7 +16,10 @@ public static class ReflectionUtils
 		attribute = member.GetCustomAttribute<T>();
 		return attribute != null;
 	}
-	public static FieldInfo GetField(object target, string fieldName)
+	public static bool HasAttribute<T>(this MemberInfo member)
+		where T : Attribute
+		=> member.GetCustomAttribute<T>() is not null;
+    public static FieldInfo GetField(object target, string fieldName)
 	{
 		var type = target.GetType();
 		return type.GetField(fieldName, AllNonStatic)
