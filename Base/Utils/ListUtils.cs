@@ -239,9 +239,9 @@ public static class ListUtils
         foreach (var item in list2)
             list.AddUnique(item);
     }
-    public static bool IsValidIndex(this IList list, int index)
+    public static bool IsValidIndex<T>(this IReadOnlyList<T> list, int index)
         => index >= 0 && index < list.Count;
-    public static bool HasIndex<T>(this IList<T> list, int index, out T element)
+    public static bool HasIndex<T>(this IReadOnlyList<T> list, int index, out T element)
     {
         var valid = index >= 0 && index < list.Count;
         element = valid ? list[index] : default;

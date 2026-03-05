@@ -1,12 +1,14 @@
 ﻿using Newtonsoft.Json;
 using System;
 using UnityEngine;
+
 namespace BB
 {
     public abstract class BaseSerializer<TSelf, TTarget, TData> : IEntityComponentSerializer
         where TSelf : BaseSerializer<TSelf, TTarget, TData>, new()
     {
         static TSelf _default;
+
         public static TSelf Default
         {
             get
@@ -15,8 +17,15 @@ namespace BB
                 return _default;
             }
         }
-        protected virtual void ApplySpawn(TTarget target, TData data) { }
-        protected virtual void ApplyAfterSpawn(TTarget target, TData data) { }
+
+        protected virtual void ApplySpawn(TTarget target, TData data)
+        {
+        }
+
+        protected virtual void ApplyAfterSpawn(TTarget target, TData data)
+        {
+        }
+
         protected abstract TData Serialize(TTarget target);
 
         public object Serialize(object target)
@@ -24,6 +33,7 @@ namespace BB
             AssertProperType(target);
             return Serialize((TTarget)target);
         }
+
         protected bool IsLoadableBehaviour(in TransformAdapter transform, out string key)
         {
             if (!transform._transform.TryGetComponent(out LoadableComponent lb))
@@ -31,11 +41,14 @@ namespace BB
                 key = null;
                 return false;
             }
+
             key = lb.Key;
             return true;
         }
+
         protected string GetLoadableBehaviourKey(in TransformAdapter transform)
             => IsLoadableBehaviour(transform, out var key) ? key : null;
+
         protected bool HasLoadableBehaviour<T>(string key, out T result)
             where T : Component
         {
@@ -48,7 +61,7 @@ namespace BB
             if (!lb.TryGetComponent(out result))
             {
                 LogError($"{key} loadable behaviour was found, " +
-                    $"but it had no component of type {typeof(T).Name}");
+                         $"but it had no component of type {typeof(T).Name}");
                 return false;
             }
 
@@ -62,9 +75,16 @@ namespace BB
                     $"{GetType().Name} serializer expects target of type{typeof(TTarget).Name}. " +
                     $"Actual type: {target.GetType().Name}.");
         }
+
         protected bool HasLoadableAsset<T>(string key, out T asset)
             where T : BaseScriptableObject, ILoadableAsset
         {
+            if (string.IsNullOrWhiteSpace(key))
+            {
+                asset = null;
+                return false;
+            }
+            
             var assets = World.Require<ILoadableAssets>();
             if (!assets.HasAsset(key, out asset) || !asset)
             {
@@ -74,9 +94,18 @@ namespace BB
 
             return true;
         }
+
         protected T GetLoadableAsset<T>(string key)
             where T : BaseScriptableObject, ILoadableAsset
             => HasLoadableAsset(key, out T asset) ? asset : default;
+
+        protected string AssertAssetExists<T>(ILoadableAsset asset)
+            where T : BaseScriptableObject, ILoadableAsset
+        {
+            GetLoadableAsset<T>(asset?.AssetLoadKey);
+
+            return asset?.AssetLoadKey;
+        }
 
 
         public void ApplySpawn(in DeserializationContext context)
@@ -94,6 +123,7 @@ namespace BB
             var data = JsonConvert.DeserializeObject<TData>(context.SerializedData.ToString());
             ApplyAfterSpawn(target, data);
         }
+
         protected void LogError(string msg)
             => Log.Error(msg);
     }

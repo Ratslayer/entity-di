@@ -9,11 +9,11 @@ namespace BB
         public override string ToString()
             => $"{GetType().Name} {Entity}";
 
-        protected void LogError(string message, [CallerMemberName] string caller = null)
+        public void LogError(string message, [CallerMemberName] string caller = null)
         {
             Log.Error($"{Entity}.{GetType().Name}.{caller}: {message}");
         }
-        protected void LogInfo(string message, [CallerMemberName] string caller = null)
+        public void LogInfo(string message, [CallerMemberName] string caller = null)
         {
             Log.Info($"{Entity}.{GetType().Name}.{caller}: {message}");
         }
