@@ -27,6 +27,7 @@ namespace BB
                 var backupPath = $"{path}_backup";
                 return ReadFromPath(backupPath);
             }
+
             static async Task<T> ReadFromPath(string path)
             {
                 var text = await File.ReadAllTextAsync(path);
@@ -37,6 +38,13 @@ namespace BB
 
         public async Task Write(WriteFileContext context)
         {
+            var settings = new JsonSerializerSettings
+            {
+                Formatting = Formatting.Indented,
+            };
+
+            var json = JsonConvert.SerializeObject(context.Data, settings);
+
             var path = GetFullPath(context.Path);
             if (!File.Exists(path))
             {
@@ -54,16 +62,7 @@ namespace BB
 
             File.Delete(backupPath);
 
-            Task WriteToFile()
-            {
-                var settings = new JsonSerializerSettings
-                {
-                    Formatting = Formatting.Indented,
-                };
-
-                var json = JsonConvert.SerializeObject(context.Data, settings);
-                return File.WriteAllTextAsync(path, json);
-            }
+            Task WriteToFile() => File.WriteAllTextAsync(path, json);
         }
     }
 }

@@ -41,6 +41,7 @@ public static class MathUtils
     public static bool IsZero(this float value) => value.Approximately(0);
     public static bool IsZero(this double value) => value.Approximately(0);
     public static bool NotZero(this double value) => !value.IsZero();
+    public static bool NotZero(this float value) => !value.IsZero();
     public static bool IsValid(this double value) => value is not double.NaN;
     public static bool LessThanOrEquals(this float v1, float v2)
         => v1 <= v2 + _epsilon;

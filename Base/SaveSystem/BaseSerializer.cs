@@ -49,7 +49,7 @@ namespace BB
         protected string GetLoadableBehaviourKey(in TransformAdapter transform)
             => IsLoadableBehaviour(transform, out var key) ? key : null;
 
-        protected bool HasLoadableBehaviour<T>(string key, out T result)
+        protected bool HasLoadableComponent<T>(string key, out T result)
             where T : Component
         {
             if (!World.Require<ILoadableComponents>().TryGet(key, out var lb))
