@@ -76,6 +76,9 @@ namespace BB
                     $"Actual type: {target.GetType().Name}.");
         }
 
+        protected bool IsValidLoadableAsset<T>(T asset)
+            where T : BaseScriptableObject, ILoadableAsset
+            => asset && HasLoadableAsset(asset.AssetLoadKey, out T _);
         protected bool HasLoadableAsset<T>(string key, out T asset)
             where T : BaseScriptableObject, ILoadableAsset
         {

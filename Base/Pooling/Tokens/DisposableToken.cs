@@ -25,7 +25,7 @@ namespace BB
         public bool CanDispose => _disposable switch
         {
             IPooledDisposable pd => _counter != 1 && pd.Counter == _counter,
-            IDisposable => true,
+            not null => true,
             _ => false
         };
         public bool HasValue(out IDisposable disposable)

@@ -8,13 +8,12 @@ namespace BB
     {
         IEvent<T> _event;
         Action<T> _action;
-        IEntity _entity;
+
         public static PooledActionSubscription<T> GetPooled(Entity entity, Action<T> action)
         {
             if (!entity.Has(out IEvent<T> e))
                 return null;
             var result = GetPooledInternal();
-            result._entity = entity._ref;
             result._event = e;
             result._action = action;
             return result;
@@ -29,10 +28,10 @@ namespace BB
         {
             _event.Unsubscribe(this);
         }
+
         public override void Dispose()
         {
             Unsubscribe();
-            _entity = null;
             _action = null;
             _event = null;
             base.Dispose();

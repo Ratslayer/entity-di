@@ -13,5 +13,11 @@ namespace BB
             subscription.Subscribe();
             return subscription.GetToken();
         }
+        public static DisposableToken Subscribe<T>(this Entity entity, IEventHandler<T> handler)
+        {
+            var subscription = PooledSubscription<T>.GetPooled(entity, handler);
+            subscription.Subscribe(null);
+            return subscription.GetToken();
+        }
     }
 }
