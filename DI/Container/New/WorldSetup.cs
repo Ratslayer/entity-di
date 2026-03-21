@@ -1,16 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 
 namespace BB.Di
 {
     public sealed record WorldData(IEntityFactory Factory, IEntityInjector Injector, IEntity Entity);
-    public interface IWorld
-    {
 
-    }
-    public sealed class WorldSetup : IDisposable, IWorld
+    public sealed class WorldSetup : IDisposable
     {
         public IEntityInstaller BaseInstaller { get; init; }
         public ILogger Logger { get; init; }
@@ -20,6 +16,7 @@ namespace BB.Di
         public Dictionary<IEntityInstaller, IEntityFactory> Factories { get; init; } = new();
         public HashSet<Type> ForcedDynamicTypes { get; init; }
         readonly Dictionary<Type, TypeInjector> _injectors = new();
+
         public InitInjectorContext GetInjectorContext()
             => new()
             {
@@ -27,6 +24,7 @@ namespace BB.Di
                 GameComponents = Game?.Injector.Components,
                 ForcedDynamicTypes = ForcedDynamicTypes
             };
+
         public TypeInjector GetTypeInjector(Type type)
         {
             if (!_injectors.TryGetValue(type, out var result))
@@ -34,38 +32,45 @@ namespace BB.Di
                 result = new TypeInjector(type);
                 _injectors.Add(type, result);
             }
+
             if (result._errors.Count > 0)
                 throw new ArgumentException(
                     $"Errors encountered during creation of {type.Name} type injector:\n" +
                     $"{string.Join('\n', result._errors)}");
             return result;
         }
+
         public static WorldSetup CreateFromConfig(in WorldSetupConfig config)
         {
             var result = new WorldSetup
             {
                 BaseInstaller = config.AdditionalInstaller,
-                ForcedDynamicTypes = config.ForcedDinamicTypes?.ToHashSet() ?? new(),
+                ForcedDynamicTypes = config.ForcedDynamicTypes?.ToHashSet() ?? new(),
                 Logger = config.Logger
             };
 
             return result;
         }
+
         public void ClearGame()
         {
             Game?.Entity?.SetState(EntityState.Destroyed);
             Game = null;
         }
+
         public void ClearCore()
         {
             ClearGame();
             Core?.Entity?.SetState(EntityState.Destroyed);
             Core = null;
         }
+
         public void CreateCore(IEntityInstaller installer)
             => CreateWorldEntity("Core", installer, data => Core = data);
+
         public void CreateGame(IEntityInstaller installer)
             => CreateWorldEntity("Game", installer, data => Game = data);
+
         void CreateWorldEntity(
             string name,
             IEntityInstaller installer,
@@ -89,10 +94,7 @@ namespace BB.Di
             ClearCore();
         }
     }
-    public interface IWorldInitializer
-    {
-        WorldSetupConfig Init();
-    }
+
     public class AdditionalInstaller : IEntityInstaller
     {
         public string Name => string.Empty;
@@ -108,55 +110,63 @@ namespace BB.Di
             container.Event<EntityDespawnedEvent>();
         }
     }
+
     public readonly struct WorldSetupConfig
     {
         public IEntityInstaller AdditionalInstaller { get; init; }
         public IEntityInstaller CoreInstaller { get; init; }
-        public IEnumerable<Type> ForcedDinamicTypes { get; init; }
+        public IEnumerable<Type> ForcedDynamicTypes { get; init; }
         public ILogger Logger { get; init; }
     }
+
     public static class WorldBootstrap
     {
         public static WorldSetup World { get; private set; }
-        public static void SpawnWorld()
-        {
-            if (World is not null)
-                return;
 
-            var worldSetupConfig = LoadConfig();
+        public static void SpawnWorld(IWorldConfigProvider configProvider)
+        {
+            if(configProvider is null)
+                throw new DiException("Can't spawn world with null config provider.");
+            DestroyWorld();
+
+            var worldSetupConfig = configProvider.GetConfig();
 
             World = WorldSetup.CreateFromConfig(worldSetupConfig);
             World.CreateCore(worldSetupConfig.CoreInstaller);
             World.Core.Entity.Publish(new AfterWorldSpawnEvent());
         }
-        public static void CreateWorld()
+
+        public static void CreateWorld(IWorldConfigProvider configProvider)
         {
-            var worldSetupConfig = LoadConfig();
+            var worldSetupConfig = configProvider.GetConfig();
             World = new WorldSetup
             {
                 BaseInstaller = worldSetupConfig.AdditionalInstaller,
-                ForcedDynamicTypes = worldSetupConfig.ForcedDinamicTypes.ToHashSet()
+                ForcedDynamicTypes = worldSetupConfig.ForcedDynamicTypes.ToHashSet()
             };
         }
+
         public static void DestroyWorld()
         {
             World?.Dispose();
             World = null;
         }
-        static WorldSetupConfig LoadConfig()
-        {
-            var worldSetupConfigFactoryType = Assembly.GetExecutingAssembly()
-               .GetTypes()
-               .Where(t => !t.IsAbstract && typeof(IWorldInitializer).IsAssignableFrom(t))
-               .FirstOrDefault()
-               ?? throw new DiException(
-                   $"Could not find any class implementing " +
-                   $"{typeof(IWorldInitializer).FullName}");
 
-            var worldSetupConfigFactory
-                = (IWorldInitializer)Activator.CreateInstance(worldSetupConfigFactoryType);
-
-            return worldSetupConfigFactory.Init();
-        }
+        // static WorldSetupConfig LoadConfig()
+        // {
+        //     var worldSetupConfigFactoryType = Assembly.GetExecutingAssembly()
+        //                                           .GetTypes()
+        //                                           .Where(t => !t.IsAbstract &&
+        //                                                       typeof(IWorldInitializer).IsAssignableFrom(t))
+        //                                           .FirstOrDefault()
+        //                                       ?? throw new DiException(
+        //                                           $"Could not find any class implementing " +
+        //                                           $"{typeof(IWorldInitializer).FullName}");
+        //
+        //     var worldSetupConfigFactory
+        //         = (IWorldInitializer)Activator.CreateInstance(worldSetupConfigFactoryType);
+        //
+        //     return worldSetupConfigFactory.Init();
+        // }
     }
 }
