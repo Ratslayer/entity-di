@@ -6,17 +6,17 @@ namespace BB.Di
         void Subscribe();
         void Unsubscribe();
     }
-    public abstract class InternalSubscription : ISubscription
-    {
-        public MethodInfo _method;
-        public object _target;
-        public IEntity _entity;
-        public abstract void Init();
-        public abstract void Subscribe();
-        public abstract void Unsubscribe();
-        public override string ToString()
-            => DiEventsUtils.GetTypeMethodName(_target, _method);
-    }
+    // public abstract class InternalSubscription : ISubscription
+    // {
+    //     public MethodInfo _method;
+    //     public object _target;
+    //     public IEntity _entity;
+    //     public abstract void Init();
+    //     public abstract void Subscribe();
+    //     public abstract void Unsubscribe();
+    //     public override string ToString()
+    //         => DiEventsUtils.GetTypeMethodName(_target, _method);
+    // }
 }
 namespace BB
 {

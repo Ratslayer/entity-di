@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading;
+
 namespace BB.Di
 {
     public sealed class CascadingEvent<T> : BaseEvent<T>, IEventHandler<T>
@@ -10,12 +11,14 @@ namespace BB.Di
 
         IEvent<T> _parentEvent;
         [Inject] EntityWrapper _entity;
+
         [OnEvent]
         void OnSpawn(EntitySpawnedEvent _)
         {
             _parentEvent = _entity.Entity.Parent?.Require<IEvent<T>>();
             _parentEvent?.Subscribe(this);
         }
+
         [OnEvent]
         void OnDespawn(EntityDespawnedEvent _)
         {
@@ -36,12 +39,14 @@ namespace BB.Di
     {
         IReadOnlyCollection<IEventHandler> Handlers { get; }
     }
-    public abstract class BaseEvent<T> : IEvent<T>, IDisposable, IEventHandlers
+
+    public abstract class BaseEvent<T> : EntitySystem, IEvent<T>, IDisposable, IEventHandlers
     {
         readonly List<IEventHandler<T>> _handlers = new(), _tempAddSubscriptions = new();
         bool _isInvoking;
         public abstract CancellationToken NextEventCancellationToken { get; }
         public IReadOnlyCollection<IEventHandler> Handlers => _handlers;
+
         public virtual void Dispose()
         {
             _handlers.Clear();
@@ -60,12 +65,12 @@ namespace BB.Di
                 }
                 catch (Exception e)
                 {
-                    Log.Logger.Error(
+                    GetLogger().Exception(e,
                         $"Exception occured during event {typeof(T).Name} " +
                         $"in subscription {subscription}");
-                    Log.Logger.LogException(e);
                 }
             }
+
             _isInvoking = false;
 
             _handlers.AddRange(_tempAddSubscriptions);
@@ -84,10 +89,12 @@ namespace BB.Di
             _handlers.Remove(subscription);
         }
     }
+
     public sealed class DefaultEvent<T> : BaseEvent<T>
     {
         readonly ReusableCancellationTokenSource _tokenSource = new();
         public override CancellationToken NextEventCancellationToken => _tokenSource.Token;
+
         public override void Dispose()
         {
             base.Dispose();

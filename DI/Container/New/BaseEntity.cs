@@ -80,12 +80,14 @@ namespace BB.Di
         }
 
         #region State
-        bool _createEventInvoked;
+        bool _createEventInvoked, _isChangingState;
         EntityState
             _effectiveState = EntityState.Despawned,
             _previousEffectiveState = EntityState.Despawned,
             _assignedState = EntityState.Despawned;
         public EntityState State => _effectiveState;
+        public bool IsChangingState => _isChangingState;
+        
         public void SetState(EntityState state)
         {
             if (_assignedState == state)
@@ -95,6 +97,15 @@ namespace BB.Di
             if (_effectiveState == _previousEffectiveState)
                 return;
 
+            if (_isChangingState)
+            {
+                this.GetToken()
+                    .GetLogger()
+                    .Error($"{Name}: Attempting to change entity state while changing state.");
+                return;
+            }
+
+            SetIsChangingState ( true);
             var dir = (int)_effectiveState - (int)_previousEffectiveState;
             //downstream direction
             if (dir > 0)
@@ -112,6 +123,16 @@ namespace BB.Di
                 PublishPostSpawnEvent();
                 PublishEnableEvent();
             }
+
+            SetIsChangingState(false);
+        }
+
+        void SetIsChangingState(bool value)
+        {
+            _isChangingState = value;
+            foreach(var i in _children?.Count)
+                if(_children[i] is BaseEntity child)
+                    child.SetIsChangingState(value);
         }
         bool EnteredStateUpstream(EntityState state)
         {
@@ -299,9 +320,7 @@ namespace BB.Di
             var data = GetComponentData(this, context.ContractType);
             if (data is null)
                 throw new DiException(
-                    $"Could not resolve {context.ContractType} " +
-                    $"in component {context.RequestingType?.Name} " +
-                    $"in entity {Name}");
+                    $"{Name}:{context.RequestingType?.Name} Could not resolve {context.ContractType}");
 
             if (context.Init)
                 data.Init();

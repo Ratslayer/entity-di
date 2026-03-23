@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace BB
 {
-    public sealed class FileSystem : IFileSystem
+    public sealed class FileSystem : EntitySystem, IFileSystem
     {
         [Inject] FileSystemParams _params;
 
@@ -22,7 +22,7 @@ namespace BB
             }
             catch (Exception e)
             {
-                Log.Exception(e, $"{path} could not be properly read. Reverting to backup.");
+                GetLogger().Exception(e, $"{path} could not be properly read. Reverting to backup.");
 
                 var backupPath = $"{path}_backup";
                 return ReadFromPath(backupPath);

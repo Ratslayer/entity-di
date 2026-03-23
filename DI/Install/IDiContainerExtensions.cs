@@ -17,7 +17,6 @@ namespace BB.Di
         }
         public static object Resolve(this IEntity entity, Type type)
         {
-            using var _ = Log.Logger.UseContext(entity);
             if (!entity.TryResolve(type, out var result))
                 throw new DiException($"{type.FullName} contract not found in entity {entity.Name}.");
             return result;

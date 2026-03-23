@@ -2,18 +2,20 @@
 using System;
 using System.Reflection;
 using System.Threading;
+
 namespace BB.Di
 {
     public sealed class EventSubscription<TEvent>
         : ProtectedPooledObject<EventSubscription<TEvent>>,
-        ISubscription,
-        IEventHandler<TEvent>
+            ISubscription,
+            IEventHandler<TEvent>
     {
         IEvent<TEvent> _event;
         Action<TEvent> _action;
         object _instance;
         IEntity _entity;
         MethodInfo _method;
+
         public static EventSubscription<TEvent> GetPooled(
             IEvent<TEvent> @event,
             MethodInfo method,
@@ -28,6 +30,7 @@ namespace BB.Di
             result._action = CreateAction(method, instance, entity);
             return result;
         }
+
         public override string ToString()
             => $"{_entity.Name}:{_instance.GetType().Name}:{_method.Name}";
 
@@ -40,6 +43,7 @@ namespace BB.Di
         {
             _event?.Unsubscribe(this);
         }
+
         public override void Dispose()
         {
             _event = null;
@@ -47,6 +51,7 @@ namespace BB.Di
             _entity = null;
             base.Dispose();
         }
+
         static Action<TEvent> CreateAction(MethodInfo method, object target, IEntity entity)
         {
             var args = method.GetParameters();
@@ -60,6 +65,7 @@ namespace BB.Di
                         var action = (Action)Delegate.CreateDelegate(typeof(Action), target, method);
                         return _ => action();
                 }
+
                 ;
             }
             else if (method.ReturnType == typeof(UniTaskVoid))
@@ -69,13 +75,15 @@ namespace BB.Di
                     case 2:
                         var a2 = (Func<TEvent, CancellationToken, UniTaskVoid>)Delegate
                             .CreateDelegate(typeof(Func<TEvent, CancellationToken, UniTaskVoid>), target, method);
-                        return t => a2(t, entity.Require<IEvent<EntityDespawnedEvent>>().NextEventCancellationToken).Forget();
+                        return t => a2(t, entity.Require<IEvent<EntityDespawnedEvent>>().NextEventCancellationToken)
+                            .Forget();
                     case 1:
                         if (args[0].ParameterType == typeof(CancellationToken))
                         {
                             var a1 = (Func<CancellationToken, UniTaskVoid>)Delegate
                                 .CreateDelegate(typeof(Func<CancellationToken, UniTaskVoid>), target, method);
-                            return _ => a1(entity.Require<IEvent<EntityDespawnedEvent>>().NextEventCancellationToken).Forget();
+                            return _ => a1(entity.Require<IEvent<EntityDespawnedEvent>>().NextEventCancellationToken)
+                                .Forget();
                         }
                         else
                         {
@@ -90,9 +98,12 @@ namespace BB.Di
             }
             else
             {
-                Log.Error(
-                    $"Can't bind {target.ToString()}:{method.Name}. " +
-                    $"Action methods can only have return type of void or UniTaskVoid");
+                entity
+                    .GetToken()
+                    .GetLogger()
+                    .Error(
+                        $"Can't bind {target}:{method.Name}. " +
+                        $"Action methods can only have return type of void or UniTaskVoid");
                 return null;
             }
         }

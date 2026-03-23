@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
+
 namespace BB.Di
 {
     public abstract class BaseDiComponent : IDiComponent
@@ -63,9 +65,9 @@ namespace BB.Di
             DynamicElements = dynamicElements;
             Dynamic = dynamicElements?.Count > 0;
         }
-        protected void LogError(IEntityInstaller installer, string error)
+        protected void LogError(IEntityInstaller installer, string error, [CallerMemberName] string caller = null)
         {
-            Log.Error($"{installer.Name}:{ContractType.Name}: {error}");
+            World.Entity.GetLogger(caller).Error($"{installer.Name}:{ContractType.Name}: {error}");
         }
         public override string ToString()
             => $"{ContractType}:{InstanceType}";

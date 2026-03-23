@@ -9,7 +9,7 @@ namespace BB.Di
     public sealed class WorldSetup : IDisposable
     {
         public IEntityInstaller BaseInstaller { get; init; }
-        public ILogger Logger { get; init; }
+        public ILoggerScopeFactory Logger { get; init; }
         public WorldData Core { get; set; }
         public WorldData Game { get; set; }
         public IEntity ParentEntity => (Game ?? Core)?.Entity;
@@ -116,7 +116,7 @@ namespace BB.Di
         public IEntityInstaller AdditionalInstaller { get; init; }
         public IEntityInstaller CoreInstaller { get; init; }
         public IEnumerable<Type> ForcedDynamicTypes { get; init; }
-        public ILogger Logger { get; init; }
+        public ILoggerScopeFactory Logger { get; init; }
     }
 
     public static class WorldBootstrap

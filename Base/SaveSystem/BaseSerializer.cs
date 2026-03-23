@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using System;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 
 namespace BB
@@ -76,9 +77,42 @@ namespace BB
                     $"Actual type: {target.GetType().Name}.");
         }
 
-        protected bool IsValidLoadableAsset<T>(T asset)
-            where T : BaseScriptableObject, ILoadableAsset
-            => asset && HasLoadableAsset(asset.AssetLoadKey, out T _);
+        protected bool IsValidLoadableAsset(ILoadableAsset asset)
+        {
+            var a = (BaseScriptableObject)asset;
+            if (!a)
+                return false;
+
+            if (string.IsNullOrWhiteSpace(asset.AssetLoadKey))
+            {
+                LogError($"{a.name} has no AssetLoadKey");
+                return false;
+            }
+
+            var assets = World.Require<ILoadableAssets>();
+            if (!assets.HasAsset(asset.AssetLoadKey, out ILoadableAsset existingAsset))
+            {
+                LogError($"{a.name} is not added to LoadableAssets");
+                return false;
+            }
+
+            if (asset != existingAsset)
+            {
+                LogError($"Another asset {existingAsset} is already added by key {asset.AssetLoadKey}");
+                return false;
+            }
+
+            return true;
+
+            void LogError(string msg)
+            {
+                GetLogger()
+                    .WithUnityObject(a)
+                    .WithClass(GetType())
+                    .Error(msg);
+            }
+        }
+
         protected bool HasLoadableAsset<T>(string key, out T asset)
             where T : BaseScriptableObject, ILoadableAsset
         {
@@ -87,7 +121,7 @@ namespace BB
                 asset = null;
                 return false;
             }
-            
+
             var assets = World.Require<ILoadableAssets>();
             if (!assets.HasAsset(key, out asset) || !asset)
             {
@@ -102,12 +136,12 @@ namespace BB
             where T : BaseScriptableObject, ILoadableAsset
             => HasLoadableAsset(key, out T asset) ? asset : default;
 
-        protected string AssertAssetExists<T>(ILoadableAsset asset)
-            where T : BaseScriptableObject, ILoadableAsset
+        protected string GetValidKey(ILoadableAsset asset)
         {
-            GetLoadableAsset<T>(asset?.AssetLoadKey);
+            if (IsValidLoadableAsset(asset))
+                return asset.AssetLoadKey;
 
-            return asset?.AssetLoadKey;
+            return null;
         }
 
 
@@ -127,7 +161,10 @@ namespace BB
             ApplyAfterSpawn(target, data);
         }
 
-        protected void LogError(string msg)
-            => Log.Error(msg);
+        protected ILoggerScope GetLogger([CallerMemberName] string caller = null)
+            => World.Entity.GetLogger(caller);
+
+        protected void LogError(string msg, [CallerMemberName] string caller = null)
+            => GetLogger(caller).Error(msg);
     }
 }

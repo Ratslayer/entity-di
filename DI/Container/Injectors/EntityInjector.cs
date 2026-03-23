@@ -1,13 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
+
 namespace BB.Di
 {
-	public sealed class EntityInjector : IEntityInjector, IDiContainer
+    public sealed class EntityInjector : IEntityInjector, IDiContainer
     {
         readonly Dictionary<Type, IDiComponent> _components = new();
         readonly List<IDiComponent> _dynamicComponents = new();
         readonly IEntityInstaller _installer;
         public WorldSetup World { get; init; }
+
         public EntityInjector(IEntityInstaller installer, WorldSetup world)
         {
             _installer = installer;
@@ -40,9 +42,11 @@ namespace BB.Di
                 return;
 
             if (_components.ContainsKey(component.ContractType))
-                Log.Error(
-                    $"Entity installer {_installer.Name} " +
-                    $"binds multiple components to {component.ContractType}");
+                World.Logger
+                    .GetScope()
+                    .Error(
+                        $"Entity installer {_installer.Name} " +
+                        $"binds multiple components to {component.ContractType}");
 
             _components[component.ContractType] = component;
         }

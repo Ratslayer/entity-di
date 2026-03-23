@@ -46,7 +46,9 @@ namespace BB
                 }
             }
             if (!result)
-                Log.Error(sb.ToString());
+                World.Entity
+                    .GetLogger()
+                    .Error(sb.ToString());
             sb.Dispose();
             return result;
         }
