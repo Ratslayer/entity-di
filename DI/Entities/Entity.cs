@@ -26,6 +26,8 @@ namespace BB
                 .WithMethod(methodName);
         }
 
+        public Entity Parent => _ref?.Parent?.GetToken() ?? default;
+
         public bool Enabled => this && _ref.State == EntityState.Enabled;
 
         public void SetEnabled(bool enabled)

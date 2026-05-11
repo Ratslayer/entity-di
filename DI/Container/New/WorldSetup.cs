@@ -121,19 +121,36 @@ namespace BB.Di
 
     public static class WorldBootstrap
     {
-        public static WorldSetup World { get; private set; }
+        public static WorldSetup World
+        {
+            get;
+            private set;
+        }
 
         public static void SpawnWorld(IWorldConfigProvider configProvider)
         {
-            if(configProvider is null)
+            if (configProvider is null)
                 throw new DiException("Can't spawn world with null config provider.");
-            DestroyWorld();
-
+            
             var worldSetupConfig = configProvider.GetConfig();
+            var logger = worldSetupConfig.Logger.GetScope();
 
+            try
+            {
+                logger.Info("Beginning destroy world");
+                DestroyWorld();
+                logger.Info("Destroy world successfully completed");
+            }
+            catch (Exception e)
+            {
+                logger.Exception(e,"Exception occured during destroy world");
+            }
+            
+            logger.Info("Creating new world");
             World = WorldSetup.CreateFromConfig(worldSetupConfig);
             World.CreateCore(worldSetupConfig.CoreInstaller);
             World.Core.Entity.Publish(new AfterWorldSpawnEvent());
+            logger.Info("New world created");
         }
 
         public static void CreateWorld(IWorldConfigProvider configProvider)
