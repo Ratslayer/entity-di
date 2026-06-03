@@ -40,14 +40,6 @@ namespace BB.Di
         {
             if (!component.Validate(_installer))
                 return;
-
-            if (_components.ContainsKey(component.ContractType))
-                World.Logger
-                    .GetScope()
-                    .Error(
-                        $"Entity installer {_installer.Name} " +
-                        $"binds multiple components to {component.ContractType}");
-
             _components[component.ContractType] = component;
         }
 
