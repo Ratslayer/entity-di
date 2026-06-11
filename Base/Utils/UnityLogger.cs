@@ -62,23 +62,13 @@ namespace BB
         {
             using var builder = PooledStringBuilder.GetPooled();
 
-            Append(LoggerConstants.EntityContextKey);
-            Append(LoggerConstants.ClassContextKey);
-            Append(LoggerConstants.MethodContextKey);
-
-            builder.Append(" ");
             builder.Append(msg);
+            builder.Append("\n===\n");
+            
+            foreach (var kvp in _values)
+                builder.Append($"{kvp.Key}:{kvp.Value}\n");
 
             return builder.ToString();
-
-            void Append(string key)
-            {
-                if (!_values.TryGetValue(key, out var value))
-                    return;
-                if (!builder.Empty)
-                    builder.Append(":");
-                builder.Append(value.ToString());
-            }
         }
     }
 
