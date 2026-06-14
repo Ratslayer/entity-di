@@ -149,7 +149,8 @@ namespace BB
         {
             if (context.Component is not TTarget target)
                 return;
-            var data = JsonConvert.DeserializeObject<TData>(context.SerializedData.ToString());
+            var serializedData = context.SerializedData.ToString();
+            var data = JsonConvert.DeserializeObject<TData>(serializedData);
             ApplySpawn(target, data);
         }
 
