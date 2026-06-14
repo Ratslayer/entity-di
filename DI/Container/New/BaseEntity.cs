@@ -8,6 +8,8 @@ namespace BB
     public readonly struct EntityEnabledEvent { }
     public readonly struct EntityDisabledEvent { }
     public readonly struct EntityDespawnedEvent { }
+    public readonly struct EntityDestroyedEvent { }
+    
 }
 namespace BB.Di
 {
@@ -16,7 +18,11 @@ namespace BB.Di
         WorldSetup World,
         IEntityPool Pool,
         IEntityInjector Injector,
-        IEntityInstaller Installer) : BaseEntity(Name, World, Pool, Injector, Installer);
+        IEntityInstaller Installer) : BaseEntity(Name, World, Pool, Injector, Installer)
+    {
+        public override string ToString()
+            => $"{Name}: {State}";
+    }
 
     public abstract record BaseEntity(
         string Name,
@@ -112,6 +118,7 @@ namespace BB.Di
             {
                 PublishDisableEvent();
                 PublishDespawnEvent();
+                PublishDestroyedEvent();
                 FinalizeDespawn();
                 FinalizeDestroy();
             }
@@ -231,18 +238,26 @@ namespace BB.Di
         {
             if (!EnteredStateDownstream(EntityState.Disabled))
                 return;
-            this.Publish(new EntityDisabledEvent());
             foreach (var i in -_children?.Count)
                 _children[i].PublishDisableEvent();
+            this.Publish(new EntityDisabledEvent());
         }
 
         public void PublishDespawnEvent()
         {
             if (!EnteredStateDownstream(EntityState.Despawned))
                 return;
-            this.Publish(new EntityDespawnedEvent());
             foreach (var i in -_children?.Count)
                 _children[i].PublishDespawnEvent();
+            this.Publish(new EntityDespawnedEvent());
+        }
+        public void PublishDestroyedEvent()
+        {
+            if (!EnteredStateDownstream(EntityState.Destroyed))
+                return;
+            foreach (var i in -_children?.Count)
+                _children[i].PublishDestroyedEvent();
+            this.Publish(new EntityDestroyedEvent());
         }
         public void FinalizeDestroy()
         {
@@ -250,7 +265,10 @@ namespace BB.Di
             _previousEffectiveState = _effectiveState;
             if (!isDestroyed)
                 return;
+            
             ClearSubscriptions(_selfSubscriptions);
+            foreach (var i in -_children?.Count)
+                _children[i].FinalizeDestroy();
         }
         #endregion
         #region Subscriptions

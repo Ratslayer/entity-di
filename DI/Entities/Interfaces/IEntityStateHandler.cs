@@ -9,7 +9,8 @@ namespace BB.Di
         void PublishPostSpawnEvent();
         void PublishEnableEvent();
         void PublishDisableEvent();
-        void PublishDespawnEvent();
+        void PublishDestroyedEvent();
         void FinalizeDestroy();
+        void PublishDespawnEvent();
     }
 }

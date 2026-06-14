@@ -60,8 +60,9 @@ namespace BB.Di
 
         public void ClearCore()
         {
-            ClearGame();
+            // ClearGame();
             Core?.Entity?.SetState(EntityState.Destroyed);
+            Game = null;
             Core = null;
         }
 
@@ -108,6 +109,7 @@ namespace BB.Di
             container.Event<EntityEnabledEvent>();
             container.Event<EntityDisabledEvent>();
             container.Event<EntityDespawnedEvent>();
+            container.Event<EntityDestroyedEvent>();
         }
     }
 
