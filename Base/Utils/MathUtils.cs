@@ -68,4 +68,5 @@ public static class MathUtils
 
     public static bool IsOdd(this int n) => n % 2 == 1;
     public static bool IsEven(this int n) => n % 2 == 0;
+    public static int FloorInt(this double d) => (int)Math.Floor(d);
 }

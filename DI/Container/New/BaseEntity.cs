@@ -1,16 +1,37 @@
 ﻿using System;
 using System.Collections.Generic;
+
 namespace BB
 {
-    public readonly struct EntityCreatedEvent { }
-    public readonly struct EntitySpawnedEvent { }
-    public readonly struct PostEntitySpawnedEvent { }
-    public readonly struct EntityEnabledEvent { }
-    public readonly struct EntityDisabledEvent { }
-    public readonly struct EntityDespawnedEvent { }
-    public readonly struct EntityDestroyedEvent { }
-    
+    public readonly struct EntityCreatedEvent
+    {
+    }
+
+    public readonly struct EntitySpawnedEvent
+    {
+    }
+
+    public readonly struct PostEntitySpawnedEvent
+    {
+    }
+
+    public readonly struct EntityEnabledEvent
+    {
+    }
+
+    public readonly struct EntityDisabledEvent
+    {
+    }
+
+    public readonly struct EntityDespawnedEvent
+    {
+    }
+
+    public readonly struct EntityDestroyedEvent
+    {
+    }
 }
+
 namespace BB.Di
 {
     public sealed record EntityV1(
@@ -71,7 +92,9 @@ namespace BB.Di
             result = comp.Instance;
             return true;
         }
+
         bool _injected;
+
         public void Inject()
         {
             if (_injected)
@@ -86,14 +109,17 @@ namespace BB.Di
         }
 
         #region State
+
         bool _createEventInvoked, _isChangingState;
+
         EntityState
             _effectiveState = EntityState.Despawned,
             _previousEffectiveState = EntityState.Despawned,
             _assignedState = EntityState.Despawned;
+
         public EntityState State => _effectiveState;
         public bool IsChangingState => _isChangingState;
-        
+
         public void SetState(EntityState state)
         {
             if (_assignedState == state)
@@ -111,7 +137,7 @@ namespace BB.Di
                 return;
             }
 
-            SetIsChangingState ( true);
+            SetIsChangingState(true);
             var dir = (int)_effectiveState - (int)_previousEffectiveState;
             //downstream direction
             if (dir > 0)
@@ -137,15 +163,17 @@ namespace BB.Di
         void SetIsChangingState(bool value)
         {
             _isChangingState = value;
-            foreach(var i in _children?.Count)
-                if(_children[i] is BaseEntity child)
+            foreach (var i in _children?.Count)
+                if (_children[i] is BaseEntity child)
                     child.SetIsChangingState(value);
         }
+
         bool EnteredStateUpstream(EntityState state)
         {
             var s = (int)state;
             return s >= (int)_effectiveState && s < (int)_previousEffectiveState;
         }
+
         bool EnteredStateDownstream(EntityState state)
         {
             var s = (int)state;
@@ -161,12 +189,13 @@ namespace BB.Di
             foreach (var i in -_children?.Count)
                 _children[i].UpdateEffectiveState();
         }
+
         public void FinalizeDespawn()
         {
             if (!EnteredStateDownstream(EntityState.Despawned))
                 return;
-            ClearSubscriptions(_worldSubscriptions);
-            ClearSubscriptions(_tempSubscriptions);
+            Unsubscribe(_worldSubscriptions, false);
+            Unsubscribe(_tempSubscriptions, true);
             foreach (var i in -_children?.Count)
                 _children[i].FinalizeDespawn();
             CurrentSpawnId = 0;
@@ -176,6 +205,7 @@ namespace BB.Di
                 Pool?.ReturnEntity(this);
             }
         }
+
         private void Subscribe(List<ISubscription> subscriptions)
         {
             if (subscriptions is null)
@@ -183,14 +213,17 @@ namespace BB.Di
             foreach (var subscription in subscriptions)
                 subscription.Subscribe();
         }
-        private void ClearSubscriptions(List<ISubscription> subscriptions)
+
+        private void Unsubscribe(List<ISubscription> subscriptions, bool clearList)
         {
             if (subscriptions is null)
                 return;
             foreach (var subscription in subscriptions)
                 subscription.Unsubscribe();
-            subscriptions.Clear();
+            if (clearList)
+                subscriptions.Clear();
         }
+
         public void PrepareForSpawn()
         {
             if (!EnteredStateUpstream(EntityState.Disabled))
@@ -203,9 +236,11 @@ namespace BB.Di
                 _createEventInvoked = true;
                 this.Publish<EntityCreatedEvent>();
             }
+
             foreach (var i in _children?.Count)
                 _children[i].PrepareForSpawn();
         }
+
         public void PublishSpawnEvent()
         {
             if (!EnteredStateUpstream(EntityState.Disabled))
@@ -251,6 +286,7 @@ namespace BB.Di
                 _children[i].PublishDespawnEvent();
             this.Publish(new EntityDespawnedEvent());
         }
+
         public void PublishDestroyedEvent()
         {
             if (!EnteredStateDownstream(EntityState.Destroyed))
@@ -259,20 +295,26 @@ namespace BB.Di
                 _children[i].PublishDestroyedEvent();
             this.Publish(new EntityDestroyedEvent());
         }
+
         public void FinalizeDestroy()
         {
             var isDestroyed = EnteredStateDownstream(EntityState.Destroyed);
             _previousEffectiveState = _effectiveState;
             if (!isDestroyed)
                 return;
-            
-            ClearSubscriptions(_selfSubscriptions);
+
+            Unsubscribe(_selfSubscriptions, true);
+            Unsubscribe(_worldSubscriptions, true);
             foreach (var i in -_children?.Count)
                 _children[i].FinalizeDestroy();
         }
+
         #endregion
+
         #region Subscriptions
+
         List<ISubscription> _selfSubscriptions, _worldSubscriptions, _tempSubscriptions;
+
         public void AddSubscription(in EntitySubscriptionContext context)
         {
             switch (context.Source)
@@ -296,6 +338,7 @@ namespace BB.Di
                 || State is EntityState.Enabled or EntityState.Disabled)
                 context.Subscription.Subscribe();
         }
+
         public void RemoveSubscription(in EntitySubscriptionContext context)
         {
             var subscriptions = context.Source switch
@@ -307,13 +350,18 @@ namespace BB.Di
             };
             subscriptions?.Remove(context.Subscription);
         }
+
         #endregion
+
         #region Children
+
         public IReadOnlyCollection<IEntity> Children
             => _children
-            ?? (IReadOnlyCollection<IEntity>)Array.Empty<IEntity>();
+               ?? (IReadOnlyCollection<IEntity>)Array.Empty<IEntity>();
+
         List<IFullEntity> _children;
         IEntity _parent;
+
         public IEntity Parent
         {
             get => _parent;
@@ -329,9 +377,10 @@ namespace BB.Di
                 }
             }
         }
+
         public IReadOnlyCollection<EntityComponentData> GetElements()
             => _components?.Values
-            ?? (IReadOnlyCollection<EntityComponentData>)Array.Empty<EntityComponentData>();
+               ?? (IReadOnlyCollection<EntityComponentData>)Array.Empty<EntityComponentData>();
 
         public EntityComponentData GetComponentData(in GetComponentDataContext context)
         {
@@ -353,14 +402,17 @@ namespace BB.Di
                 return GetComponentData(parent, contractType);
             return null;
         }
+
         #endregion
     }
+
     public sealed record EntityComponentData(
         IEntity Entity,
         IDiComponent FactoryComponent,
         Type ContractType)
     {
         public object Instance { get; set; }
+
         public bool Init()
         {
             if (FactoryComponent.AlwaysCreate)
@@ -372,6 +424,7 @@ namespace BB.Di
             Instance = FactoryComponent.Create(Entity);
             return true;
         }
+
         public override string ToString()
         {
             var cType = ContractType;
