@@ -15,4 +15,20 @@ public static class EnumExtensions
         var intersection = i1 & i2;
         return intersection != 0;
     }
+
+    public static T FlagsFromBools<T>(params bool[] values)
+        where T : struct, Enum
+    {
+        ulong result = 0;
+
+        for (int i = 0; i < values.Length; i++)
+        {
+            if (values[i])
+            {
+                result |= 1UL << i;
+            }
+        }
+
+        return (T)Enum.ToObject(typeof(T), result);
+    }
 }
